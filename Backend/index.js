@@ -31,8 +31,6 @@ app.use(cors());
 
 // - - - - - Endpoints - - - - -
 
-
-
 // Payments
 
 // GET /payments - filtered: paid, date_from, date_to
@@ -107,11 +105,9 @@ app.post("/bookings/:id/pay", async (req, res) => {
         discount.minimum_order_amount &&
         amount < discount.minimum_order_amount
       ) {
-        return res
-          .status(400)
-          .send({
-            error: `Minimum order amount is ${discount.minimum_order_amount}`,
-          });
+        return res.status(400).send({
+          error: `Minimum order amount is ${discount.minimum_order_amount}`,
+        });
       }
 
       let reduction = amount * (discount.percentage / 100);
@@ -136,6 +132,129 @@ app.post("/bookings/:id/pay", async (req, res) => {
   }
 });
 
+// Discounts
+
+// Get /discounts - filter by active
+app.get("/discounts", async (req, res) => {
+  try {
+    const { active } = req.query;
+    let filtered = await sql`SELECT * FROM discounts ORDER BY created_at DESC`;
+
+    if (active === "true") filtered.filter((d) => d.is_active === true);
+    if (active === "false") filtered.filter((d) => d.is_active === false);
+
+    res.send(discounts);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "Error fetching discounts" });
+  }
+});
+
+// Get /discounts/validate?code=X&amount=Y
+app.get("/discounts/validate", async (req, res) => {
+  try {
+    const { code, amount } = req.query;
+    if (!code) return res.status(400).send({ error: "code is required" });
+
+    const result =
+      await sql`SELECT * FROM discounts WHERE code = ${code} AND is_active = true AND now() BETWEEN starts_at AND expires_at`;
+
+    const discount = result[0];
+
+    if (!discount)
+      return res
+        .status(404)
+        .send({ valid: false, error: "Invalid or expired code" });
+
+    if (discount.usage_limit && discount.used_count >= discount.usage_limit)
+      return res
+        .status(400)
+        .send({ valid: false, error: "Usage limit reached" });
+
+    if (
+      amount &&
+      discount.minimum_order_amount &&
+      Number(amount) < discount.minimum_order_amount
+    )
+      return res.status(400).send({
+        valid: false,
+        error: `Minimum order amount is ${discount.minimum_order_amount}`,
+      });
+
+    res.send({ valid: true, discount });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "Error validating discount" });
+  }
+});
+
+// Post /discounts
+app.post("/discounts", async (req, res) => {
+  try {
+    const {
+      code,
+      percentage,
+      maxDiscountAmount,
+      minimumOrderAmount,
+      usageLimit,
+      startsAt,
+      expiresAt,
+    } = req.body;
+
+    if (!code || !percentage || !startsAt || !expiresAt) {
+      return res.status(400).send({
+        error: "code, percentage, startsAt and expiresAt are required",
+      });
+    }
+
+    const result =
+      await sql`INSERT INTO discounts (code, percentage, max_discount_amount, minimum_order_amount, usage_limit, starts_at, expires_at) VALUES (${code}, ${percentage}, ${maxDiscountAmount || null}, ${minimumOrderAmount || null}, ${usageLimit || null}, ${startsAt}, ${expiresAt}) RETURNING *`;
+
+    res.status(201).send(result[0]);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(400).send({ error: error.message });
+  }
+});
+
+// Patch /discounts:id - body: is_active
+app.patch("/discounts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_active } = req.body;
+
+    const result =
+      await sql`UPDATE discounts SET is_active = COALESCE(${is_active}, is_active) WHERE id = ${id} RETURNING *`;
+
+    if (result.length === 0) {
+      return res.status(404).send({ error: "Discount NOT found" });
+    }
+
+    res.send(result[0]);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "Error updating discount" });
+  }
+});
+
+// Delete /discounts/:id
+app.delete("discounts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result =
+      await sql`DELETE FROM discounts WHERE id = ${id} RETURNING id`;
+
+    if (result.length === 0)
+      return res
+        .status(404)
+        .send({ success: false, error: "Discount NOT found" });
+
+    res.send({ success: true });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ success: false, error: "Error deleting discount" });
+  }
+});
 
 app.listen(PORT, () =>
   console.log(` My App listening at http://localhost:${PORT}`),
