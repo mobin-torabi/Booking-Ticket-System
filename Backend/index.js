@@ -259,3 +259,80 @@ app.delete("/discounts/:id", async (req, res) => {
 app.listen(PORT, () =>
   console.log(` My App listening at http://localhost:${PORT}`),
 );
+
+//ADDRESS
+// GET /addresses?userId=123
+app.get("/addresses", async (request, response) => {
+  try {
+    const { userId } = request.query;
+    if (!userId)
+      return response
+        .status(400)
+        .send({ error: "userId query param is required" });
+    const result =
+      await sql`SELECT * FROM "Address" WHERE "user-id" = ${userId}`;
+    response.send(result);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching addresses" });
+  }
+});
+// POST /addresses
+app.post("/addresses", async (request, response) => {
+  try {
+    const { userId, provinceId, cityId, addressDetails, houseNumver } =
+      request.body;
+    if (!userId || !addressDetails) {
+      return response
+        .status(400)
+        .send({ error: "User Id and Address details are required" });
+    }
+    const result =
+      await sql`INSERT INTO "Address" ("user-id", "province-id", "city-id", "address-details", "house-number")
+            VALUES (${userId}, ${provinceId || null}, ${cityId || null}, ${addressDetails}, ${houseNumber || null})
+            RETURNING *
+        `;
+    response.status(201).send(result[0]);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: error.message });
+  }
+});
+// PATCH /addresses/:id
+app.patch("/addresses/;id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const { userId, provinceId, cityId, addressDetails, houseNumber } =
+      request.body;
+    const result = await sql`
+           UPDATE "Address" SET
+                "province-id" = COALESCE(${provinceId}, "province-id"),
+                "city-id" = COALESCE(${cityId}, "city-id"),
+                "address-details" = COALESCE(${addressDetails}, "address-details"),
+                "house-number" = COALESCE(${houseNumber}, "house-number")
+            WHERE id = ${id} AND "user-id" = ${userId}
+            RETURNING *
+        `;
+    if (result.length === 0)
+      return response.status(404).send({ error: "Address not found" });
+    response.send(result[0]);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error updating address" });
+  }
+});
+// DELETE /addresses/:id?userId=123
+app.delete("/addresses/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const { userId } = request.query;
+    const result =
+      await sql`  DELETE FROM "Address" WHERE id = ${id} AND "user-id" = ${userId} RETURNING id`;
+    if (result.length === 0)
+      return response.status(404).send({ error: "Address Not Found" });
+    response.send({ success: true, deleted: true });
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error deleting address" });
+  }
+});
