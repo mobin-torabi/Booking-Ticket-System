@@ -545,6 +545,7 @@ app.delete('/:providerRoute/:id', async (request, response) => {
     }
 });
 }
+
 //NOTIFICATIONS
 // GET /notifications?userId=123
 app.get('/notifications', async (request, response) => {
