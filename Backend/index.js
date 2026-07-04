@@ -433,3 +433,15 @@ app.get("/cities", async (request, response) => {
     response.status(500).send({ error: "Error fetching provinces" });
   }
 });
+// GET /notifications?userId=123
+app.get('/notifications', async (request, response) => {
+    try {
+        const { userId } = request.query;
+        if (!userId) return response.status(400).send({ error: 'userId query param is required' });
+        const result = await sql`SELECT * FROM notifications WHERE user_id = ${userId} ORDER BY sent_at DESC`;
+        response.send(result);
+    } catch (error) {
+        console.error(error);
+        response.status(500).send({ error: 'Error fetching notifications' });
+    }
+});
