@@ -336,3 +336,100 @@ app.delete("/addresses/:id", async (request, response) => {
     response.status(500).send({ error: "Error deleting address" });
   }
 });
+
+//LOCATIONS
+//PROVINCES
+// GET /provinces/:id
+app.get("/provinces/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const result = await sql`SELECT * FROM "Province" WHERE id = ${id}`;
+    if (result.length === 0)
+      return response.status(404).send({ error: "Province Not Found" });
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching province" });
+  }
+});
+// GET /provinces
+app.get("/provinces", async (request, response) => {
+  try {
+    const result = await sql`SELECT * FROM "Province" ORDER BY name`;
+    if (result.length === 0)
+      return response.status(404).send({ error: "Province Not Found" });
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching province" });
+  }
+});
+// GET /provinces - filters: has_train, search
+app.get("/provinces", async (request, response) => {
+  try {
+    const { has_train, search } = request.query;
+    let filtered = await sql`SELECT * FROM "Province" ORDER BY name`;
+    if (has_train !== undefined) {
+      const wantTrain = has_train === "true" ? true : false;
+      filtered = filtered.filter((p) => p["has-train"] === wantTrain);
+    }
+    if (search)
+      filtered = filtered.filter((p) =>
+        p.name.toLowerCase().includes(search.toLowerCase()),
+      );
+    response.send(filtered);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching provinces" });
+  }
+});
+//CITIES
+// GET /cities/:id
+app.get("/cities/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const result = await sql`SELECT * FROM "City" WHERE id = ${id}`;
+    if (result.length === 0)
+      return response.status(404).send({ error: "City Not Found" });
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching City" });
+  }
+});
+// GET /cities
+app.get("/cities", async (request, response) => {
+  try {
+    const result = await sql`SELECT * FROM "City" ORDER BY name`;
+    if (result.length === 0)
+      return response.status(404).send({ error: "City Not Found" });
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching City" });
+  }
+});
+// GET /cities - filters:has_airport,has_train, search
+app.get("/cities", async (request, response) => {
+  try {
+    const { province_name, has_airport, has_train, search } = request.query;
+    let filtered = await sql`SELECT * FROM "City" ORDER BY name`;
+    if (province_name)
+      filtered = filtered.filter(
+        (c) => String(c["name"]) === String(province_name),
+      );
+
+    if (has_train !== undefined) {
+      const want_Train = has_train === "true" ? true : false;
+      filtered = filtered.filter((p) => p["has-train"] === want_Train);
+    }
+    if (has_airport !== undefined) {
+      const want_Airport = has_airport === "true" ? true : false;
+      filtered = filtered.filter((p) => p["has_airport"] === want_Airport);
+    }
+    if (search)
+      filtered = filtered.filter((p) =>
+        p.name.toLowerCase().includes(search.toLowerCase()),
+      );
+    response.send(filtered);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching provinces" });
+  }
+});
