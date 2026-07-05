@@ -140,10 +140,10 @@ app.get("/discounts", async (req, res) => {
     const { active } = req.query;
     let filtered = await sql`SELECT * FROM discounts ORDER BY created_at DESC`;
 
-    if (active === "true") filtered.filter((d) => d.is_active === true);
-    if (active === "false") filtered.filter((d) => d.is_active === false);
+    if (active === "true") filtered = filtered.filter((d) => d.is_active === true);
+    if (active === "false") filtered = filtered.filter((d) => d.is_active === false);
 
-    res.send(discounts);
+    res.send(filtered);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send({ error: "Error fetching discounts" });
@@ -224,7 +224,7 @@ app.patch("/discounts/:id", async (req, res) => {
     const { is_active } = req.body;
 
     const result =
-      await sql`UPDATE discounts SET is_active = COALESCE(${is_active}, is_active) WHERE id = ${id} RETURNING *`;
+      await sql`UPDATE discounts SET is_active = ${is_active} WHERE id = ${id} RETURNING *`;
 
     if (result.length === 0) {
       return res.status(404).send({ error: "Discount NOT found" });
@@ -238,7 +238,7 @@ app.patch("/discounts/:id", async (req, res) => {
 });
 
 // Delete /discounts/:id
-app.delete("discounts/:id", async (req, res) => {
+app.delete("/discounts/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const result =
