@@ -21,14 +21,23 @@ app.use(function (_, res, next) {
   next();
 });
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3001;
 const DATABASE_URL = process.env.DATABASE_URL;
-
+console.log(process.env.DATABASE_URL);
 const sql = neon(DATABASE_URL);
 
 const cors = require("cors");
 app.use(cors());
+const PROVIDER_TABLES = {
+  airlines: "airlines",
+  "bus-companies": "bus_companies",
+  "train-companies": "train_companies",
+  "tour-agencies": "tour_agencies",
+};
 
+app.listen(PORT, () =>
+  console.log(` My App listening at http://localhost:${PORT}`),
+);
 // - - - - - Endpoints - - - - -
 
 // Payments
@@ -604,6 +613,490 @@ app.delete("/tickets/:id", async (req, res) => {
     res.status(500).send({ error: "Error cancelling ticket" });
   }
 });
+
+//ADDRESS
+// GET /addresses?userId=123
+app.get("/addresses", async (request, response) => {
+  try {
+    const { userId } = request.query;
+    if (!userId)
+      return response
+        .status(400)
+        .send({ error: "userId query param is required" });
+    const result =
+      await sql`SELECT * FROM "Address" WHERE "user-id" = ${userId}`;
+    response.send(result);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching addresses" });
+  }
+});
+// POST /addresses
+app.post("/addresses", async (request, response) => {
+  try {
+    const { userId, provinceId, cityId, addressDetails, houseNumber } =
+      request.body;
+    if (!userId || !addressDetails) {
+      return response
+        .status(400)
+        .send({ error: "User Id and Address details are required" });
+    }
+    const result =
+      await sql`INSERT INTO "Address" ("user-id", "province-id", "city-id", "address-details", "house-number")
+            VALUES (${userId}, ${provinceId || null}, ${cityId || null}, ${addressDetails}, ${houseNumber || null})
+            RETURNING *
+        `;
+    response.status(201).send(result[0]);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: error.message });
+  }
+});
+// PATCH /addresses/:id
+app.patch("/addresses/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const {
+      "user-id": userId,
+      "province-id": provinceId,
+      "city-id": cityId,
+      "address-details": addressDetails,
+      "house-number": houseNumber,
+    } = request.body;
+
+    const result = await sql`
+           UPDATE "Address" SET
+                "province-id" = COALESCE(${provinceId ?? null}, "province-id"),
+                "city-id" = COALESCE(${cityId ?? null}, "city-id"),
+                "address-details" = COALESCE(${addressDetails ?? null}, "address-details"),
+                "house-number" = COALESCE(${houseNumber ?? null}, "house-number")
+            WHERE id = ${id} AND "user-id" = ${userId}
+            RETURNING *
+        `;
+    if (result.length === 0)
+      return response.status(404).send({ error: "Address not found" });
+    response.send(result[0]);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error updating address" });
+  }
+});
+// DELETE /addresses/:id
+
+app.delete("/addresses/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const dbCheck = await sql`SELECT current_database()`;
+    console.log(dbCheck);
+    const result =
+      await sql`  DELETE FROM "Address" WHERE id = ${id}  RETURNING id`;
+    if (result.length === 0)
+      return response.status(404).send({ error: "Address Not Found" });
+    response.send({ success: true, deleted: true });
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error deleting address" });
+  }
+});
+
+//LOCATIONS
+//PROVINCES
+// GET /provinces/:id
+app.get("/provinces/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const result =
+      await sql`SELECT * FROM "Province" WHERE "province-id" = ${id}::integer`;
+    if (result.length === 0) {
+      return response.status(404).send({ error: "Province Not Found" });
+    }
+    response.send(result);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching province" });
+  }
+});
+
+// GET /provinces - filters: has_train, search
+app.get("/provinces", async (request, response) => {
+  try {
+    const { has_train, search } = request.query;
+    let filtered = await sql`SELECT * FROM "Province" ORDER BY name`;
+    if (has_train !== undefined) {
+      const wantTrain = has_train === "true";
+      filtered = filtered.filter((p) => p["has-train"] === wantTrain);
+    }
+    if (search)
+      filtered = filtered.filter((p) =>
+        p.name.toLowerCase().includes(search.toLowerCase()),
+      );
+    response.send(filtered);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching provinces" });
+  }
+});
+//CITIES
+// GET /cities/:id
+app.get("/cities/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const result = await sql`SELECT * FROM "City" WHERE id = ${id}`;
+    if (result.length === 0) {
+      return response.status(404).send({ error: "City Not Found" });
+    }
+    response.send(result);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching City" });
+  }
+});
+
+// GET /cities - filters:province_name,has_airport,has_train, search
+app.get("/cities", async (request, response) => {
+  try {
+    const { province_name, has_airport, has_train, search } = request.query;
+    let filtered = await sql`SELECT * FROM "City" ORDER BY name`;
+
+    if (province_name) {
+      const provinceResult =
+        await sql`SELECT "province-id" FROM "Province" WHERE name = ${province_name}`;
+
+      if (provinceResult.length === 0) {
+        return response.status(404).send({ error: "Province not found" });
+      }
+
+      const provinceId = provinceResult[0]["province-id"];
+      filtered = filtered.filter((c) => c["province-id"] === provinceId);
+    }
+
+    if (has_train !== undefined) {
+      const wantTrain = has_train === "true";
+      filtered = filtered.filter((c) => c["has-train"] === wantTrain);
+    }
+
+    if (has_airport !== undefined) {
+      const wantAirport = has_airport === "true";
+      filtered = filtered.filter((c) => c["has-airport"] === wantAirport); // fixed key
+    }
+
+    if (search) {
+      filtered = filtered.filter((c) =>
+        c.name.toLowerCase().includes(search.toLowerCase()),
+      );
+    }
+
+    response.send(filtered);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching cities" });
+  }
+});
+//PROVIDERS
+function getFromProviderTable(route, response) {
+  const table = PROVIDER_TABLES[route];
+  if (!table) {
+    response.status(400).send({ error: `Invalid provider route: ${route}` });
+    return null;
+  }
+  return table;
+
+  // GET /:providerRoute - filters: is_active, search
+  app.get("/:providerRoute", async (request, response) => {
+    try {
+      const table = getFromProviderTable(
+        request.params.providerRoute,
+        response,
+      );
+      if (!table) return;
+      const { is_active, search } = request.query;
+      let filtered =
+        await sql`SELECT * FROM ${sql.unsafe(table)} ORDER BY name`;
+      if (is_active !== undefined) {
+        const want = is_active === "true";
+        filtered = filtered.filter((p) => p.is_active === want);
+      }
+      if (search)
+        filtered = filtered.filter((p) =>
+          p.name.toLowerCase().includes(search.toLowerCase()),
+        );
+      response.send(filtered);
+    } catch (error) {
+      console.error(error);
+      response.status(500).send({ error: "Error fetching providers" });
+    }
+  });
+
+  app.get("/:providerRoute/:id", async (request, response) => {
+    try {
+      const table = getFromProviderTable(
+        request.params.providerRoute,
+        response,
+      );
+      if (!table) return;
+      const result =
+        await sql`SELECT * FROM ${sql.unsafe(table)} WHERE id = ${request.params.id}`;
+      if (result.length === 0)
+        return response.status(404).send({ error: "Not found" });
+      response.send(result[0]);
+    } catch (error) {
+      console.error(error);
+      response.status(500).send({ error: "Error fetching provider" });
+    }
+  });
+
+  app.post("/:providerRoute", async (request, response) => {
+    try {
+      const table = getFromProviderTable(
+        request.params.providerRoute,
+        response,
+      );
+      if (!table) return;
+      const {
+        name,
+        contactEmail,
+        contactPhone,
+        isActive = true,
+      } = request.body;
+      if (!name)
+        return response.status(400).send({ error: "name is required" });
+      const result = await sql`
+            INSERT INTO ${sql.unsafe(table)} (name, contact_email, contact_phone, is_active)
+            VALUES (${name}, ${contactEmail || null}, ${contactPhone || null}, ${isActive})
+            RETURNING *
+        `;
+      response.status(201).send(result[0]);
+    } catch (error) {
+      console.error("Error:", error);
+      response.status(400).send({ error: error.message });
+    }
+  });
+
+  app.patch("/:providerRoute/:id", async (request, response) => {
+    try {
+      const table = getFromProviderTable(
+        request.params.providerRoute,
+        response,
+      );
+      if (!table) return;
+      const { name, contactEmail, contactPhone, isActive } = request.body;
+      const result = await sql`
+            UPDATE ${sql.unsafe(table)} SET
+                name = COALESCE(${name}, name),
+                contact_email = COALESCE(${contactEmail}, contact_email),
+                contact_phone = COALESCE(${contactPhone}, contact_phone),
+                is_active = COALESCE(${isActive}, is_active)
+            WHERE id = ${request.params.id}
+            RETURNING *
+        `;
+      if (result.length === 0)
+        return response.status(404).send({ error: "Not found" });
+      response.send(result[0]);
+    } catch (error) {
+      console.error(error);
+      response.status(500).send({ error: "Error updating provider" });
+    }
+  });
+
+  app.delete("/:providerRoute/:id", async (request, response) => {
+    try {
+      const table = getFromProviderTable(
+        request.params.providerRoute,
+        response,
+      );
+      if (!table) return;
+      const result = await sql`
+            UPDATE ${sql.unsafe(table)} SET is_active = false WHERE id = ${request.params.id}
+            RETURNING *
+        `;
+      if (result.length === 0)
+        return response.status(404).send({ error: "Not found" });
+      response.send({ success: true, deactivated: true, provider: result[0] });
+    } catch (error) {
+      console.error(error);
+      response.status(500).send({ error: "Error deactivating provider" });
+    }
+  });
+}
+//BOOKINGS
+// POST /bookings
+// Body: { userId, ticket_id, seat_ids: [...], passengers?: [{first_name,last_name,phone_number}] }
+app.post("/bookings", async (request, response) => {
+  try {
+    const { userId, ticket_id, seat_ids, passengers } = request.body;
+
+    if (
+      !userId ||
+      !ticket_id ||
+      !Array.isArray(seat_ids) ||
+      seat_ids.length === 0
+    ) {
+      return response.status(400).send({
+        error: "userId, ticket_id, and a non-empty seat_ids[] are required",
+      });
+    }
+    if (passengers && passengers.length !== seat_ids.length) {
+      return response
+        .status(400)
+        .send({ error: "passengers[] must be the same length as seat_ids[]" });
+    }
+
+    const seats =
+      await sql`SELECT * FROM seats WHERE id = ANY(${seat_ids}) AND ticket_id = ${ticket_id}`;
+    if (seats.length !== seat_ids.length) {
+      return response
+        .status(400)
+        .send({ error: "One or more seats do not belong to this ticket" });
+    }
+    if (seats.some((s) => !s.is_available)) {
+      return response
+        .status(409)
+        .send({ error: "One or more selected seats are already booked" });
+    }
+
+    const ticketResult =
+      await sql`SELECT * FROM tickets WHERE id = ${ticket_id}`;
+    const ticket = ticketResult[0];
+    if (!ticket)
+      return response.status(404).send({ error: "Ticket not found" });
+
+    const totalAmount = Number(ticket.base_price) * seat_ids.length;
+
+    const bookingResult = await sql`
+            INSERT INTO bookings (user_id, ticket_id, total_amount, number_of_seats)
+            VALUES (${userId}, ${ticket_id}, ${totalAmount}, ${seat_ids.length})
+            RETURNING *
+        `;
+    const booking = bookingResult[0];
+
+    for (let idx = 0; idx < seat_ids.length; idx++) {
+      const p = passengers?.[idx] || {};
+      const bookingResult = await sql`
+    INSERT INTO bookings (user_id, ticket_id, total_amount, number_of_seats, status)
+    VALUES (${userId}, ${ticket_id}, ${totalAmount}, ${seat_ids.length}, 'booked')
+    RETURNING *
+`;
+      await sql`UPDATE seats SET is_available = false WHERE id = ${seat_ids[idx]}`;
+    }
+
+    await sql`UPDATE tickets SET available_seats = available_seats - ${seat_ids.length} WHERE id = ${ticket_id}`;
+
+    response.status(201).send(booking);
+  } catch (error) {
+    console.error("Error:", error);
+    response.status(400).send({ error: error.message });
+  }
+});
+
+// GET /bookings - filters: status, user_id, ticket_type, date_from, date_to
+app.get("/bookings", async (request, response) => {
+  try {
+    const { status, user_id, ticket_type, date_from, date_to } = request.query;
+    let filtered = await sql`
+            SELECT b.*, tt.name AS ticket_type, u.username
+            FROM bookings b
+            JOIN tickets t ON t.id = b.ticket_id
+            JOIN ticket_types tt ON tt.id = t.type_id
+            JOIN "Users" u ON u.id = b.user_id
+            ORDER BY b.booked_at DESC
+        `;
+
+    if (status) filtered = filtered.filter((b) => b.status === status);
+    if (user_id)
+      filtered = filtered.filter((b) => String(b.user_id) === String(user_id));
+    if (ticket_type)
+      filtered = filtered.filter((b) => b.ticket_type === ticket_type);
+    if (date_from)
+      filtered = filtered.filter(
+        (b) => new Date(b.booked_at) >= new Date(date_from),
+      );
+    if (date_to)
+      filtered = filtered.filter(
+        (b) => new Date(b.booked_at) <= new Date(date_to),
+      );
+
+    response.send(filtered);
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    response
+      .status(500)
+      .send({ error: "An error occurred while fetching bookings." });
+  }
+});
+// GET /bookings/:id
+app.get("/bookings/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const result = await sql`
+            SELECT b.*, t.origin, t.destination, t.departure_at, t.arrival_at
+            FROM bookings b JOIN tickets t ON t.id = b.ticket_id
+            WHERE b.id = ${id}
+        `;
+    const booking = result[0];
+    if (!booking)
+      return response.status(404).send({ error: "Booking not found" });
+
+    const seats = await sql`
+            SELECT bs.*, s.seat_number, s.seat_class
+            FROM booking_seats bs JOIN seats s ON s.id = bs.seat_id
+            WHERE bs.booking_id = ${booking.id}
+        `;
+    response.send({ ...booking, seats });
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching booking" });
+  }
+});
+
+// PATCH /bookings/:id/cancel
+app.patch("/bookings/:id/cancel", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const { reason } = request.body;
+
+    const bookingResult = await sql`SELECT * FROM bookings WHERE id = ${id}`;
+    const booking = bookingResult[0];
+    if (!booking)
+      return response.status(404).send({ error: "Booking not found" });
+
+    await sql`
+            UPDATE bookings SET status = 'cancelled', cancellation_reason = ${reason || "Cancelled by user"}, updated_at = now()
+            WHERE id = ${id}
+        `;
+
+    const seatIdsResult =
+      await sql`SELECT seat_id FROM booking_seats WHERE booking_id = ${id}`;
+    const seatIds = seatIdsResult.map((r) => r.seat_id);
+    if (seatIds.length) {
+      await sql`UPDATE seats SET is_available = true WHERE id = ANY(${seatIds})`;
+      await sql`UPDATE tickets SET available_seats = available_seats + ${seatIds.length} WHERE id = ${booking.ticket_id}`;
+    }
+
+    await sql`
+            INSERT INTO notifications (booking_id, user_id, type, content)
+            VALUES (${booking.id}, ${booking.user_id}, 'cancellation', ${reason || "Your booking has been cancelled."})
+        `;
+
+    response.send({ message: "Booking cancelled" });
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error cancelling booking" });
+  }
+});
+//NOTIFICATIONS
+// GET /notifications?userId=123
+app.get('/notifications', async (request, response) => {
+    try {
+        const { userId } = request.query;
+        if (!userId) return response.status(400).send({ error: 'userId query param is required' });
+        const result = await sql`SELECT * FROM notifications WHERE user_id = ${userId} ORDER BY sent_at DESC`;
+        response.send(result);
+    } catch (error) {
+        console.error(error);
+        response.status(500).send({ error: 'Error fetching notifications' });
+    }
+});
+
 
 app.listen(PORT, () =>
   console.log(` My App listening at http://localhost:${PORT}`),
