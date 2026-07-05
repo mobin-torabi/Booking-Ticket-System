@@ -334,7 +334,7 @@ app.patch("/addresses/:id", async (request, response) => {
     response.status(500).send({ error: "Error updating address" });
   }
 });
-// DELETE /addresses/:id?userId=123
+// DELETE /addresses/:id
 
 app.delete("/addresses/:id", async (request, response) => {
   try {
@@ -735,4 +735,17 @@ app.patch("/bookings/:id/cancel", async (request, response) => {
     console.error(error);
     response.status(500).send({ error: "Error cancelling booking" });
   }
+});
+//NOTIFICATIONS
+// GET /notifications?userId=123
+app.get('/notifications', async (request, response) => {
+    try {
+        const { userId } = request.query;
+        if (!userId) return response.status(400).send({ error: 'userId query param is required' });
+        const result = await sql`SELECT * FROM notifications WHERE user_id = ${userId} ORDER BY sent_at DESC`;
+        response.send(result);
+    } catch (error) {
+        console.error(error);
+        response.status(500).send({ error: 'Error fetching notifications' });
+    }
 });
