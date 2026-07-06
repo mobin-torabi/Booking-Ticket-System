@@ -1228,7 +1228,7 @@ app.post("/test-email", async (req, res) => {
     return res.send({ ok: true });
 
   } catch (err) {
-    console.log("🔥 EMAIL ERROR:", err);
+    console.log(" EMAIL ERROR:", err);
     return res.status(500).send({ error: "email failed" });
   }
 });
