@@ -10,6 +10,7 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+
 const express = require("express");
 const { neon } = require("@neondatabase/serverless");
 const app = express();
@@ -842,6 +843,10 @@ app.get("/cities", async (request, response) => {
     response.status(500).send({ error: "Error fetching cities" });
   }
 });
+
+app.listen(PORT, () =>
+  console.log(` My App listening at http://localhost:${PORT}`),
+);
 //PROVIDERS
 function getFromProviderTable(route, response) {
   const table = PROVIDER_TABLES[route];
@@ -1211,27 +1216,3 @@ app.get('/notifications', async (request, response) => {
     }
 });
 
-app.post("/test-email", async (req, res) => {
-  console.log("STEP 1: route hit");
-
-  try {
-    console.log("STEP 2: before sendEmail");
-
-    const result = await sendEmail({
-      to: "aylinamjad@gmail.com",
-      subject: "Test Email",
-      text: "SMTP test"
-    });
-
-    console.log("STEP 3: after sendEmail", result);
-
-    return res.send({ ok: true });
-
-  } catch (err) {
-    console.log(" EMAIL ERROR:", err);
-    return res.status(500).send({ error: "email failed" });
-  }
-});
-app.listen(PORT, () =>
-  console.log(` My App listening at http://localhost:${PORT}`),
-);
