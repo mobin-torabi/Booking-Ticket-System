@@ -27,6 +27,9 @@ const sql = neon(DATABASE_URL);
 
 const cors = require("cors");
 app.use(cors());
+const sha256 = require("sha256");
+
+
 const PROVIDER_TABLES = {
   airlines: "airlines",
   "bus-companies": "bus_companies",
@@ -41,6 +44,16 @@ const PROVIDER_TABLES = {
 const SAFE_USER_COLUMNS = sql.unsafe(
   `id, username, "first-name", "last-name", "phone-number", gender, email, role, birth_date`,
 );
+
+// Get /users - filter by role, gender, search
+app.get('/users', async (req, res) => {
+  try {
+    
+  } catch (error) {
+    console.error("Error fetching users:", error)
+    res.status(500).send({error: "An error occurred while fetching users"})
+  }
+})
 
 
 // Payments
