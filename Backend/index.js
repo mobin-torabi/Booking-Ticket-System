@@ -29,7 +29,6 @@ const cors = require("cors");
 app.use(cors());
 const sha256 = require("sha256");
 
-
 const PROVIDER_TABLES = {
   airlines: "airlines",
   "bus-companies": "bus_companies",
@@ -46,15 +45,258 @@ const SAFE_USER_COLUMNS = sql.unsafe(
 );
 
 // Get /users - filter by role, gender, search
-app.get('/users', async (req, res) => {
+app.get("/users", async (req, res) => {
   try {
-    
-  } catch (error) {
-    console.error("Error fetching users:", error)
-    res.status(500).send({error: "An error occurred while fetching users"})
-  }
-})
+    const { role, gender, search } = req.query;
+    let filtered = await sql`SELECT ${SAFE_USER_COLUMNS} FROM "Users"`;
 
+    if (role) {
+      filtered = filtered.filter(
+        (u) => u.role.toLowerCase() === role.toLowerCase(),
+      );
+    }
+
+    if (gender) {
+      filtered = filtered.filter(
+        (u) => u.gender.toLowerCase() === gender.toLowerCase(),
+      );
+    }
+
+    if (search) {
+      const s = search.toLowerCase().trim();
+      filtered = filtered.filter(
+        (u) =>
+          u.username.toLowerCase().includes(s) ||
+          u["first-name"]?.toLowerCase().includes(s) ||
+          u["last-name"]?.toLowerCase().includes(s) ||
+          `${u["first-name"]} ${u["last-name"]}`?.toLowerCase().includes(s),
+      );
+    }
+
+    if (filtered.length === 0) {
+      return res.status(404).send({ error: "No result" });
+    }
+
+    res.send(filtered);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).send({ error: "An error occurred while fetching users" });
+  }
+});
+
+// Get /users/:id
+app.get("/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user =
+      await sql`SELECT ${SAFE_USER_COLUMNS} FROM "Users" WHERE id = ${id}`;
+
+    if (user.length === 0) {
+      return res.status(404).send({ error: "User NOT found" });
+    }
+
+    res.send(user[0]);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "Error fetching user" });
+  }
+});
+
+// Post /users - body: username, firstName, lastName, phoneNumber, gender, email, password, birthDate
+app.post("/users", async (req, res) => {
+  try {
+    const {
+      username,
+      firstName,
+      lastName,
+      phoneNumber,
+      gender,
+      email,
+      password,
+      birthDate,
+    } = req.body;
+
+    if (
+      !username ||
+      !firstName ||
+      !lastName ||
+      !phoneNumber ||
+      !gender ||
+      !password ||
+      !birthDate
+    ) {
+      return res.status(400).send({
+        error:
+          "username, firstName, lastName, phoneNumber, gender, password, birthDate are required",
+      });
+    }
+
+    const duplicateUser =
+      await sql`SELECT id FROM "Users" WHERE username = ${username}`;
+    if (duplicateUser.length !== 0) {
+      return res.status(400).send({ error: "The username exists" });
+    }
+
+    const hashedPassword = sha256(password);
+
+    const result = await sql`
+      INSERT INTO "Users" (username, "first-name", "last-name", "phone-number", gender, email, password, birth_date) VALUES (${username}, ${firstName}, ${lastName}, ${phoneNumber}, ${gender}, ${email || null}, ${hashedPassword}, ${birthDate}) RETURNING ${SAFE_USER_COLUMNS}
+    `;
+
+    res.status(201).send(result[0]);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: `Error creating user: ${error.message}` });
+  }
+});
+
+// Post /login - body: username, password
+app.post("/users/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res
+        .status(400)
+        .send({ error: "username and password are required" });
+    }
+
+    const user = await sql`SELECT * FROM "Users" WHERE username = ${username}`;
+
+    if (user.length === 0) {
+      return res.status(401).send({ error: "Invalid username" });
+    }
+
+    const hashedPassword = sha256(password);
+
+    if (hashedPassword !== user[0].password) {
+      return res.status(401).send({ error: "Incorrect password" });
+    }
+
+    res.send({
+      success: true,
+      user: {
+        id: user[0].id,
+        username: user[0].username,
+        role: user[0].role,
+      },
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "Login failed" });
+  }
+});
+
+// Patch /users/:id/password - body: password
+app.patch("/users/:id/password", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).send({ error: "Password is required" });
+    }
+
+    const user = await sql`SELECT * FROM "Users" WHERE id = ${id}`;
+
+    if (user.length === 0) {
+      return res.status(404).send({ error: "User NOT found" });
+    }
+
+    const hashedPassword = sha256(password);
+
+    if (hashedPassword === user[0].password) {
+      return res.status(400).send({ error: "Password must be different" });
+    }
+
+    const result =
+      await sql`UPDATE "Users" SET password = ${hashedPassword} WHERE id = ${id} RETURNING id`;
+
+    if (result.length === 0) {
+      return res
+        .status(400)
+        .send({ error: "An error occurred while changing password" });
+    }
+
+    res.send({ success: true });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "Error changing password" });
+  }
+});
+
+// Patch /users/:id - update user fields - body: firstName, lastName, email, phoneNumber
+app.patch("/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, email, phoneNumber } = req.body;
+
+    const result = await sql`
+            UPDATE "Users" SET
+              "first-name" = COALESCE(${firstName}, "first-name"),
+              "last-name" = COALESCE(${lastName}, "last-name"),
+              email = COALESCE(${email}, email),
+              "phone-number" = COALESCE(${phoneNumber}, "phone-number")
+            WHERE id = ${id}
+            RETURNING ${SAFE_USER_COLUMNS}
+        `;
+
+    if (result.length === 0) {
+      return res.status(404).send({ error: "User NOT found" });
+    }
+
+    res.send(result[0]);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "Error updating user" });
+  }
+});
+
+// Patch /users/:id/role - body: role (customer or admin)
+app.patch("/users/:id/role", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (!role) {
+      return res.status(400).send({ error: "role is required" });
+    }
+
+    const result = await sql`
+        UPDATE "Users" SET
+          role = ${role}
+        WHERE id = ${id}
+        RETURNING id, username, role
+      `;
+
+    if (result.length === 0) {
+      return res.status(404).send({ error: "User NOT found" });
+    }
+
+    res.send(result[0]);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "Error updating role" });
+  }
+});
+
+// Delete /users/:id
+app.delete("/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await sql`DELETE FROM "Users" WHERE id = ${id} RETURNING id`;
+
+    if (result.length === 0) {
+      return res.status(404).send({ error: "User NOT found" });
+    }
+
+    res.send({ success: true });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "Error deleting user" });
+  }
+});
 
 // Payments
 
@@ -75,6 +317,10 @@ app.get("/payments", async (req, res) => {
       filtered = filtered.filter(
         (p) => p.paid_at && new Date(p.paid_at) <= new Date(date_to),
       );
+
+    if (filtered.length === 0) {
+      return res.status(404).send({ error: "No result" });
+    }
 
     res.send(filtered);
   } catch (error) {
@@ -169,6 +415,10 @@ app.get("/discounts", async (req, res) => {
       filtered = filtered.filter((d) => d.is_active === true);
     if (active === "false")
       filtered = filtered.filter((d) => d.is_active === false);
+
+    if (filtered.length === 0) {
+      return res.status(404).send({ error: "No result" });
+    }
 
     res.send(filtered);
   } catch (error) {
@@ -329,12 +579,10 @@ app.get("/tickets", async (req, res) => {
     }
 
     if (status === "purchased") {
-      //check
       filtered = filtered.filter((t) => t.status === "purchased");
     }
 
     if (status === "cancelled") {
-      // check
       filtered = filtered.filter((t) => t.status === "cancelled");
     }
 
@@ -352,18 +600,26 @@ app.get("/tickets", async (req, res) => {
 
     if (departure_date) {
       filtered = filtered.filter(
-        (t) => new Date(t.departure_date).getTime() === new Date(departure_date).getTime()
+        (t) =>
+          new Date(t.departure_date).getTime() ===
+          new Date(departure_date).getTime(),
       );
     }
 
     if (departure_date_from) {
       filtered = filtered.filter(
-        (t) => new Date(t.departure_date).getTime() >= new Date(departure_date_from).getTime(),
+        (t) =>
+          new Date(t.departure_date).getTime() >=
+          new Date(departure_date_from).getTime(),
       );
     }
 
     if (departure_date_to) {
-      filtered = filtered.filter((t) => new Date(t.departure_date).getTime() <= new Date(departure_date_to).getTime());
+      filtered = filtered.filter(
+        (t) =>
+          new Date(t.departure_date).getTime() <=
+          new Date(departure_date_to).getTime(),
+      );
     }
 
     if (trip_type === "oneway") {
@@ -415,6 +671,10 @@ app.get("/tickets", async (req, res) => {
       price_asc: (a, b) => a.base_price - b.base_price,
       price_desc: (a, b) => b.base_price - a.base_price,
     };
+
+    if (filtered.length === 0) {
+      return res.status(404).send({ error: "No result" });
+    }
 
     filtered.sort(sortFunctions[sort] || sortFunctions.departure_at_asc);
 
@@ -744,8 +1004,13 @@ app.get("/provinces", async (request, response) => {
     }
     if (search)
       filtered = filtered.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase()),
+        p.name.toLowerCase().includes(search.toLowerCase().trim()),
       );
+
+    if (filtered.length === 0) {
+      return res.status(404).send({ error: "No result" });
+    }
+
     response.send(filtered);
   } catch (error) {
     console.error(error);
@@ -798,8 +1063,12 @@ app.get("/cities", async (request, response) => {
 
     if (search) {
       filtered = filtered.filter((c) =>
-        c.name.toLowerCase().includes(search.toLowerCase()),
+        c.name.toLowerCase().includes(search.toLowerCase().trim()),
       );
+    }
+
+    if (filtered.length === 0) {
+      return res.status(404).send({ error: "No result" });
     }
 
     response.send(filtered);
@@ -834,8 +1103,13 @@ function getFromProviderTable(route, response) {
       }
       if (search)
         filtered = filtered.filter((p) =>
-          p.name.toLowerCase().includes(search.toLowerCase()),
+          p.name.toLowerCase().includes(search.toLowerCase().trim()),
         );
+
+      if (filtered.length === 0) {
+        return res.status(404).send({ error: "No result" });
+      }
+
       response.send(filtered);
     } catch (error) {
       console.error(error);
@@ -1031,6 +1305,10 @@ app.get("/bookings", async (request, response) => {
         (b) => new Date(b.booked_at) <= new Date(date_to),
       );
 
+    if (filtered.length === 0) {
+      return res.status(404).send({ error: "No result" });
+    }
+
     response.send(filtered);
   } catch (error) {
     console.error("Error fetching bookings:", error);
@@ -1101,18 +1379,21 @@ app.patch("/bookings/:id/cancel", async (request, response) => {
 });
 //NOTIFICATIONS
 // GET /notifications?userId=123
-app.get('/notifications', async (request, response) => {
-    try {
-        const { userId } = request.query;
-        if (!userId) return response.status(400).send({ error: 'userId query param is required' });
-        const result = await sql`SELECT * FROM notifications WHERE user_id = ${userId} ORDER BY sent_at DESC`;
-        response.send(result);
-    } catch (error) {
-        console.error(error);
-        response.status(500).send({ error: 'Error fetching notifications' });
-    }
+app.get("/notifications", async (request, response) => {
+  try {
+    const { userId } = request.query;
+    if (!userId)
+      return response
+        .status(400)
+        .send({ error: "userId query param is required" });
+    const result =
+      await sql`SELECT * FROM notifications WHERE user_id = ${userId} ORDER BY sent_at DESC`;
+    response.send(result);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "Error fetching notifications" });
+  }
 });
-
 
 app.listen(PORT, () =>
   console.log(` My App listening at http://localhost:${PORT}`),
