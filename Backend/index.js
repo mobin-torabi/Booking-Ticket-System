@@ -1126,9 +1126,7 @@ app.get("/cities", async (request, response) => {
   }
 });
 
-app.listen(PORT, () =>
-  console.log(` My App listening at http://localhost:${PORT}`),
-);
+
 //PROVIDERS
 function getFromProviderTable(route, response) {
   const table = PROVIDER_TABLES[route];
