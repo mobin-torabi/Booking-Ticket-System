@@ -23,7 +23,6 @@ app.use(function (_, res, next) {
 
 const PORT = process.env.PORT || 3001;
 const DATABASE_URL = process.env.DATABASE_URL;
-console.log(process.env.DATABASE_URL);
 const sql = neon(DATABASE_URL);
 
 const cors = require("cors");
@@ -35,10 +34,14 @@ const PROVIDER_TABLES = {
   "tour-agencies": "tour_agencies",
 };
 
-app.listen(PORT, () =>
-  console.log(` My App listening at http://localhost:${PORT}`),
-);
 // - - - - - Endpoints - - - - -
+
+// Users
+
+const SAFE_USER_COLUMNS = sql.unsafe(
+  `id, username, "first-name", "last-name", "phone-number", gender, email, role, birth_date`,
+);
+
 
 // Payments
 
