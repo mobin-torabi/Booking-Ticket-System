@@ -295,9 +295,9 @@ app.get("/tickets", async (req, res) => {
       trip_type, // oneway or roundtrip
       price_min,
       price_max,
-      status,
+      status, // purchased or cancelled
       provider_id,
-      seat_class,
+      seat_class, // first, business or economy
       available_seats_min,
       sort = "departure_at_asc",
     } = req.query;
@@ -313,12 +313,10 @@ app.get("/tickets", async (req, res) => {
     }
 
     if (status === "purchased") {
-      //check
       filtered = filtered.filter((t) => t.status === "purchased");
     }
 
     if (status === "cancelled") {
-      // check
       filtered = filtered.filter((t) => t.status === "cancelled");
     }
 
@@ -336,18 +334,26 @@ app.get("/tickets", async (req, res) => {
 
     if (departure_date) {
       filtered = filtered.filter(
-        (t) => new Date(t.departure_date).getTime() === new Date(departure_date).getTime()
+        (t) =>
+          new Date(t.departure_date).getTime() ===
+          new Date(departure_date).getTime(),
       );
     }
 
     if (departure_date_from) {
       filtered = filtered.filter(
-        (t) => new Date(t.departure_date).getTime() >= new Date(departure_date_from).getTime(),
+        (t) =>
+          new Date(t.departure_date).getTime() >=
+          new Date(departure_date_from).getTime(),
       );
     }
 
     if (departure_date_to) {
-      filtered = filtered.filter((t) => new Date(t.departure_date).getTime() <= new Date(departure_date_to).getTime());
+      filtered = filtered.filter(
+        (t) =>
+          new Date(t.departure_date).getTime() <=
+          new Date(departure_date_to).getTime(),
+      );
     }
 
     if (trip_type === "oneway") {
@@ -386,9 +392,30 @@ app.get("/tickets", async (req, res) => {
     }
 
     if (available_seats_min) {
-      filtered = filtered.filter(
-        (t) => t.available_seats >= Number(available_seats_min),
-      );
+      const result = [];
+
+      for (const t of filtered) {
+        const availableSeats = await sql`
+          SELECT
+            t.id,
+            (t.total_seats - COALESCE(SUM(b.number_of_seats), 0)) AS available_seats
+          FROM tickets t
+          LEFT JOIN bookings b
+            ON b.ticket_id = t.id
+            AND b.status != 'cancelled'
+          WHERE t.id = ${t.id}
+          GROUP BY t.id;
+        `;
+
+        if (
+          Number(availableSeats[0].available_seats) >=
+          Number(available_seats_min)
+        ) {
+          result.push(t);
+        }
+      }
+
+      filtered = result;
     }
 
     const sortFunctions = {
@@ -532,7 +559,7 @@ app.post("/tickets", async (req, res) => {
     const typeId = typeRow[0].id;
 
     const ticketResult = await sql`
-      INSERT INTO tickets (type_id, origin, destination, departure_at, arrival_at, base_price, total_seats, available_seats, departure_date, return_date) VALUES (${typeId},${origin},${destination},${departure_at},${arrival_at},${base_price},${total_seats},${total_seats},${departure_date},${return_date || null}) RETURNING *
+      INSERT INTO tickets (type_id, origin, destination, departure_at, arrival_at, base_price, total_seats, departure_date, return_date) VALUES (${typeId},${origin},${destination},${departure_at},${arrival_at},${base_price},${total_seats},${departure_date},${return_date || null}) RETURNING *
     `;
     const ticket = ticketResult[0];
 
