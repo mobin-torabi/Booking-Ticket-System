@@ -1,23 +1,25 @@
 import { Outlet } from "react-router";
 
-import Sidebar from "../components/layout/Sidebar";
+import CustomerSidebar from "../components/layout/CustomerSidebar";
 
 export default function DashboardLayout() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+      }}
+    >
+      <CustomerSidebar />
 
-    return (
-
-        <div>
-
-            <Sidebar />
-
-            <main>
-
-                <Outlet />
-
-            </main>
-
-        </div>
-
-    );
-
+      <main
+        style={{
+          flex: 1,
+          padding: "2rem",
+        }}
+      >
+        <Outlet />
+      </main>
+    </div>
+  );
 }
