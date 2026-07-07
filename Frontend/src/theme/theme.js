@@ -1,6 +1,7 @@
 import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
+  
   palette: {
     mode: "light",
 
@@ -40,7 +41,13 @@ const theme = createTheme({
   },
 
   typography: {
-    fontFamily: ["Inter", "Roboto", "Arial", "sans-serif"].join(","),
+  fontFamily: [
+    "Vazirmatn",
+    "Inter",
+    "Roboto",
+    "Arial",
+    "sans-serif",
+  ].join(","),
 
     h1: {
       fontSize: "2.5rem",
