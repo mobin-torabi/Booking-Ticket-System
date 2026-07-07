@@ -1,17 +1,103 @@
+import { AppBar, Toolbar, Typography, Button, Box, Chip } from "@mui/material";
+import Tooltip from "@mui/material/Tooltip";
+import AirplaneTicketIcon from "@mui/icons-material/AirplaneTicket";
 import { Link } from "react-router";
 
+import DashboardMenu from "../common/DashboardMenu";
+import { useAuth } from "../../context/AuthContext";
+import { showSuccess } from "../../utils/toast";
+
 export default function Navbar() {
+  const { user, isAuthenticated } = useAuth();
+
+  function copyUsername() {
+    navigator.clipboard.writeText(user.username);
+    showSuccess("Username copied!");
+  }
   return (
-    <nav>
-      <Link to="/">Ticki</Link>
+    <AppBar
+      position="sticky"
+      color="inherit"
+      elevation={1}
+      sx={{
+        borderBottom: "1px solid #E5E7EB",
+      }}
+    >
+      <Toolbar
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          minHeight: 72,
+        }}
+      >
+        {/* Left Side */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
+          <Typography
+            variant="h5"
+            component={Link}
+            to="/tickets"
+            sx={{
+              fontWeight: 700,
+              color: "primary.main",
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <AirplaneTicketIcon fontSize="large" />
+            Ticki
+          </Typography>
 
-      <Link to="/">Home</Link>
+          <Button
+            component={Link}
+            to="/tickets"
+            color="inherit"
+            sx={{
+              fontWeight: 600,
+            }}
+          >
+            Home
+          </Button>
+        </Box>
 
-      <Link to="/tickets">Tickets</Link>
-
-      <Link to="/login">Login</Link>
-
-      <Link to="/register">Register</Link>
-    </nav>
+        {/* Right Side */}
+        {!isAuthenticated ? (
+          <Button component={Link} to="/login" variant="contained">
+            Login
+          </Button>
+        ) : (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0,
+            }}
+          >
+            <Box
+              sx={{
+                textAlign: "right",
+              }}
+            >
+              <Tooltip
+                title="Username"
+                sx={{ cursor: "pointer", fontSize: "18px" }}
+              >
+                <Typography fontWeight={600} onClick={copyUsername}>
+                  {user.username}
+                </Typography>
+              </Tooltip>
+            </Box>
+            <DashboardMenu />
+          </Box>
+        )}
+      </Toolbar>
+    </AppBar>
   );
 }

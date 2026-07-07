@@ -1,7 +1,5 @@
 import { Outlet } from "react-router";
 
-import CustomerSidebar from "../components/layout/CustomerSidebar";
-
 export default function DashboardLayout() {
   return (
     <div
@@ -10,7 +8,6 @@ export default function DashboardLayout() {
         minHeight: "100vh",
       }}
     >
-      <CustomerSidebar />
 
       <main
         style={{

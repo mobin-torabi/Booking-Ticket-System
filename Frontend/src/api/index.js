@@ -12,6 +12,7 @@ export * as ticketTypeApi from "./ticketTypeApi";
 
 /* 
     this file serves as a central export point for all API modules in the application. so we can use API functions in the code of components like this:
+    
     import { authApi, ticketApi, bookingApi } from "../api";
 
     const { data } = await ticketApi.getTickets({
