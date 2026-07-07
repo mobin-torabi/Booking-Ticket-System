@@ -26,7 +26,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <App />
 
           <Toaster
-            position="top-right"
+            position="top-center"
             reverseOrder={false}
             gutter={12}
             containerStyle={{
@@ -34,7 +34,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               right: 20,
             }}
             toastOptions={{
-              duration: 4000,
+              duration: 2000,
 
               style: {
                 borderRadius: "12px",

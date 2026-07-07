@@ -1,7 +1,5 @@
 import { Outlet } from "react-router";
 
-import AdminSidebar from "../components/layout/AdminSidebar";
-
 export default function AdminLayout() {
   return (
     <div
@@ -10,7 +8,6 @@ export default function AdminLayout() {
         minHeight: "100vh",
       }}
     >
-      <AdminSidebar />
 
       <main
         style={{

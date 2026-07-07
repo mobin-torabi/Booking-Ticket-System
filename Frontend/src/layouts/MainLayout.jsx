@@ -4,23 +4,15 @@ import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 
 export default function MainLayout() {
+  return (
+    <>
+      <Navbar />
 
-    return (
+      <main>
+        <Outlet />
+      </main>
 
-        <>
-
-            <Navbar />
-
-            <main>
-
-                <Outlet />
-
-            </main>
-
-            <Footer />
-
-        </>
-
-    );
-
+      <Footer />
+    </>
+  );
 }

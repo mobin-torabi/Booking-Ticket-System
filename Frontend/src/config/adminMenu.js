@@ -2,16 +2,16 @@ import { ROUTES } from "../utils/routes";
 
 const adminMenu = [
     {
+        title: "Home",
+        path: ROUTES.HOME,
+    },
+    {
         title: "Dashboard",
         path: ROUTES.ADMIN,
     },
     {
         title: "Users",
         path: ROUTES.USERS,
-    },
-    {
-        title: "Tickets",
-        path: ROUTES.ADMIN_TICKETS,
     },
     {
         title: "Providers",

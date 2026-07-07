@@ -1,21 +1,18 @@
 export const ROUTES = {
     // Public
-    HOME: "/",
+    HOME: "/tickets",
     LOGIN: "/login",
     REGISTER: "/register",
-    TICKETS: "/tickets",
 
     // Customer
     DASHBOARD: "/dashboard",
     PROFILE: "/dashboard/profile",
     BOOKINGS: "/dashboard/bookings",
     NOTIFICATIONS: "/dashboard/notifications",
-    ADDRESSES: "/dashboard/addresses",
 
     // Admin
-    ADMIN: "/admin",
+    ADMIN: "/admin/profile",
     USERS: "/admin/users",
-    ADMIN_TICKETS: "/admin/tickets",
     PROVIDERS: "/admin/providers",
     ADMIN_BOOKINGS: "/admin/bookings",
     PAYMENTS: "/admin/payments",
