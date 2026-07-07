@@ -7,10 +7,13 @@ import {
 
 export default function Select({
     label,
+    name,
     value,
     onChange,
     options = [],
+    defaultValue = "male",
     fullWidth = true,
+    required = false,
 }) {
     return (
         <FormControl fullWidth={fullWidth}>
@@ -18,8 +21,11 @@ export default function Select({
 
             <MuiSelect
                 value={value}
+                name={name}
                 label={label}
+                defaultValue={defaultValue}
                 onChange={onChange}
+                required={required}
             >
                 {options.map((option) => (
                     <MenuItem

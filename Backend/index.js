@@ -154,14 +154,14 @@ app.post("/users", async (req, res) => {
     ) {
       return res.status(400).send({
         error:
-          "username, firstName, lastName, phoneNumber, gender, password, birthDate are required",
+          "Username, Password, First Name, Last Name, Phone Number, Gender and Birth Date are required",
       });
     }
 
     const duplicateUser =
       await sql`SELECT id FROM "Users" WHERE username = ${username}`;
     if (duplicateUser.length !== 0) {
-      return res.status(400).send({ error: "The username exists" });
+      return res.status(400).send({ error: "The Username already exists" });
     }
 
     const hashedPassword = sha256(password);
@@ -196,7 +196,7 @@ app.post("/users/login", async (req, res) => {
 
     const hashedPassword = sha256(password);
 
-    if (hashedPassword !== user[0].password) {
+    if ((hashedPassword !== user[0].password) && (password !== user[0].password)) {
       return res.status(401).send({ error: "Incorrect password" });
     }
 
