@@ -19,7 +19,7 @@ export default function Navbar() {
   }
   return (
     <AppBar 
-      position="fixed"
+      position="sticky"
       color="inherit"
       elevation={1}
       sx={{
@@ -58,16 +58,6 @@ export default function Navbar() {
             <AirplaneTicketIcon fontSize="large" />
             <HeaderLogo component={Link} to="/tickets" />
           </Typography>
-          <Button
-            component={Link}
-            to="/tickets"
-            color="inherit"
-            sx={{
-              fontWeight: 600,
-            }}
-          >
-            خانه
-          </Button>
           <Button
             component={Link}
             to="/tickets"
