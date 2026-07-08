@@ -6,6 +6,9 @@ import { Link } from "react-router";
 import DashboardMenu from "../common/DashboardMenu";
 import { useAuth } from "../../context/AuthContext";
 import { showSuccess } from "../../utils/toast";
+import HeaderLogo from "../MUIComponents/HeaderLogo";
+
+
 
 export default function Navbar() {
   const { user, isAuthenticated } = useAuth();
@@ -15,11 +18,12 @@ export default function Navbar() {
     showSuccess("نام کاربری کپی شد!");
   }
   return (
-    <AppBar
+    <AppBar 
       position="sticky"
       color="inherit"
       elevation={1}
       sx={{
+        
         borderBottom: "1px solid #E5E7EB",
       }}
     >
@@ -52,9 +56,8 @@ export default function Navbar() {
             }}
           >
             <AirplaneTicketIcon fontSize="large" />
-            Ticki
+            <HeaderLogo component={Link} to="/tickets" />
           </Typography>
-
           <Button
             component={Link}
             to="/tickets"
@@ -64,6 +67,37 @@ export default function Navbar() {
             }}
           >
             خانه
+            بلیط هوایپما
+          </Button>
+          <Button
+            component={Link}
+            to="/tickets"
+            color="inherit"
+            sx={{
+              fontWeight: 600,
+            }}
+          >
+            بلیط قطار
+          </Button>
+          <Button
+            component={Link}
+            to="/tickets"
+            color="inherit"
+            sx={{
+              fontWeight: 600,
+            }}
+          >
+            بلیط اتوبوس
+          </Button>
+          <Button
+            component={Link}
+            to="/tickets"
+            color="inherit"
+            sx={{
+              fontWeight: 600,
+            }}
+          >
+            بلیط تور
           </Button>
         </Box>
 

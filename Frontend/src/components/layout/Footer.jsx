@@ -28,14 +28,16 @@ export default function Footer() {
 
   return (
     <footer
-      className="mt-20 border-t"
+
+      className="mt-20 border-t w-auto "
       style={{
         backgroundColor: theme.palette.background.paper,
         borderColor: theme.palette.grey[200],
+        
       }}
     >
       <div className="mx-auto max-w-7xl px-6 py-12">
-        <div className="flex flex-col md:flex-row items-start justify-between gap-10">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-10 ">
           <div style={{ marginRight: "70px" ,fontSize: "20px"}}>
             <Typography sx={{ mt: 6, mb: 2 ,fontSize:20}} fontWeight={600}>
               خدمات مشتریان
@@ -165,10 +167,17 @@ export default function Footer() {
           </div>
         </div>
 
-        <Divider sx={{ my: 4 }} />
+        <Divider sx={{ my: 4, 
+    width: 'auto',
+    position: 'relative',
+    left: '50%',
+    right: '50%',
+    marginLeft: '-50vw',
+    marginRight: '-50vw',
+  }}  />
 
-        <div className="flex justify-center">
-          <Typography textalign="center" color="text.secondary">
+        <div className="flex justify-center text-center">
+          <Typography sx={{mb:3}} textalign="center" color="text.secondary">
             ©2026 استفاده از مطالب این وب سایت فقط برای مقاصد غیر تجاری و با ذکر
             منبع بلامانع است. کلیه حقوق این سایت متعلق به تیکی می‌باشد.
           </Typography>
