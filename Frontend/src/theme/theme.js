@@ -48,13 +48,9 @@ const theme = createTheme({
   },
 
   typography: {
-    fontFamily: [
-      "Vazirmatn",
-      "Inter",
-      "Roboto",
-      "Arial",
-      "sans-serif",
-    ].join(","),
+    fontFamily: ["Vazirmatn", "Inter", "Roboto", "Arial", "sans-serif"].join(
+      ",",
+    ),
 
     h1: {
       fontSize: "2.5rem",
@@ -171,6 +167,18 @@ const theme = createTheme({
         },
       },
     },
+  },
+
+  direction: "rtl",
+});
+
+export default theme;
+
+/*
+
+Inside any component, we can access the theme like this:
+
+import { useTheme } from "@mui/material/styles";
 
     MuiChip: {
       styleOverrides: {

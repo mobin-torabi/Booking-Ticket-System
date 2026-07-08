@@ -37,8 +37,7 @@ import Discounts from "./pages/admin/Discounts";
 export default function App() {
   return (
     <Routes>
-
-       <Route path="/" element={<Navigate to="/tickets" replace />} />
+      <Route path="/" element={<Navigate to="/tickets" replace />} />
       {/* ===========================
                     PUBLIC
             ============================ */}
@@ -57,7 +56,7 @@ export default function App() {
       <Route
         element={
           <ProtectedRoute>
-            <MainLayout/>
+            <MainLayout />
           </ProtectedRoute>
         }
       >
@@ -83,7 +82,7 @@ export default function App() {
       <Route
         element={
           <AdminRoute>
-            <MainLayout/>
+            <MainLayout />
           </AdminRoute>
         }
       >

@@ -44,9 +44,9 @@ export default function DashboardMenu({ letter }) {
     setAnchorEl(null);
   };
 
-  function logoutHandler(){
-    logout()
-    showSuccess("Logged Out")
+  function logoutHandler() {
+    logout();
+    showSuccess("از حساب کاربری خود خارج شدید!");
   }
 
   function navigateAdminDashboard() {
@@ -92,7 +92,7 @@ export default function DashboardMenu({ letter }) {
   return (
     <React.Fragment>
       <Box sx={{ display: "flex", alignItems: "center", textAlign: "center" }}>
-        <Tooltip title="Dashboard">
+        <Tooltip title="داشبورد">
           <IconButton
             onClick={handleClick}
             size="small"
@@ -103,11 +103,12 @@ export default function DashboardMenu({ letter }) {
           >
             <Avatar
               sx={{
-                width: 42,
-                height: 42,
+                width: 38,
+                height: 38,
                 bgcolor:
                   user.role === "Admin" ? "secondary.main" : "primary.main",
                 fontWeight: "bold",
+                m: 1
               }}
             >
               {user.username.charAt(0).toUpperCase()}
@@ -132,14 +133,14 @@ export default function DashboardMenu({ letter }) {
                 width: 32,
                 height: 32,
                 ml: -0.5,
-                mr: 1,
+                mr: 0,
               },
               "&::before": {
                 content: '""',
                 display: "block",
                 position: "absolute",
                 top: 0,
-                right: 14,
+                insetInlineEnd: 26,
                 width: 10,
                 height: 10,
                 bgcolor: "background.paper",
@@ -149,61 +150,66 @@ export default function DashboardMenu({ letter }) {
             },
           },
         }}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+        transformOrigin={{ horizontal: "left", vertical: "top" }}
+        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
       >
         {isAdmin && (
           <>
             <MenuItem onClick={navigateAdminDashboard}>
-              <Avatar
-                sx={{
-                  bgcolor: "secondary.main",
-                }}
-              />
-              Profile
-              <Chip
-                size="small"
-                label={user.role}
-                sx={{ ml: 2}}
-                color={"secondary"}
-              />
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", flexDirection: "row", marginBottom: '10px'}}>
+                  <Avatar
+                    sx={{
+                      bgcolor: "secondary.main",
+                    }}
+                  />
+
+                  <Chip
+                    size="small"
+                    label={"ادمین"}
+                    sx={{ ml: 1, mt: 0.5}}
+                    color={"secondary"}
+                  />
+                </div>
+                اطلاعات حساب کاربری
+              </div>
             </MenuItem>
             <Divider />
             <MenuItem onClick={navigateTickets}>
               <ListItemIcon>
                 <AirplaneTicketIcon fontSize="small" />
               </ListItemIcon>
-              Tickets
+              تیکت ها
             </MenuItem>
             <MenuItem onClick={navigateUsers}>
               <ListItemIcon>
                 <Person fontSize="small" />
               </ListItemIcon>
-              Users
+              کاربران
             </MenuItem>
             <MenuItem onClick={navigateProviders}>
               <ListItemIcon>
                 <BusinessIcon fontSize="small" />
               </ListItemIcon>
-              Providers
+              ارائه دهندگان
             </MenuItem>
             <MenuItem onClick={navigateBookings}>
               <ListItemIcon>
                 <BookOnlineIcon fontSize="small" />
               </ListItemIcon>
-              Bookings
+              رزرو ها
             </MenuItem>
             <MenuItem onClick={navigatePayments}>
               <ListItemIcon>
                 <PaymentsIcon fontSize="small" />
               </ListItemIcon>
-              Payments
+              پرداخت ها
             </MenuItem>
             <MenuItem onClick={navigateDiscounts}>
               <ListItemIcon>
                 <PercentIcon fontSize="small" />
               </ListItemIcon>
-              Discounts
+              تخفیفات
             </MenuItem>
           </>
         )}
@@ -211,46 +217,51 @@ export default function DashboardMenu({ letter }) {
         {isCustomer && (
           <>
             <MenuItem onClick={navigateCustomerDashboard}>
-              <Avatar
-                sx={{
-                  bgcolor: "primary.main",
-                }}
-              />
-              Profile
-              <Chip
-                size="small"
-                label={user.role}
-                sx={{ ml: 2 }}
-                color={"primary"}
-              />
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", flexDirection: "row", marginBottom: '10px'}}>
+                  <Avatar
+                    sx={{
+                      bgcolor: "primary.main",
+                    }}
+                  />
+
+                  <Chip
+                    size="small"
+                    label={"کاربر"}
+                    sx={{ ml: 1, mt: 0.5}}
+                    color={"primary"}
+                  />
+                </div>
+                اطلاعات حساب کاربری
+              </div>
             </MenuItem>
             <Divider />
             <MenuItem onClick={navigateTickets}>
               <ListItemIcon>
                 <AirplaneTicketIcon fontSize="small" />
               </ListItemIcon>
-              Tickets
+              تیکت ها
             </MenuItem>
             <MenuItem onClick={navigateCustomerBookings}>
               <ListItemIcon>
                 <BookOnlineIcon fontSize="small" />
               </ListItemIcon>
-              My Bookings
+              رزرو های من
             </MenuItem>
             <MenuItem onClick={navigateNotifications}>
               <ListItemIcon>
                 <InboxIcon fontSize="small" />
               </ListItemIcon>
-              Notifications
+              اعلان ها
             </MenuItem>
           </>
         )}
-        <Divider/>
+        <Divider />
         <MenuItem onClick={logoutHandler}>
           <ListItemIcon>
             <Logout fontSize="small" />
           </ListItemIcon>
-          Logout
+          خروج از حساب کاربری
         </MenuItem>
       </Menu>
     </React.Fragment>

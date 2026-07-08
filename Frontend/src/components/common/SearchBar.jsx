@@ -3,7 +3,7 @@ import Input from "./Input";
 export default function SearchBar({
     value,
     onChange,
-    placeholder = "Search...",
+    placeholder = "جستجو...",
 }) {
     return (
         <Input

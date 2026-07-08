@@ -15,7 +15,7 @@ export default function Navbar() {
 
   function copyUsername() {
     navigator.clipboard.writeText(user.username);
-    showSuccess("Username copied!");
+    showSuccess("نام کاربری کپی شد!");
   }
   return (
     <AppBar 
@@ -66,6 +66,7 @@ export default function Navbar() {
               fontWeight: 600,
             }}
           >
+            خانه
             بلیط هوایپما
           </Button>
           <Button
@@ -119,7 +120,7 @@ export default function Navbar() {
               }}
             >
               <Tooltip
-                title="Username"
+                title="نام کاربری خود را کپی کنید"
                 sx={{ cursor: "pointer", fontSize: "18px" }}
               >
                 <Typography fontWeight={600} onClick={copyUsername}>
