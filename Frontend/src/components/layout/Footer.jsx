@@ -117,7 +117,7 @@ export default function Footer() {
                    sx={{mt:3}}
                     variant="h5"
                     fontWeight={700}
-                    textAlign="center"
+                    textalign="center"
                  
                   >
                     تماس با ما
@@ -134,7 +134,7 @@ export default function Footer() {
                       sx={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 2,
+                        gap: 3,
                         p: 2,
                         mb: 2,
                         borderRadius: 3,
@@ -154,7 +154,7 @@ export default function Footer() {
                     </Box>
                   ))}
 
-                  <Box display="flex" justifyContent="center" mt={2}>
+                  <Box display="flex" justifycontent="center" mt={2}>
                     <Button variant="contained" onClick={() => setOpen(false)}>
                       بستن
                     </Button>
@@ -168,7 +168,7 @@ export default function Footer() {
         <Divider sx={{ my: 4 }} />
 
         <div className="flex justify-center">
-          <Typography textAlign="center" color="text.secondary">
+          <Typography textalign="center" color="text.secondary">
             ©2026 استفاده از مطالب این وب سایت فقط برای مقاصد غیر تجاری و با ذکر
             منبع بلامانع است. کلیه حقوق این سایت متعلق به تیکی می‌باشد.
           </Typography>
