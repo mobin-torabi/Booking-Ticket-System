@@ -21,6 +21,7 @@ import { Chip } from "@mui/material";
 import { useAuth } from "../../context/AuthContext";
 import { ROUTES } from "../../utils/routes";
 import { useNavigate } from "react-router";
+import { showSuccess } from "../../utils/toast";
 
 export default function DashboardMenu({ letter }) {
   const navigate = useNavigate();
@@ -30,8 +31,6 @@ export default function DashboardMenu({ letter }) {
     user,
 
     logout,
-
-    isAuthenticated,
 
     isCustomer,
     isAdmin,
@@ -44,6 +43,11 @@ export default function DashboardMenu({ letter }) {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  function logoutHandler(){
+    logout()
+    showSuccess("Logged Out")
+  }
 
   function navigateAdminDashboard() {
     navigate(ROUTES.ADMIN);
@@ -241,8 +245,8 @@ export default function DashboardMenu({ letter }) {
             </MenuItem>
           </>
         )}
-
-        <MenuItem onClick={logout}>
+        <Divider/>
+        <MenuItem onClick={logoutHandler}>
           <ListItemIcon>
             <Logout fontSize="small" />
           </ListItemIcon>

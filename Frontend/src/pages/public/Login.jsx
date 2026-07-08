@@ -10,7 +10,7 @@ import { ROUTES } from "../../utils/routes";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 
-import { showError, showSuccess } from "../../utils/toast";
+import { showError, showPromise } from "../../utils/toast";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -47,11 +47,12 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const { data } = await loginUser(form);
+      const {data} = await showPromise(loginUser(form), {
+        loading: "Logging in...",
+        success: "Welcome!",
+      })
 
-      login(data.user);
-
-      showSuccess("Welcome!");
+      login(data.user)
 
       navigate(ROUTES.HOME);
     } catch (error) {

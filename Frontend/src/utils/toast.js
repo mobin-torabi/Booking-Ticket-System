@@ -1,34 +1,28 @@
 import toast from "react-hot-toast";
 
-export const showSuccess = (message) =>
-    toast.success(message);
+export const showSuccess = (message) => toast.success(message);
 
-export const showError = (message) =>
-    toast.error(message);
+export const showError = (message) => toast.error(message);
 
-export const showLoading = (message = "Loading...") =>
-    toast.loading(message);
+export const showLoading = (message = "Loading...") => toast.loading(message);
 
-export const dismissToast = (toastId) =>
-    toast.dismiss(toastId);
+export const dismissToast = (toastId) => toast.dismiss(toastId);
 
-export const showInfo = (message) =>
-    toast(message);
+export const showInfo = (message) => toast(message);
 
 export const showPromise = (
-    promise,
-    {
-        loading = "Loading...",
-        success = "Operation completed successfully.",
-        error = "Something went wrong.",
-    } = {}
+  promise,
+  {
+    loading = "Loading...",
+    success = "Operation completed successfully.",
+    error,
+  } = {},
 ) =>
-    toast.promise(promise, {
-        loading,
-        success,
-        error: (err) =>
-            err?.response?.data?.message || error,
-    });
+  toast.promise(promise, {
+    loading,
+    success,
+    error: (err) => error,
+  });
 
 /*
 
