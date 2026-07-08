@@ -47,8 +47,6 @@ const PROVIDER_TABLES = {
   "tour-agencies": "tour_agencies",
 };
 
-
-
 async function sendEmail({ to, subject, text, html }) {
   try {
     const info = await transporter.sendMail({
@@ -101,13 +99,13 @@ app.get("/users", async (req, res) => {
     }
 
     if (filtered.length === 0) {
-      return res.status(404).send({ error: "No result" });
+      return res.status(404).send({ error: "بدون نتیجه" });
     }
 
     res.send(filtered);
   } catch (error) {
     console.error("Error fetching users:", error);
-    res.status(500).send({ error: "An error occurred while fetching users" });
+    res.status(500).send({ error: "خطا در دریافت لیست کاربران" });
   }
 });
 
@@ -119,13 +117,13 @@ app.get("/users/:id", async (req, res) => {
       await sql`SELECT ${SAFE_USER_COLUMNS} FROM "Users" WHERE id = ${id}`;
 
     if (user.length === 0) {
-      return res.status(404).send({ error: "User NOT found" });
+      return res.status(404).send({ error: "کاربر پیدا نشد" });
     }
 
     res.send(user[0]);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error fetching user" });
+    res.status(500).send({ error: "خطا در دریافت کاربر" });
   }
 });
 
@@ -154,14 +152,14 @@ app.post("/users", async (req, res) => {
     ) {
       return res.status(400).send({
         error:
-          "Username, Password, First Name, Last Name, Phone Number, Gender and Birth Date are required",
+          "نام کاربری, رمز ورود, نام و نام خانوادگی, شماره تماس, جنسیت و تاریخ تولد الزامی اند",
       });
     }
 
     const duplicateUser =
       await sql`SELECT id FROM "Users" WHERE username = ${username}`;
     if (duplicateUser.length !== 0) {
-      return res.status(400).send({ error: "The Username already exists" });
+      return res.status(400).send({ error: "نام کاربری در سیستم وجود دارد" });
     }
 
     const hashedPassword = sha256(password);
@@ -173,7 +171,7 @@ app.post("/users", async (req, res) => {
     res.status(201).send(result[0]);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: `Error creating user: ${error.message}` });
+    res.status(500).send({ error: `خطا در ثبت کاربر: ${error.message}` });
   }
 });
 
@@ -185,19 +183,19 @@ app.post("/users/login", async (req, res) => {
     if (!username || !password) {
       return res
         .status(400)
-        .send({ error: "username and password are required" });
+        .send({ error: "نام کاربری و رمز ورود الزامی اند" });
     }
 
     const user = await sql`SELECT * FROM "Users" WHERE username = ${username}`;
 
     if (user.length === 0) {
-      return res.status(401).send({ error: "Invalid username" });
+      return res.status(401).send({ error: "نام کاربری نامعتبر است" });
     }
 
     const hashedPassword = sha256(password);
 
-    if ((hashedPassword !== user[0].password) && (password !== user[0].password)) {
-      return res.status(401).send({ error: "Incorrect password" });
+    if (hashedPassword !== user[0].password && password !== user[0].password) {
+      return res.status(401).send({ error: "رمز ورود اشتباه است" });
     }
 
     res.send({
@@ -210,7 +208,7 @@ app.post("/users/login", async (req, res) => {
     });
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Login failed" });
+    res.status(500).send({ error: "ورود ناموفق!" });
   }
 });
 
@@ -221,19 +219,19 @@ app.patch("/users/:id/password", async (req, res) => {
     const { password } = req.body;
 
     if (!password) {
-      return res.status(400).send({ error: "Password is required" });
+      return res.status(400).send({ error: "رمز ورود الزامی است" });
     }
 
     const user = await sql`SELECT * FROM "Users" WHERE id = ${id}`;
 
     if (user.length === 0) {
-      return res.status(404).send({ error: "User NOT found" });
+      return res.status(404).send({ error: "کاربر پیدا نشد" });
     }
 
     const hashedPassword = sha256(password);
 
     if (hashedPassword === user[0].password) {
-      return res.status(400).send({ error: "Password must be different" });
+      return res.status(400).send({ error: "رمز ورود نمی تواند تکراری باشد" });
     }
 
     const result =
@@ -242,13 +240,13 @@ app.patch("/users/:id/password", async (req, res) => {
     if (result.length === 0) {
       return res
         .status(400)
-        .send({ error: "An error occurred while changing password" });
+        .send({ error: "در حین تغییر دادن رمز ورود، مشکلی پیش آمده است" });
     }
 
     res.send({ success: true });
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error changing password" });
+    res.status(500).send({ error: "خطا در تغییر رمز عبور" });
   }
 });
 
@@ -269,13 +267,13 @@ app.patch("/users/:id", async (req, res) => {
         `;
 
     if (result.length === 0) {
-      return res.status(404).send({ error: "User NOT found" });
+      return res.status(404).send({ error: "کاربر پیدا نشد" });
     }
 
     res.send(result[0]);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error updating user" });
+    res.status(500).send({ error: "خطا در بروزرسانی اطلاعات کاربر" });
   }
 });
 
@@ -286,7 +284,7 @@ app.patch("/users/:id/role", async (req, res) => {
     const { role } = req.body;
 
     if (!role) {
-      return res.status(400).send({ error: "role is required" });
+      return res.status(400).send({ error: "نقش الزامی است" });
     }
 
     const result = await sql`
@@ -297,13 +295,13 @@ app.patch("/users/:id/role", async (req, res) => {
       `;
 
     if (result.length === 0) {
-      return res.status(404).send({ error: "User NOT found" });
+      return res.status(404).send({ error: "کاربر پیدا نشد" });
     }
 
     res.send(result[0]);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error updating role" });
+    res.status(500).send({ error: "خطا در بروزرسانی اطلاعات کاربر" });
   }
 });
 
@@ -315,13 +313,13 @@ app.delete("/users/:id", async (req, res) => {
     const result = await sql`DELETE FROM "Users" WHERE id = ${id} RETURNING id`;
 
     if (result.length === 0) {
-      return res.status(404).send({ error: "User NOT found" });
+      return res.status(404).send({ error: "کاربر پیدا نشد" });
     }
 
     res.send({ success: true });
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error deleting user" });
+    res.status(500).send({ error: "خطا در حذف کاربر" });
   }
 });
 
@@ -346,15 +344,13 @@ app.get("/payments", async (req, res) => {
       );
 
     if (filtered.length === 0) {
-      return res.status(404).send({ error: "No result" });
+      return res.status(404).send({ error: "بدون نتیجه" });
     }
 
     res.send(filtered);
   } catch (error) {
     console.error("Error fetching payments:", error);
-    res
-      .status(500)
-      .send({ error: "An error occurred while fetching payments" });
+    res.status(500).send({ error: "خطا در دریافت پرداخت ها" });
   }
 });
 
@@ -364,11 +360,11 @@ app.get("/payments/:id", async (req, res) => {
     const { id } = req.params;
     let payment = await sql`SELECT * FROM payments WHERE id = ${id}`;
     if (payment.length === 0)
-      return res.status(404).send({ error: "Payment NOT found" });
+      return res.status(404).send({ error: "پرداخت پیدا نشد" });
     res.send(payment[0]);
   } catch (error) {
     console.error(error);
-    res.status(500).send({ error: "Error fetching payment" });
+    res.status(500).send({ error: "خطا در دریافت پرداخت" });
   }
 });
 
@@ -380,7 +376,7 @@ app.post("/bookings/:id/pay", async (req, res) => {
 
     const bookingResult = await sql`SELECT * FROM bookings WHERE id = ${id}`;
     const booking = bookingResult[0];
-    if (!booking) return res.status(404).send({ error: "Booking NOT found" });
+    if (!booking) return res.status(404).send({ error: "رزرو پیدا نشد" });
 
     let amount = Number(booking.total_amount);
     let discountId = null;
@@ -391,12 +387,12 @@ app.post("/bookings/:id/pay", async (req, res) => {
       const discount = discountResult[0];
 
       if (!discount)
-        return res
-          .status(400)
-          .send({ error: "Invalid or expired discount code" });
+        return res.status(400).send({ error: "کد تخفیف نامعتبر یا منقضی است" });
 
       if (discount.usage_limit && discount.used_count >= discount.usage_limit) {
-        return res.status(400).send({ error: "Discount usage limit reached" });
+        return res
+          .status(400)
+          .send({ error: "ظرفیت استفاده از کد تخفیف پر شده است" });
       }
 
       if (
@@ -404,7 +400,7 @@ app.post("/bookings/:id/pay", async (req, res) => {
         amount < discount.minimum_order_amount
       ) {
         return res.status(400).send({
-          error: `Minimum order amount is ${discount.minimum_order_amount}`,
+          error: `خطا، حداقل میزان سفارش: ${discount.minimum_order_amount}`,
         });
       }
 
@@ -423,7 +419,7 @@ app.post("/bookings/:id/pay", async (req, res) => {
 
     await sql`INSERT INTO notifications (booking_id, user_id, type, content) VALUES (${booking.id}, ${booking.user_id}, 'confirmation', 'رزرو شما با موفقیت تایید شد.')`;
 
-    res.send({ message: "Payment successful", amount });
+    res.send({ message: "پرداخت موفقیت آمیز بود", amount });
   } catch (error) {
     console.error("Error:", error);
     res.status(400).send({ error: error.message });
@@ -444,13 +440,13 @@ app.get("/discounts", async (req, res) => {
       filtered = filtered.filter((d) => d.is_active === false);
 
     if (filtered.length === 0) {
-      return res.status(404).send({ error: "No result" });
+      return res.status(404).send({ error: "بدون نتیجه" });
     }
 
     res.send(filtered);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error fetching discounts" });
+    res.status(500).send({ error: "خطا در دریافت تخفیف ها" });
   }
 });
 
@@ -458,7 +454,7 @@ app.get("/discounts", async (req, res) => {
 app.get("/discounts/validate", async (req, res) => {
   try {
     const { code, amount } = req.query;
-    if (!code) return res.status(400).send({ error: "code is required" });
+    if (!code) return res.status(400).send({ error: "کد تخفیف الزامی است" });
 
     const result =
       await sql`SELECT * FROM discounts WHERE code = ${code} AND is_active = true AND now() BETWEEN starts_at AND expires_at`;
@@ -468,12 +464,12 @@ app.get("/discounts/validate", async (req, res) => {
     if (!discount)
       return res
         .status(404)
-        .send({ valid: false, error: "Invalid or expired code" });
+        .send({ valid: false, error: "کد تخفیف نامعتبر یا منقضی است" });
 
     if (discount.usage_limit && discount.used_count >= discount.usage_limit)
       return res
         .status(400)
-        .send({ valid: false, error: "Usage limit reached" });
+        .send({ valid: false, error: "ظرفیت استفاده از کد تخفیف پر شده است" });
 
     if (
       amount &&
@@ -482,13 +478,13 @@ app.get("/discounts/validate", async (req, res) => {
     )
       return res.status(400).send({
         valid: false,
-        error: `Minimum order amount is ${discount.minimum_order_amount}`,
+        error: `خطا، حداقل میزان خرید: ${discount.minimum_order_amount}`,
       });
 
     res.send({ valid: true, discount });
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error validating discount" });
+    res.status(500).send({ error: "خطا در اعتبارسنجی کد تخفیف" });
   }
 });
 
@@ -507,7 +503,7 @@ app.post("/discounts", async (req, res) => {
 
     if (!code || !percentage || !startsAt || !expiresAt) {
       return res.status(400).send({
-        error: "code, percentage, startsAt and expiresAt are required",
+        error: "کد تخفیف، درصد تخفیف، تاریخ شروع و تاریخ پایان الزامی اند",
       });
     }
 
@@ -531,13 +527,13 @@ app.patch("/discounts/:id", async (req, res) => {
       await sql`UPDATE discounts SET is_active = ${is_active} WHERE id = ${id} RETURNING *`;
 
     if (result.length === 0) {
-      return res.status(404).send({ error: "Discount NOT found" });
+      return res.status(404).send({ error: "تخفیف پیدا نشد" });
     }
 
     res.send(result[0]);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error updating discount" });
+    res.status(500).send({ error: "خطا در بروزرسانی تخفیف" });
   }
 });
 
@@ -549,14 +545,12 @@ app.delete("/discounts/:id", async (req, res) => {
       await sql`DELETE FROM discounts WHERE id = ${id} RETURNING id`;
 
     if (result.length === 0)
-      return res
-        .status(404)
-        .send({ success: false, error: "Discount NOT found" });
+      return res.status(404).send({ success: false, error: "تخفیف پیدا نشد" });
 
     res.send({ success: true });
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ success: false, error: "Error deleting discount" });
+    res.status(500).send({ success: false, error: "خطا در حذف تخفیف" });
   }
 });
 
@@ -569,7 +563,7 @@ app.get("/ticket-types", async (req, res) => {
     res.send(result);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error fetching ticket types" });
+    res.status(500).send({ error: "خطا در دریافت نوع بلیط" });
   }
 });
 
@@ -721,7 +715,7 @@ app.get("/tickets", async (req, res) => {
     };
 
     if (filtered.length === 0) {
-      return res.status(404).send({ error: "No result" });
+      return res.status(404).send({ error: "بدون نتیجه" });
     }
 
     filtered.sort(sortFunctions[sort] || sortFunctions.departure_at_asc);
@@ -729,7 +723,7 @@ app.get("/tickets", async (req, res) => {
     res.send(filtered);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error fetching tickets" });
+    res.status(500).send({ error: "خطا در دریافت تیکت ها" });
   }
 });
 
@@ -747,7 +741,7 @@ app.get("/tickets/:id", async (req, res) => {
     `;
 
     if (result.length === 0)
-      return res.status(404).send({ error: "Ticket NOT found" });
+      return res.status(404).send({ error: "تیکت پیدا نشد" });
 
     const seats =
       await sql`SELECT * FROM seats WHERE ticket_id = ${id} ORDER BY seat_number`;
@@ -755,7 +749,7 @@ app.get("/tickets/:id", async (req, res) => {
     res.send({ ...result[0], seats });
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error fetching ticket" });
+    res.status(500).send({ error: "خطا در دریافت تیکت" });
   }
 });
 
@@ -775,7 +769,7 @@ app.get("/tickets/:id/seats", async (req, res) => {
     res.send(seats);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error fetching seats" });
+    res.status(500).send({ error: "خطا در دریافت صندلی ها" });
   }
 });
 
@@ -829,11 +823,15 @@ app.post("/tickets", async (req, res) => {
     if (!meta) {
       return res
         .status(400)
-        .send({ error: "Type must be 'flight', 'train', 'bus' or 'tour'" });
+        .send({
+          error: "نوع تیکت باید 'پرواز', 'قطار', 'اتوبوس' یا 'تور باشد'",
+        });
     }
 
     if (type === "tour" && !return_date) {
-      return res.status(400).send({ error: "Tours must have a return date" });
+      return res
+        .status(400)
+        .send({ error: "تور ها باید تاریخ برگشت داشته باشند" });
     }
 
     if (
@@ -846,12 +844,12 @@ app.post("/tickets", async (req, res) => {
       !departure_date ||
       !provider_id
     ) {
-      return res.status(400).send({ error: "Missing required ticket fields" });
+      return res.status(400).send({ error: "فیلد های الزامی تیکت پر نشدند" });
     }
 
     const typeRow = await sql`SELECT id FROM ticket_types WHERE name = ${type}`;
     if (typeRow.length === 0) {
-      return res.status(400).send({ error: `Unknown ticket type ${type}` });
+      return res.status(400).send({ error: `نوع تیکت ناشناس: ${type}` });
     }
     const typeId = typeRow[0].id;
 
@@ -892,7 +890,7 @@ app.post("/tickets", async (req, res) => {
     res.status(201).send(ticket);
   } catch (error) {
     console.error("Error:", error);
-    res.status(400).send({ error: `Error creating ticket\n${error}` });
+    res.status(400).send({ error: `خطا در ساخت تیکت\n${error}` });
   }
 });
 
@@ -910,13 +908,13 @@ app.patch("/tickets/:id", async (req, res) => {
     `;
 
     if (result.length === 0) {
-      return res.status(404).send({ error: "Ticket NOT found" });
+      return res.status(404).send({ error: "تیکت پیدا نشد" });
     }
 
     res.send(result[0]);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error updating ticket" });
+    res.status(500).send({ error: "خطا در بروزرسانی تیکت" });
   }
 });
 
@@ -928,13 +926,13 @@ app.delete("/tickets/:id", async (req, res) => {
       await sql`UPDATE tickets SET status = 'cancelled' WHERE id = ${id} RETURNING *`;
 
     if (result.length === 0) {
-      return res.status(404).send({ error: "Ticket NOT found" });
+      return res.status(404).send({ error: "تیکت پیدا نشد" });
     }
 
     res.send(result[0]);
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ error: "Error cancelling ticket" });
+    res.status(500).send({ error: "خطا در لغو تیکت" });
   }
 });
 
@@ -944,15 +942,13 @@ app.get("/addresses", async (request, response) => {
   try {
     const { userId } = request.query;
     if (!userId)
-      return response
-        .status(400)
-        .send({ error: "userId query param is required" });
+      return response.status(400).send({ error: "آیدی کاربر الزامی است" });
     const result =
       await sql`SELECT * FROM "Address" WHERE "user-id" = ${userId}`;
     response.send(result);
   } catch (error) {
     console.error(error);
-    response.status(500).send({ error: "Error fetching addresses" });
+    response.status(500).send({ error: "خطا در دریافت آدرس" });
   }
 });
 // POST /addresses
@@ -963,7 +959,7 @@ app.post("/addresses", async (request, response) => {
     if (!userId || !addressDetails) {
       return response
         .status(400)
-        .send({ error: "User Id and Address details are required" });
+        .send({ error: "آیدی کاربر و اطلاعات آدرس الزامی اند" });
     }
     const result =
       await sql`INSERT INTO "Address" ("user-id", "province-id", "city-id", "address-details", "house-number")
@@ -998,11 +994,11 @@ app.patch("/addresses/:id", async (request, response) => {
             RETURNING *
         `;
     if (result.length === 0)
-      return response.status(404).send({ error: "Address not found" });
+      return response.status(404).send({ error: "آدرس پیدا نشد" });
     response.send(result[0]);
   } catch (error) {
     console.error(error);
-    response.status(500).send({ error: "Error updating address" });
+    response.status(500).send({ error: "خطا در بروزرسانی آدرس" });
   }
 });
 // DELETE /addresses/:id
@@ -1015,11 +1011,11 @@ app.delete("/addresses/:id", async (request, response) => {
     const result =
       await sql`  DELETE FROM "Address" WHERE id = ${id}  RETURNING id`;
     if (result.length === 0)
-      return response.status(404).send({ error: "Address Not Found" });
+      return response.status(404).send({ error: "آدرس پیدا نشد" });
     response.send({ success: true, deleted: true });
   } catch (error) {
     console.error(error);
-    response.status(500).send({ error: "Error deleting address" });
+    response.status(500).send({ error: "خطا در حذف آدرس" });
   }
 });
 
@@ -1032,12 +1028,12 @@ app.get("/provinces/:id", async (request, response) => {
     const result =
       await sql`SELECT * FROM "Province" WHERE "province-id" = ${id}::integer`;
     if (result.length === 0) {
-      return response.status(404).send({ error: "Province Not Found" });
+      return response.status(404).send({ error: "استان پیدا نشد" });
     }
     response.send(result);
   } catch (error) {
     console.error(error);
-    response.status(500).send({ error: "Error fetching province" });
+    response.status(500).send({ error: "خطا در دریافت استان" });
   }
 });
 
@@ -1056,13 +1052,13 @@ app.get("/provinces", async (request, response) => {
       );
 
     if (filtered.length === 0) {
-      return res.status(404).send({ error: "No result" });
+      return res.status(404).send({ error: "بدون نتیجه" });
     }
 
     response.send(filtered);
   } catch (error) {
     console.error(error);
-    response.status(500).send({ error: "Error fetching provinces" });
+    response.status(500).send({ error: "خطا در دریافت استان" });
   }
 });
 //CITIES
@@ -1072,12 +1068,12 @@ app.get("/cities/:id", async (request, response) => {
     const { id } = request.params;
     const result = await sql`SELECT * FROM "City" WHERE id = ${id}`;
     if (result.length === 0) {
-      return response.status(404).send({ error: "City Not Found" });
+      return response.status(404).send({ error: "شهر پیدا نشد" });
     }
     response.send(result);
   } catch (error) {
     console.error(error);
-    response.status(500).send({ error: "Error fetching City" });
+    response.status(500).send({ error: "خطا در دریافت شهر" });
   }
 });
 
@@ -1092,7 +1088,7 @@ app.get("/cities", async (request, response) => {
         await sql`SELECT "province-id" FROM "Province" WHERE name = ${province_name}`;
 
       if (provinceResult.length === 0) {
-        return response.status(404).send({ error: "Province not found" });
+        return response.status(404).send({ error: "استان پیدا نشد" });
       }
 
       const provinceId = provinceResult[0]["province-id"];
@@ -1116,111 +1112,93 @@ app.get("/cities", async (request, response) => {
     }
 
     if (filtered.length === 0) {
-      return res.status(404).send({ error: "No result" });
+      return res.status(404).send({ error: "بدون نتیجه" });
     }
 
     response.send(filtered);
   } catch (error) {
     console.error(error);
-    response.status(500).send({ error: "Error fetching cities" });
+    response.status(500).send({ error: "خطا در دریافت شهر ها" });
   }
 });
-
 
 //PROVIDERS
 function getFromProviderTable(route, response) {
   const table = PROVIDER_TABLES[route];
   if (!table) {
-    response.status(400).send({ error: `Invalid provider route: ${route}` });
+    response
+      .status(400)
+      .send({ error: `خطا، مسیر ارائه دهنده نامعتبر: ${route}` });
     return null;
   }
   return table;
 }
-  // GET /:providerRoute - filters: is_active, search
-  app.get("/:providerRoute", async (request, response) => {
-    try {
-      const table = getFromProviderTable(
-        request.params.providerRoute,
-        response,
-      );
-      if (!table) return;
-      const { is_active, search } = request.query;
-      let filtered =
-        await sql`SELECT * FROM ${sql.unsafe(table)} ORDER BY name`;
-      if (is_active !== undefined) {
-        const want = is_active === "true";
-        filtered = filtered.filter((p) => p.is_active === want);
-      }
-      if (search)
-        filtered = filtered.filter((p) =>
-          p.name.toLowerCase().includes(search.toLowerCase().trim()),
-        );
-
-      if (filtered.length === 0) {
-        return res.status(404).send({ error: "No result" });
-      }
-
-      response.send(filtered);
-    } catch (error) {
-      console.error(error);
-      response.status(500).send({ error: "Error fetching providers" });
+// GET /:providerRoute - filters: is_active, search
+app.get("/:providerRoute", async (request, response) => {
+  try {
+    const table = getFromProviderTable(request.params.providerRoute, response);
+    if (!table) return;
+    const { is_active, search } = request.query;
+    let filtered = await sql`SELECT * FROM ${sql.unsafe(table)} ORDER BY name`;
+    if (is_active !== undefined) {
+      const want = is_active === "true";
+      filtered = filtered.filter((p) => p.is_active === want);
     }
-  });
-
-  app.get("/:providerRoute/:id", async (request, response) => {
-    try {
-      const table = getFromProviderTable(
-        request.params.providerRoute,
-        response,
+    if (search)
+      filtered = filtered.filter((p) =>
+        p.name.toLowerCase().includes(search.toLowerCase().trim()),
       );
-      if (!table) return;
-      const result =
-        await sql`SELECT * FROM ${sql.unsafe(table)} WHERE id = ${request.params.id}`;
-      if (result.length === 0)
-        return response.status(404).send({ error: "Not found" });
-      response.send(result[0]);
-    } catch (error) {
-      console.error(error);
-      response.status(500).send({ error: "Error fetching provider" });
+
+    if (filtered.length === 0) {
+      return res.status(404).send({ error: "بدون نتیجه" });
     }
-  });
 
-  app.post("/:providerRoute", async (request, response) => {
-    try {
-      const table = getFromProviderTable(
-        request.params.providerRoute,
-        response,
-      );
-      if (!table) return;
-      const {
-        name,
-        contactEmail,
-        contactPhone,
-        isActive = true,
-      } = request.body;
-      if (!name)
-        return response.status(400).send({ error: "name is required" });
-      const result = await sql`
+    response.send(filtered);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "خطا در دریافت ارائه دهندگان" });
+  }
+});
+
+app.get("/:providerRoute/:id", async (request, response) => {
+  try {
+    const table = getFromProviderTable(request.params.providerRoute, response);
+    if (!table) return;
+    const result =
+      await sql`SELECT * FROM ${sql.unsafe(table)} WHERE id = ${request.params.id}`;
+    if (result.length === 0)
+      return response.status(404).send({ error: "چیزی پیدا نشد" });
+    response.send(result[0]);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "خطا در دریافت ارائه دهندگان" });
+  }
+});
+
+app.post("/:providerRoute", async (request, response) => {
+  try {
+    const table = getFromProviderTable(request.params.providerRoute, response);
+    if (!table) return;
+    const { name, contactEmail, contactPhone, isActive = true } = request.body;
+    if (!name) return response.status(400).send({ error: "اسم الزامی است" });
+    const result = await sql`
             INSERT INTO ${sql.unsafe(table)} (name, contact_email, contact_phone, is_active)
             VALUES (${name}, ${contactEmail || null}, ${contactPhone || null}, ${isActive})
             RETURNING *
         `;
-      response.status(201).send(result[0]);
-    } catch (error) {
-      console.error("Error:", error);
-      response.status(400).send({ error: error.message });
-    }
-  });
+    response.status(201).send(result[0]);
+  } catch (error) {
+    console.error("Error:", error);
+    response.status(400).send({ error: error.message });
+  }
+});
 
-  app.patch("/:providerRoute/:id", async (request, response) => {
-    try {
-      const table = getFromProviderTable(
-        request.params.providerRoute,
-        response,
-      );
-      if (!table) return;
-      const { name, contactEmail, contactPhone, isActive } = request.body;
-      const result = await sql`
+app.patch("/:providerRoute/:id", async (request, response) => {
+  try {
+    const table = getFromProviderTable(request.params.providerRoute, response);
+    if (!table) return;
+    const { name, contactEmail, contactPhone, isActive } = request.body;
+    const result = await sql`
             UPDATE ${sql.unsafe(table)} SET
                 name = COALESCE(${name}, name),
                 contact_email = COALESCE(${contactEmail}, contact_email),
@@ -1229,34 +1207,31 @@ function getFromProviderTable(route, response) {
             WHERE id = ${request.params.id}
             RETURNING *
         `;
-      if (result.length === 0)
-        return response.status(404).send({ error: "Not found" });
-      response.send(result[0]);
-    } catch (error) {
-      console.error(error);
-      response.status(500).send({ error: "Error updating provider" });
-    }
-  });
+    if (result.length === 0)
+      return response.status(404).send({ error: "چیزی پیدا نشد" });
+    response.send(result[0]);
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "خطا در بروزرسانی ارائه دهنده" });
+  }
+});
 
-  app.delete("/:providerRoute/:id", async (request, response) => {
-    try {
-      const table = getFromProviderTable(
-        request.params.providerRoute,
-        response,
-      );
-      if (!table) return;
-      const result = await sql`
+app.delete("/:providerRoute/:id", async (request, response) => {
+  try {
+    const table = getFromProviderTable(request.params.providerRoute, response);
+    if (!table) return;
+    const result = await sql`
             UPDATE ${sql.unsafe(table)} SET is_active = false WHERE id = ${request.params.id}
             RETURNING *
         `;
-      if (result.length === 0)
-        return response.status(404).send({ error: "Not found" });
-      response.send({ success: true, deactivated: true, provider: result[0] });
-    } catch (error) {
-      console.error(error);
-      response.status(500).send({ error: "Error deactivating provider" });
-    }
-  });
+    if (result.length === 0)
+      return response.status(404).send({ error: "چیزی پیدا نشد" });
+    response.send({ success: true, deactivated: true, provider: result[0] });
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "خطا در غیرفعال سازی ارائه دهنده" });
+  }
+});
 
 //BOOKINGS
 // POST /bookings
@@ -1269,8 +1244,13 @@ app.post("/bookings", async (req, res) => {
 
     const { userId, ticket_id, seat_ids, passengers } = req.body;
 
-    if (!userId || !ticket_id || !Array.isArray(seat_ids) || seat_ids.length === 0) {
-      return res.status(400).send({ error: "Invalid input" });
+    if (
+      !userId ||
+      !ticket_id ||
+      !Array.isArray(seat_ids) ||
+      seat_ids.length === 0
+    ) {
+      return res.status(400).send({ error: "ورودی نامعتبر" });
     }
 
     const ticketResult = await client`
@@ -1283,7 +1263,7 @@ app.post("/bookings", async (req, res) => {
 
     if (!ticket) {
       await client`ROLLBACK`;
-      return res.status(404).send({ error: "Ticket not found" });
+      return res.status(404).send({ error: "تیکت پیدا نشد" });
     }
 
     const bookedResult = await client`
@@ -1297,7 +1277,9 @@ app.post("/bookings", async (req, res) => {
 
     if (availableSeats < seat_ids.length) {
       await client`ROLLBACK`;
-      return res.status(400).send({ error: "Not enough seats available" });
+      return res
+        .status(400)
+        .send({ error: "تعداد کافی صندلی در دسترس وجود ندارد" });
     }
 
     const seats = await client`
@@ -1308,12 +1290,12 @@ app.post("/bookings", async (req, res) => {
 
     if (seats.length !== seat_ids.length) {
       await client`ROLLBACK`;
-      return res.status(400).send({ error: "Invalid seats" });
+      return res.status(400).send({ error: "صندلی های نامعتبر" });
     }
 
-    if (seats.some(s => !s.is_available)) {
+    if (seats.some((s) => !s.is_available)) {
       await client`ROLLBACK`;
-      return res.status(409).send({ error: "Seats already booked" });
+      return res.status(409).send({ error: "صندلی ها از قبل رزرو شده اند" });
     }
 
     const totalAmount = Number(ticket.base_price) * seat_ids.length;
@@ -1356,12 +1338,10 @@ app.post("/bookings", async (req, res) => {
     }
 
     return res.status(201).send(booking);
-
   } catch (err) {
     await client`ROLLBACK`;
     console.error(err);
-    return res.status(500).send({ error: "Booking failed" });
-
+    return res.status(500).send({ error: "رزرو ناموفقیت آمیز" });
   } finally {
     client.release?.();
   }
@@ -1395,15 +1375,13 @@ app.get("/bookings", async (request, response) => {
       );
 
     if (filtered.length === 0) {
-      return res.status(404).send({ error: "No result" });
+      return res.status(404).send({ error: "بدون نتیجه" });
     }
 
     response.send(filtered);
   } catch (error) {
     console.error("Error fetching bookings:", error);
-    response
-      .status(500)
-      .send({ error: "An error occurred while fetching bookings." });
+    response.status(500).send({ error: "خطا در دریافت رزرو ها" });
   }
 });
 // GET /bookings/:id
@@ -1416,8 +1394,7 @@ app.get("/bookings/:id", async (request, response) => {
             WHERE b.id = ${id}
         `;
     const booking = result[0];
-    if (!booking)
-      return response.status(404).send({ error: "Booking not found" });
+    if (!booking) return response.status(404).send({ error: "رزرو پیدا نشد" });
 
     const seats = await sql`
             SELECT bs.*, s.seat_number, s.seat_class
@@ -1427,7 +1404,7 @@ app.get("/bookings/:id", async (request, response) => {
     response.send({ ...booking, seats });
   } catch (error) {
     console.error(error);
-    response.status(500).send({ error: "Error fetching booking" });
+    response.status(500).send({ error: "خطا در دریافت رزرو" });
   }
 });
 
@@ -1444,7 +1421,7 @@ app.patch("/bookings/:id/cancel", async (req, res) => {
     const booking = bookingResult[0];
 
     if (!booking) {
-      return res.status(404).send({ error: "Booking not found" });
+      return res.status(404).send({ error: "رزرو پیدا نشد" });
     }
 
     await sql`
@@ -1481,14 +1458,14 @@ app.patch("/bookings/:id/cancel", async (req, res) => {
           html: `<p>Hi ${user.username}, your booking was cancelled.</p>`,
         });
       } catch (err) {
-  console.log(err);      }
+        console.log(err);
+      }
     }
 
-    res.send({ message: "Booking cancelled" });
-
+    res.send({ message: "رزرو لغو شد" });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ error: "Cancel failed" });
+    res.status(500).send({ error: "لغو کردن رزرو با شکست مواجه شد" });
   }
 });
 //NOTIFICATIONS
@@ -1497,15 +1474,13 @@ app.get("/notifications", async (request, response) => {
   try {
     const { userId } = request.query;
     if (!userId)
-      return response
-        .status(400)
-        .send({ error: "userId query param is required" });
+      return response.status(400).send({ error: "آیدی کاربر الزامی است" });
     const result =
       await sql`SELECT * FROM notifications WHERE user_id = ${userId} ORDER BY sent_at DESC`;
     response.send(result);
   } catch (error) {
     console.error(error);
-    response.status(500).send({ error: "Error fetching notifications" });
+    response.status(500).send({ error: "خطا در دریافت اعلان ها" });
   }
 });
 

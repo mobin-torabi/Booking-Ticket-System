@@ -47,16 +47,16 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const {data} = await showPromise(loginUser(form), {
-        loading: "Logging in...",
-        success: "Welcome!",
-      })
+      const { data } = await showPromise(loginUser(form), {
+        loading: "در حال ورود...",
+        success: "خوش آمدید!",
+      });
 
-      login(data.user)
+      login(data.user);
 
       navigate(ROUTES.HOME);
     } catch (error) {
-      showError(error.response?.data?.error ?? "Login failed");
+      showError(error.response?.data?.error ?? "خطا در ورود");
     } finally {
       setLoading(false);
     }
@@ -74,10 +74,10 @@ export default function Login() {
           gap: 20,
         }}
       >
-        <h1>Login</h1>
+        <h1 style={{ fontWeight: "bold" }}>ورود</h1>
 
         <Input
-          label="Username"
+          label="نام کاربری"
           name="username"
           value={form.username}
           onChange={handleChange}
@@ -85,7 +85,7 @@ export default function Login() {
         />
 
         <Input
-          label="Password"
+          label="رمز ورود"
           type="password"
           name="password"
           value={form.password}
@@ -94,9 +94,9 @@ export default function Login() {
         />
 
         <Button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
+          {loading ? "در حال ورود..." : "ورود"}
         </Button>
-        <Button onClick={handleRegister}>Register</Button>
+        <Button onClick={handleRegister}>ثبت نام</Button>
       </form>
     </>
   );

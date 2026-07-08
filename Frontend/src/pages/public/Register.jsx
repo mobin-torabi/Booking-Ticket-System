@@ -11,7 +11,7 @@ import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Button from "../../components/common/Button";
 
-import { showError, showSuccess } from "../../utils/toast";
+import { showError, showPromise } from "../../utils/toast";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -52,13 +52,14 @@ export default function Register() {
     try {
       setLoading(true);
 
-      const { data } = await registerUser(form);
-
-      showSuccess("Registered successfully!");
+      const { data } = await showPromise(registerUser(form), {
+        loading: "در حال ثبت نام...",
+        success: "ثبت نام با موفقیت انجام شد!",
+      });
 
       navigate(ROUTES.LOGIN);
     } catch (error) {
-      showError(error.response?.data?.error ?? "Registration failed");
+      showError(error.response?.data?.error ?? "خطا در ثبت نام");
     } finally {
       setLoading(false);
     }
@@ -75,11 +76,11 @@ export default function Register() {
         gap: 20,
       }}
     >
-      <h1>Register</h1>
+      <h1 style={{fontWeight: 'bold'}}>ثبت نام</h1>
 
       <div style={{ display: "flex", flexDirection: "row", gap: 20 }}>
         <Input
-          label="Username"
+          label="نام کاربری"
           name="username"
           value={form.username}
           onChange={handleChange}
@@ -87,7 +88,7 @@ export default function Register() {
         />
 
         <Input
-          label="Password"
+          label="رمز ورود"
           type="password"
           name="password"
           value={form.password}
@@ -98,7 +99,7 @@ export default function Register() {
 
       <div style={{ display: "flex", flexDirection: "row", gap: 20 }}>
         <Input
-          label="First Name"
+          label="نام"
           name="firstName"
           value={form.firstName}
           onChange={handleChange}
@@ -106,7 +107,7 @@ export default function Register() {
         />
 
         <Input
-          label="Last Name"
+          label="نام خانوادگی"
           name="lastName"
           value={form.lastName}
           onChange={handleChange}
@@ -116,7 +117,7 @@ export default function Register() {
 
       <div style={{ display: "flex", flexDirection: "row", gap: 20 }}>
         <Input
-          label="Phone Number"
+          label="شماره تماس"
           name="phoneNumber"
           type="number"
           value={form.phoneNumber}
@@ -125,17 +126,17 @@ export default function Register() {
         />
 
         <Select
-          label="Gender"
+          label="جنسیت"
           name="gender"
           value={form.gender}
           onChange={handleChange}
           options={[
             {
-              label: "Male",
+              label: "مرد",
               value: "male",
             },
             {
-              label: "Female",
+              label: "زن",
               value: "female",
             },
           ]}
@@ -145,7 +146,7 @@ export default function Register() {
 
       <div style={{ display: "flex", flexDirection: "row", gap: 20 }}>
         <Input
-          label="Birthday"
+          label="تاریخ تولد"
           type="date"
           name="birthDate"
           value={form.birthDate}
@@ -154,7 +155,7 @@ export default function Register() {
         />
 
         <Input
-          label="Email"
+          label="ایمیل"
           type="email"
           name="email"
           value={form.email}
@@ -163,7 +164,7 @@ export default function Register() {
       </div>
 
       <Button type="submit" disabled={loading}>
-        {loading ? "Registering..." : "Register"}
+        {loading ? "درحال ثبت نام..." : "ثبت نام"}
       </Button>
     </form>
   );
