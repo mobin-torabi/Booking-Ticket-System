@@ -109,7 +109,7 @@ export default function Footer() {
                     sx={{
                       position: "absolute",
                       top: 10,
-                      right: 10,
+                      left: 15,
                     }}
                   >
                     <CloseIcon  />
