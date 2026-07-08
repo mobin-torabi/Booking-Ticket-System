@@ -67,6 +67,15 @@ export default function Navbar() {
             }}
           >
             خانه
+          </Button>
+          <Button
+            component={Link}
+            to="/tickets"
+            color="inherit"
+            sx={{
+              fontWeight: 600,
+            }}
+          >
             بلیط هوایپما
           </Button>
           <Button
