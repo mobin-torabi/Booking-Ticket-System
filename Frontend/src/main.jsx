@@ -44,7 +44,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                 right: 20,
               }}
               toastOptions={{
-                duration: 4000,
+                duration: 3000,
 
                 style: {
                   borderRadius: "12px",

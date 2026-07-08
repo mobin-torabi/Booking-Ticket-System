@@ -19,7 +19,7 @@ export default function Navbar() {
   }
   return (
     <AppBar 
-      position="sticky"
+      position="fixed"
       color="inherit"
       elevation={1}
       sx={{
@@ -34,7 +34,7 @@ export default function Navbar() {
           minHeight: 72,
         }}
       >
-        {/* Left Side */}
+        {/* Right Side */}
         <Box
           sx={{
             display: "flex",
@@ -110,7 +110,7 @@ export default function Navbar() {
           </Button>
         </Box>
 
-        {/* Right Side */}
+        {/* Left Side */}
         {!isAuthenticated ? (
           <Button component={Link} to="/login" variant="contained">
             ورود به حساب کاربری

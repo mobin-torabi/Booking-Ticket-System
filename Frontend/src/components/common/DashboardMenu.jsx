@@ -47,6 +47,7 @@ export default function DashboardMenu({ letter }) {
   function logoutHandler() {
     logout();
     showSuccess("از حساب کاربری خود خارج شدید!");
+    navigate(ROUTES.HOME)
   }
 
   function navigateAdminDashboard() {
