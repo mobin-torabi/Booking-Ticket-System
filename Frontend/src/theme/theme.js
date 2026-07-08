@@ -1,24 +1,29 @@
 import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
-  
   palette: {
     mode: "light",
 
     primary: {
-      main: "#6366F1",
+      light: "#2A7BFF",
+      main: "#0653C4",
+      dark: "#0A1F66",
+      contrastText: "#FFFFFF",
     },
 
     secondary: {
-      main: "#EC4899",
+      main: "#5B8CFF",
+      light: "#8FB5FF",
+      dark: "#0A4AA8",
+      contrastText: "#FFFFFF",
     },
 
     success: {
-      main: "#22C55E",
+      main: "#16A34A",
     },
 
     error: {
-      main: "#EF4444",
+      main: "#DC2626",
     },
 
     warning: {
@@ -26,42 +31,47 @@ const theme = createTheme({
     },
 
     info: {
-      main: "#3B82F6",
+      main: "#2A7BFF",
     },
 
     background: {
-      default: "#F8FAFC",
+      default: "#F6F9FD",
       paper: "#FFFFFF",
     },
 
     text: {
-      primary: "#1E293B",
+      primary: "#0F172A",
       secondary: "#64748B",
     },
+
+    divider: "#E2E8F0",
   },
 
   typography: {
-  fontFamily: [
-    "Vazirmatn",
-    "Inter",
-    "Roboto",
-    "Arial",
-    "sans-serif",
-  ].join(","),
+    fontFamily: [
+      "Vazirmatn",
+      "Inter",
+      "Roboto",
+      "Arial",
+      "sans-serif",
+    ].join(","),
 
     h1: {
       fontSize: "2.5rem",
       fontWeight: 700,
+      color: "#0A1F66",
     },
 
     h2: {
       fontSize: "2rem",
       fontWeight: 700,
+      color: "#0A1F66",
     },
 
     h3: {
       fontSize: "1.75rem",
       fontWeight: 600,
+      color: "#0A1F66",
     },
 
     h4: {
@@ -86,11 +96,11 @@ const theme = createTheme({
   },
 
   shape: {
-    borderRadius: 12,
+    borderRadius: 14,
   },
 
   spacing: 8,
-
+  direction: "rtl",
   components: {
     MuiButton: {
       defaultProps: {
@@ -99,8 +109,18 @@ const theme = createTheme({
 
       styleOverrides: {
         root: {
-          borderRadius: 10,
-          padding: "10px 18px",
+          borderRadius: 12,
+          padding: "10px 20px",
+        },
+
+        containedPrimary: {
+          background:
+            "linear-gradient(90deg, #0653C4 0%, #2A7BFF 100%)",
+
+          "&:hover": {
+            background:
+              "linear-gradient(90deg, #0A4AA8 0%, #0653C4 100%)",
+          },
         },
       },
     },
@@ -108,8 +128,16 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
+          borderRadius: 16,
+          boxShadow: "0 6px 20px rgba(6,83,196,.10)",
+        },
+      },
+    },
+
+    MuiPaper: {
+      styleOverrides: {
+        root: {
           borderRadius: 14,
-          boxShadow: "0 4px 12px rgba(0,0,0,.08)",
         },
       },
     },
@@ -121,12 +149,38 @@ const theme = createTheme({
       },
     },
 
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+
+          "&.Mui-focused fieldset": {
+            borderColor: "#0653C4",
+          },
+        },
+      },
+    },
+
     MuiAppBar: {
       styleOverrides: {
         root: {
           backgroundColor: "#FFFFFF",
-          color: "#1E293B",
-          boxShadow: "0 2px 8px rgba(0,0,0,.05)",
+          color: "#0F172A",
+          boxShadow: "0 2px 12px rgba(6,83,196,.08)",
+          borderBottom: "1px solid #E2E8F0",
+        },
+      },
+    },
+
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+
+        colorPrimary: {
+          backgroundColor: "#E8F1FF",
+          color: "#0653C4",
         },
       },
     },
@@ -134,26 +188,3 @@ const theme = createTheme({
 });
 
 export default theme;
-
-/*
-
-Inside any component, we can access the theme like this:
-
-import { useTheme } from "@mui/material/styles";
-
-export default function Home() {
-    const theme = useTheme();
-
-    return (
-        <div
-            style={{
-                color: theme.palette.primary.main,
-                padding: theme.spacing(3),
-            }}
-        >
-            Home Page
-        </div>
-    );
-}
-
-*/

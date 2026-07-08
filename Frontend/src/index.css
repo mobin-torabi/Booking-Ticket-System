@@ -22,14 +22,18 @@ html {
 /* -------------------------------------------------- */
 /* BODY */
 /* -------------------------------------------------- */
-
+html,
+body,
+#root {
+  overflow-x: hidden;
+}
 body {
     min-width: 320px;
     min-height: 100vh;
 
     font-family: "Inter", sans-serif;
 
-    background-color: #f8fafc;
+    background-color: #ccdef5;
 
     color: #1e293b;
 

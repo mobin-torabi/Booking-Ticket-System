@@ -176,7 +176,7 @@ export default function Footer() {
     marginRight: '-50vw',
   }}  />
 
-        <div className="flex justify-center">
+        <div className="flex justify-center text-center">
           <Typography sx={{mb:3}} textalign="center" color="text.secondary">
             ©2026 استفاده از مطالب این وب سایت فقط برای مقاصد غیر تجاری و با ذکر
             منبع بلامانع است. کلیه حقوق این سایت متعلق به تیکی می‌باشد.

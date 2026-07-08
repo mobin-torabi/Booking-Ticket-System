@@ -1,3 +1,12 @@
+import SimpleBottomNavigation from "../../components/MUIComponents/SimpleBottomNavigation";
+
 export default function Tickets() {
-    return <h1>Tickets Management</h1>;
+  return (
+    <div className="  min-h-screen p-4  ">
+      <div className="h-auto w-full  relative p-10   ">
+        <SimpleBottomNavigation />
+      </div>
+
+    </div>
+  );
 }
