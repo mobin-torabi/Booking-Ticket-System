@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router";
+import { Routes, Route, Navigate } from "react-router";
 
 import MainLayout from "./layouts/MainLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -37,6 +37,8 @@ import Discounts from "./pages/admin/Discounts";
 export default function App() {
   return (
     <Routes>
+
+       <Route path="/" element={<Navigate to="/tickets" replace />} />
       {/* ===========================
                     PUBLIC
             ============================ */}
@@ -55,9 +57,7 @@ export default function App() {
       <Route
         element={
           <ProtectedRoute>
-            <MainLayout>
-              <DashboardLayout />
-            </MainLayout>
+            <MainLayout/>
           </ProtectedRoute>
         }
       >
@@ -83,9 +83,7 @@ export default function App() {
       <Route
         element={
           <AdminRoute>
-            <MainLayout>
-              <AdminLayout />
-            </MainLayout>
+            <MainLayout/>
           </AdminRoute>
         }
       >
