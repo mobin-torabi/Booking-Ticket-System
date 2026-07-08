@@ -3,8 +3,10 @@ import Button from "./Button";
 
 export default function ConfirmDialog({
     open,
-    title = "Confirmation",
+    title = "تایید عملیات",
     message,
+    confirmText = "تایید",
+    cancelText = "انصراف",
     onConfirm,
     onCancel,
 }) {
@@ -19,14 +21,14 @@ export default function ConfirmDialog({
                         variant="outlined"
                         onClick={onCancel}
                     >
-                        Cancel
+                        {cancelText}
                     </Button>
 
                     <Button
                         color="error"
                         onClick={onConfirm}
                     >
-                        Confirm
+                        {confirmText}
                     </Button>
                 </>
             }
