@@ -32,8 +32,25 @@ export default function SimpleBottomNavigation() {
         <BottomNavigationAction label="اتوبوس" icon={<DirectionsBusIcon />} />
         <BottomNavigationAction label="تور" icon={<LuggageIcon />} />
       </BottomNavigation>
-
+<Box sx={{display:"flex",gap:0}}>
 <TextField
+  sx={{width:"10%"}}
+  label="مبدا (شهر)"
+  variant="outlined"
+  sx={{
+    direction: "rtl",
+    "& .MuiInputBase-input": {
+      textAlign: "right",
+    },
+    "& .MuiInputLabel-root": {
+      right: 14,
+      left: "auto",
+      transformOrigin: "top right",
+    },
+  }}
+/><TextField
+  sx={{width:"10%"}}
+
   fullWidth
   label="مبدا (شهر)"
   variant="outlined"
@@ -48,7 +65,7 @@ export default function SimpleBottomNavigation() {
       transformOrigin: "top right",
     },
   }}
-/>     
+/> </Box>    
     </Box>
   );
 }
