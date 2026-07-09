@@ -190,7 +190,6 @@ export default function Users() {
         {
           loading: "در حال ذخیره تغییرات...",
           success: "اطلاعات کاربر با موفقیت بروزرسانی شد",
-          error: "بروزرسانی اطلاعات کاربر با خطا مواجه شد",
         },
       );
 
@@ -210,6 +209,8 @@ export default function Users() {
       );
 
       closeEditModal();
+    } catch(error) {
+      showError(error.response?.data?.error ?? "بروزرسانی اطلاعات کاربر با خطا مواجه شد");
     } finally {
       setSaving(false);
     }
@@ -284,7 +285,7 @@ export default function Users() {
         {!loading && !error && users.length === 0 && (
           <EmptyState
             title="کاربری یافت نشد"
-            description="با معیارهای جست‌وجوی فعلی هیچ کاربری پیدا نشد."
+            description="با معیارهای جستجوی فعلی هیچ کاربری پیدا نشد."
           />
         )}
 

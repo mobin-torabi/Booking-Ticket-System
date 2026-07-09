@@ -1139,7 +1139,7 @@ app.get("/:providerRoute", async (request, response) => {
       );
 
     if (filtered.length === 0) {
-      return res.status(404).send({ error: "بدون نتیجه" });
+      return response.status(404).send({ error: "بدون نتیجه" });
     }
 
     response.send(filtered);
@@ -1169,7 +1169,7 @@ app.post("/:providerRoute", async (request, response) => {
     const table = getFromProviderTable(request.params.providerRoute, response);
     if (!table) return;
     const { name, contactEmail, contactPhone, isActive = true } = request.body;
-    if (!name) return response.status(400).send({ error: "اسم الزامی است" });
+    if (!name) return response.status(400).send({ error: "نام الزامی است" });
     const result = await sql`
             INSERT INTO ${sql.unsafe(table)} (name, contact_email, contact_phone, is_active)
             VALUES (${name}, ${contactEmail || null}, ${contactPhone || null}, ${isActive})
