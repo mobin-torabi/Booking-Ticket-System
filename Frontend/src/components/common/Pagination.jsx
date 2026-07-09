@@ -4,12 +4,12 @@ import Stack from "@mui/material/Stack";
 export default function Pagination({
     page,
     count,
-    onChange,
+    onChange
 }) {
     return (
         <Stack
             spacing={2}
-            alignItems="center"
+            alignitems="center"
             mt={4}
         >
             <MuiPagination

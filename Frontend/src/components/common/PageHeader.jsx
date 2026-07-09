@@ -4,14 +4,14 @@ export default function PageHeader({
     actions,
 }) {
     return (
-        <div className="flex justify-between items-center mb-6 bg-blue-50">
+        <div className="flex justify-between items-center mb-6">
             <div>
                 <h1 className="text-3xl font-bold">
                     {title}
                 </h1>
 
                 {subtitle && (
-                    <p>{subtitle}</p>
+                    <p className="text-xl">{subtitle}</p>
                 )}
             </div>
 
