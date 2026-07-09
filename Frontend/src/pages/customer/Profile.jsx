@@ -77,7 +77,6 @@ export default function Profile() {
   });
   const [passwordErrors, setPasswordErrors] = useState({});
 
-  // ---- Addresses ----
   const [addresses, setAddresses] = useState([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [addressesError, setAddressesError] = useState(null);

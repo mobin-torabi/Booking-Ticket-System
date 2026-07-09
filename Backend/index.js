@@ -1077,23 +1077,12 @@ app.get("/cities/:id", async (request, response) => {
   }
 });
 
-// GET /cities - filters:province_name,has_airport,has_train, search
+// GET /cities - filters:has_airport,has_train, search
 app.get("/cities", async (request, response) => {
   try {
-    const { province_name, has_airport, has_train, search } = request.query;
+    const { has_airport, has_train, search } = request.query;
     let filtered = await sql`SELECT * FROM "City" ORDER BY name`;
 
-    if (province_name) {
-      const provinceResult =
-        await sql`SELECT "province-id" FROM "Province" WHERE name = ${province_name}`;
-
-      if (provinceResult.length === 0) {
-        return response.status(404).send({ error: "استان پیدا نشد" });
-      }
-
-      const provinceId = provinceResult[0]["province-id"];
-      filtered = filtered.filter((c) => c["province-id"] === provinceId);
-    }
 
     if (has_train !== undefined) {
       const wantTrain = has_train === "true";
@@ -1102,7 +1091,7 @@ app.get("/cities", async (request, response) => {
 
     if (has_airport !== undefined) {
       const wantAirport = has_airport === "true";
-      filtered = filtered.filter((c) => c["has-airport"] === wantAirport); // fixed key
+      filtered = filtered.filter((c) => c["has-airport"] === wantAirport);
     }
 
     if (search) {
@@ -1112,7 +1101,7 @@ app.get("/cities", async (request, response) => {
     }
 
     if (filtered.length === 0) {
-      return res.status(404).send({ error: "بدون نتیجه" });
+      return response.status(404).send({ error: "بدون نتیجه" });
     }
 
     response.send(filtered);
