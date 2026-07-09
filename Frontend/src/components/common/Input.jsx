@@ -10,6 +10,7 @@ export default function Input({
     fullWidth = true,
     error = false,
     helperText = "",
+    ...rest
 }) {
     return (
         <TextField
@@ -22,6 +23,7 @@ export default function Input({
             fullWidth={fullWidth}
             error={error}
             helperText={helperText}
+            {...rest}
         />
     );
 }

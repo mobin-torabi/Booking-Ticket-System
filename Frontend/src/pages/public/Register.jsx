@@ -6,6 +6,7 @@ import { registerUser } from "../../api/authApi";
 import { useAuth } from "../../context/AuthContext";
 
 import { ROUTES } from "../../utils/routes";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
 
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
@@ -14,6 +15,7 @@ import Button from "../../components/common/Button";
 import { showError, showPromise } from "../../utils/toast";
 
 export default function Register() {
+  useDocumentTitle("ثبت نام")
   const navigate = useNavigate();
 
   const { isAuthenticated, isAdmin, isCustomer } = useAuth();

@@ -13,6 +13,7 @@ import {
   IconButton,
   Tooltip,
   Typography,
+  Divider,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -42,8 +43,8 @@ import EmptyState from "../../components/common/EmptyState";
 import ErrorState from "../../components/common/ErrorState";
 
 const ROLE_OPTIONS = [
-  { value: "", label: "همه نقش‌ها" },
-  { value: "Admin", label: "مدیر" },
+  { value: "", label: "همه نقش‌ ها" },
+  { value: "Admin", label: "ادمین" },
   { value: "Costumer", label: "مشتری" },
 ];
 
@@ -85,6 +86,7 @@ export default function Users() {
 
   const [deletingUser, setDeletingUser] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [dataChanged, setDataChanged] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -106,8 +108,6 @@ export default function Users() {
       } catch (err) {
         if (ignore) return;
 
-        // backend responds 404 when a filter/search matches no one — that's an empty
-        // result, not a real error, so we don't want to show an error screen for it.
         if (err.response?.status === 404) {
           setUsers([]);
         } else {
@@ -124,7 +124,6 @@ export default function Users() {
     return () => {
       ignore = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, roleFilter, genderFilter]);
 
   function openEditModal(user) {
@@ -142,9 +141,11 @@ export default function Users() {
     if (saving) return;
     setEditingUser(null);
     setFormData(EMPTY_FORM);
+    setDataChanged(false);
   }
 
   function handleFormChange(e) {
+    setDataChanged(true);
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
@@ -209,8 +210,6 @@ export default function Users() {
       );
 
       closeEditModal();
-    } catch {
-      // toast already shown by showPromise
     } finally {
       setSaving(false);
     }
@@ -230,27 +229,32 @@ export default function Users() {
 
       setUsers((prev) => prev.filter((u) => u.id !== deletingUser.id));
       setDeletingUser(null);
-    } catch {
-      // toast already shown by showPromise
     } finally {
       setDeleting(false);
     }
   }
 
+  function saveBtnDisableHandler() {
+    if (!dataChanged) return true;
+    if (saving) return true;
+
+    return false;
+  }
+
   return (
-    <div style={{ padding: '10px', marginBottom: '15px'}}>
+    <div style={{ padding: "10px" }}>
       <Box>
         <PageHeader
           title="مدیریت کاربران"
           subtitle={`مجموع ${users.length} کاربر`}
         />
 
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 3 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 2, mb: 3 }}>
           <Box sx={{ flex: "1 1 260px" }}>
             <SearchBar
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="جستجو بر اساس نام، نام کاربری یا نام خانوادگی..."
+              placeholder="جستجو بر اساس نام کاربری یا نام و نام خانوادگی..."
             />
           </Box>
 
@@ -263,7 +267,7 @@ export default function Users() {
             />
           </Box>
 
-          <Box sx={{ width: { xs: "100%", sm: 160 } }}>
+          <Box sx={{ width: { xs: "100%", sm: 180 } }}>
             <Select
               label="جنسیت"
               value={genderFilter}
@@ -307,18 +311,14 @@ export default function Users() {
 
                     return (
                       <TableRow key={u.id} hover>
-                        <TableCell>@{u.username}</TableCell>
+                        <TableCell>{u.username}</TableCell>
                         <TableCell>
                           {u["first-name"]} {u["last-name"]}
                         </TableCell>
-                        <TableCell
-                          sx={{ direction: "ltr", textAlign: "right" }}
-                        >
+                        <TableCell sx={{ direction: "ltr", textAlign: "left" }}>
                           {u["phone-number"]}
                         </TableCell>
-                        <TableCell
-                          sx={{ direction: "ltr", textAlign: "right" }}
-                        >
+                        <TableCell sx={{ direction: "ltr", textAlign: "left" }}>
                           {u.email || "—"}
                         </TableCell>
                         <TableCell>
@@ -328,7 +328,7 @@ export default function Users() {
                         <TableCell>
                           <Chip
                             size="small"
-                            label={u.role === "Admin" ? "مدیر" : "مشتری"}
+                            label={u.role === "Admin" ? "ادمین" : "مشتری"}
                             color={u.role === "Admin" ? "secondary" : "primary"}
                           />
                         </TableCell>
@@ -346,7 +346,7 @@ export default function Users() {
                                 onClick={() => openEditModal(u)}
                                 disabled={isSelf}
                               >
-                                <EditIcon fontSize="small" />
+                                <EditIcon fontSize="medium" />
                               </IconButton>
                             </span>
                           </Tooltip>
@@ -365,7 +365,7 @@ export default function Users() {
                                 onClick={() => setDeletingUser(u)}
                                 disabled={isSelf}
                               >
-                                <DeleteIcon fontSize="small" />
+                                <DeleteIcon fontSize="medium" />
                               </IconButton>
                             </span>
                           </Tooltip>
@@ -378,11 +378,13 @@ export default function Users() {
             </TableContainer>
 
             {totalPages > 1 && (
-              <Pagination
-                page={page}
-                count={totalPages}
-                onChange={(_, value) => setPage(value)}
-              />
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 1, mb: 1 }}>
+                <Pagination
+                  page={page}
+                  count={totalPages}
+                  onChange={(_, value) => setPage(value)}
+                />
+              </Box>
             )}
           </>
         )}
@@ -401,7 +403,10 @@ export default function Users() {
                 انصراف
               </Button>
 
-              <Button onClick={handleSaveUser} disabled={saving}>
+              <Button
+                onClick={handleSaveUser}
+                disabled={saveBtnDisableHandler()}
+              >
                 {saving ? "در حال ذخیره..." : "ذخیره تغییرات"}
               </Button>
             </>
@@ -417,7 +422,7 @@ export default function Users() {
               }}
             >
               <Typography variant="body2" color="text.secondary">
-                نام کاربری: @{editingUser.username}
+                نام کاربری: {editingUser.username}
               </Typography>
 
               <Input

@@ -1,5 +1,5 @@
 export default function EmptyState({
-    title = "No Data Found",
+    title = "اطلاعاتی یافت نشد",
     description = "",
 }) {
     return (

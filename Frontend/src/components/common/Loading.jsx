@@ -1,7 +1,7 @@
 import Spinner from "./Spinner";
 
 export default function Loading({
-    message = "Loading...",
+    message = "درحال بارگذاری...",
 }) {
     return (
         <div className="text-center py-10">

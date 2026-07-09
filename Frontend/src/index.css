@@ -17,6 +17,16 @@
 
 html {
     scroll-behavior: smooth;
+
+    /* Reserve the scrollbar's space permanently. Without this, whenever a MUI
+       Modal/Dialog/Menu opens (e.g. Users.jsx edit modal, DashboardMenu),
+       MUI hides the real scrollbar and injects an inline padding-right on
+       <body> to compensate for the width it removed — which shifts the
+       whole page inward and shows up as a gap on the right in RTL. Keeping
+       the scrollbar space always present means there's nothing to
+       compensate for, so no shift ever happens. */
+    overflow-y: scroll;
+    scrollbar-gutter: initial;
 }
 
 /* -------------------------------------------------- */

@@ -6,6 +6,7 @@ import { loginUser } from "../../api/authApi";
 import { useAuth } from "../../context/AuthContext";
 
 import { ROUTES } from "../../utils/routes";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
 
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
@@ -13,6 +14,7 @@ import Button from "../../components/common/Button";
 import { showError, showPromise } from "../../utils/toast";
 
 export default function Login() {
+  useDocumentTitle("ورود به حساب کاربری")
   const navigate = useNavigate();
 
   const { login, isAuthenticated, isAdmin, isCustomer } = useAuth();
