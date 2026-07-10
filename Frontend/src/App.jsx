@@ -27,7 +27,7 @@ import Notifications from "./pages/customer/Notifications";
 
 /* Admin */
 
-import AdminDashboard from "./pages/admin/Dashboard";
+import AdminProfile from "./pages/admin/Profile";
 import Users from "./pages/admin/Users";
 import Providers from "./pages/admin/Providers";
 import AdminBookings from "./pages/admin/Bookings";
@@ -86,7 +86,7 @@ export default function App() {
           </AdminRoute>
         }
       >
-        <Route path="/admin/profile" element={<AdminDashboard />} />
+        <Route path="/admin/profile" element={<AdminProfile />} />
 
         <Route path="/admin/users" element={<Users />} />
 

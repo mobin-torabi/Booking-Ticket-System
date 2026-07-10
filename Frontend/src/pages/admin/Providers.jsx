@@ -359,7 +359,7 @@ export default function Providers() {
                             color="success"
                             onClick={() => setDeactivatingProvider(p)}
                           >
-                            <ToggleOnIcon fontSize="medium" />
+                            <ToggleOnIcon fontSize="large" />
                           </IconButton>
                         </Tooltip>
                       ) : (
@@ -369,7 +369,7 @@ export default function Providers() {
                             color="error"
                             onClick={() => handleActivate(p)}
                           >
-                            <ToggleOffIcon fontSize="medium" />
+                            <ToggleOffIcon fontSize="large" />
                           </IconButton>
                         </Tooltip>
                       )}
