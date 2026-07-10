@@ -305,24 +305,6 @@ app.patch("/users/:id/role", async (req, res) => {
   }
 });
 
-// Delete /users/:id
-app.delete("/users/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const result = await sql`DELETE FROM "Users" WHERE id = ${id} RETURNING id`;
-
-    if (result.length === 0) {
-      return res.status(404).send({ error: "کاربر پیدا نشد" });
-    }
-
-    res.send({ success: true });
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).send({ error: "خطا در حذف کاربر" });
-  }
-});
-
 // Payments
 
 // GET /payments - filtered: paid, date_from, date_to

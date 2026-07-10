@@ -18,6 +18,3 @@ export const updateUserRole = (id, role) =>
     httpClient.patch(`/users/${id}/role`, {
         role,
     });
-
-export const deleteUser = (id) =>
-    httpClient.delete(`/users/${id}`);
