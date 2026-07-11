@@ -1116,7 +1116,7 @@ app.get("/cities", async (request, response) => {
 //NOTIFICATIONS
 // GET /notifications?userId=123
 app.get("/notifications", async (request, response) => {
-  console.log("fetchNotifications called");
+  // console.log("fetchNotifications called");
   try {
     
     const { userId } = request.query;

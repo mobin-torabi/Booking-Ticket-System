@@ -4,19 +4,17 @@ import "dayjs/locale/fa";
 
 dayjs.extend(jalaliday);
 
-export function formatDateTimeJalali(date) {
-  if (!date) return "";
+dayjs.calendar("jalali");
+dayjs.locale("fa");
 
-  return dayjs(date).calendar("jalali").locale("fa").format("YYYY/MM/DD HH:mm");
-}
 export function formatDate(date) {
   if (!date) return "";
 
-  return new Date(date).toLocaleDateString();
+  return dayjs(date).format("YYYY/MM/DD");
 }
 
 export function formatDateTime(date) {
   if (!date) return "";
 
-  return new Date(date).toLocaleString();
+  return dayjs(date).format("YYYY/MM/DD HH:mm");
 }

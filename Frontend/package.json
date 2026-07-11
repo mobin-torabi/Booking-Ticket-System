@@ -21,6 +21,8 @@
     "@tailwindcss/vite": "^4.3.2",
     "axios": "^1.18.1",
     "clsx": "^2.1.1",
+    "dayjs": "^1.11.21",
+    "jalali-plugin-dayjs": "^1.1.4",
     "nodemon": "^3.1.14",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

@@ -37,6 +37,8 @@ import Pagination from "../../components/common/Pagination";
 import Loading from "../../components/common/Loading";
 import EmptyState from "../../components/common/EmptyState";
 import ErrorState from "../../components/common/ErrorState";
+import JalaliDatePicker from "../../components/common/JalaliDatePicker";
+
 
 const STATUS_OPTIONS = [
   { value: "", label: "همه وضعیت‌ها" },
@@ -457,21 +459,21 @@ export default function Discounts() {
             onChange={handleFormChange}
           />
 
-          <Input
+          <JalaliDatePicker
             label="تاریخ شروع"
-            name="startsAt"
-            type="date"
             value={formData.startsAt}
-            onChange={handleFormChange}
+            onChange={(isoDate) =>
+              setFormData((prev) => ({ ...prev, startsAt: isoDate }))
+            }
             required
           />
 
-          <Input
+          <JalaliDatePicker
             label="تاریخ پایان"
-            name="expiresAt"
-            type="date"
             value={formData.expiresAt}
-            onChange={handleFormChange}
+            onChange={(isoDate) =>
+              setFormData((prev) => ({ ...prev, expiresAt: isoDate }))
+            }
             required
           />
         </Box>
