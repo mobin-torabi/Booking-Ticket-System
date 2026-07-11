@@ -61,6 +61,9 @@ async function sendEmail({ to, subject, text, html }) {
     console.error("Error while sending mail:", error);
   }
 }
+app.listen(PORT, () =>
+  console.log(` My App listening at http://localhost:${PORT}`),
+);
 // - - - - - Endpoints - - - - -
 
 // Users
@@ -302,6 +305,24 @@ app.patch("/users/:id/role", async (req, res) => {
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send({ error: "خطا در بروزرسانی اطلاعات کاربر" });
+  }
+});
+
+// Delete /users/:id
+app.delete("/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await sql`DELETE FROM "Users" WHERE id = ${id} RETURNING id`;
+
+    if (result.length === 0) {
+      return res.status(404).send({ error: "کاربر پیدا نشد" });
+    }
+
+    res.send({ success: true });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "خطا در حذف کاربر" });
   }
 });
 
@@ -1092,7 +1113,282 @@ app.get("/cities", async (request, response) => {
     response.status(500).send({ error: "خطا در دریافت شهر ها" });
   }
 });
+//NOTIFICATIONS
+// GET /notifications?userId=123
+app.get("/notifications", async (request, response) => {
+  console.log("fetchNotifications called");
+  try {
+    
+    const { userId } = request.query;
+    if (!userId)
+      return response.status(400).send({ error: "آیدی کاربر الزامی است" });
+    const result =
+      await sql`SELECT * FROM notifications WHERE user_id = ${userId} ORDER BY sent_at DESC`;
+    response.send(result);
+  } catch (error) {
+     response.status(500).send({ error: "خطا در دریافت اعلان ها" });
+  }
+});
 
+
+//BOOKINGS
+
+// GET /bookings - filters: userId, status, ticket_id
+// NOTE: this was missing before, which meant GET /bookings fell through to the
+// generic "/:providerRoute" handler further down and returned
+// "خطا، مسیر ارائه دهنده نامعتبر: bookings". Declaring it here (above the
+// catch-all provider routes) fixes that.
+app.get("/bookings", async (req, res) => {
+  try {
+    const { userId, status, ticket_id } = req.query;
+
+    let filtered = await sql`
+      SELECT b.*, t.origin, t.destination, t.departure_at, t.arrival_at
+      FROM bookings b
+      JOIN tickets t ON t.id = b.ticket_id
+      ORDER BY b.booked_at DESC
+    `;
+
+    if (userId) {
+      filtered = filtered.filter((b) => String(b.user_id) === String(userId));
+    }
+
+    if (status) {
+      filtered = filtered.filter((b) => b.status === status);
+    }
+
+    if (ticket_id) {
+      filtered = filtered.filter(
+        (b) => String(b.ticket_id) === String(ticket_id),
+      );
+    }
+
+    if (filtered.length === 0) {
+      return res.status(404).send({ error: "بدون نتیجه" });
+    }
+
+    res.send(filtered);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "خطا در دریافت رزرو ها" });
+  }
+});
+
+// POST /bookings
+// Body: { userId, ticket_id, seat_ids: [...], passengers?: [{first_name,last_name,phone_number}] }
+app.post("/bookings", async (req, res) => {
+  const client = await sql.connect();
+
+  try {
+    await client`BEGIN`;
+
+    const { userId, ticket_id, seat_ids, passengers } = req.body;
+
+    if (!userId || !ticket_id || !Array.isArray(seat_ids) || seat_ids.length === 0) {
+      await client`ROLLBACK`;
+      return res.status(400).send({ error: "ورودی نامعتبر" });
+    }
+
+    const ticketResult = await client`
+      SELECT * FROM tickets
+      WHERE id = ${ticket_id}
+      FOR UPDATE
+    `;
+
+    const ticket = ticketResult[0];
+
+    if (!ticket) {
+      await client`ROLLBACK`;
+      return res.status(404).send({ error: "تیکت پیدا نشد" });
+    }
+
+    if (ticket.available_seats < seat_ids.length) {
+      await client`ROLLBACK`;
+      return res.status(400).send({ error: "تعداد کافی صندلی در دسترس وجود ندارد" });
+    }
+
+    const seats = await client`
+      SELECT * FROM seats
+      WHERE id = ANY(${seat_ids}) AND ticket_id = ${ticket_id}
+      FOR UPDATE
+    `;
+
+    if (seats.length !== seat_ids.length) {
+      await client`ROLLBACK`;
+      return res.status(400).send({ error: "صندلی های نامعتبر" });
+    }
+
+    if (seats.some((s) => !s.is_available)) {
+      await client`ROLLBACK`;
+      return res.status(409).send({ error: "صندلی ها از قبل رزرو شده اند" });
+    }
+
+    const totalAmount = Number(ticket.base_price) * seat_ids.length;
+
+    const bookingResult = await client`
+      INSERT INTO bookings (user_id, ticket_id, total_amount, number_of_seats, status)
+      VALUES (${userId}, ${ticket_id}, ${totalAmount}, ${seat_ids.length}, 'booked')
+      RETURNING *
+    `;
+
+    const booking = bookingResult[0];
+
+    await client`
+      UPDATE seats
+      SET is_available = false
+      WHERE id = ANY(${seat_ids})
+    `;
+
+    await client`
+      UPDATE tickets
+      SET available_seats = available_seats - ${seat_ids.length}
+      WHERE id = ${ticket_id}
+    `;
+
+    // Insert passengers and link them to seats if provided.
+    if (Array.isArray(passengers) && passengers.length > 0) {
+      for (let i = 0; i < seat_ids.length; i++) {
+        const passenger = passengers[i] || {};
+        await client`
+          INSERT INTO booking_seats (booking_id, seat_id, first_name, last_name, phone_number)
+          VALUES (
+            ${booking.id},
+            ${seat_ids[i]},
+            ${passenger.first_name || null},
+            ${passenger.last_name || null},
+            ${passenger.phone_number || null}
+          )
+        `;
+      }
+    } else {
+      for (const seatId of seat_ids) {
+        await client`
+          INSERT INTO booking_seats (booking_id, seat_id)
+          VALUES (${booking.id}, ${seatId})
+        `;
+      }
+    }
+
+    await client`COMMIT`;
+
+    // FIX: the original handler committed the transaction but never sent a
+    // response, so a successful booking would hang until the client timed
+    // out. Now we return the created booking.
+    return res.status(201).send(booking);
+  } catch (err) {
+    await client`ROLLBACK`;
+    console.error(err);
+    return res.status(500).send({ error: "رزرو ناموفقیت آمیز" });
+  } finally {
+    client.release?.();
+  }
+});
+
+// GET /bookings/:id
+app.get("/bookings/:id", async (request, response) => {
+  try {
+    const { id } = request.params;
+    const result = await sql`
+            SELECT b.*, t.origin, t.destination, t.departure_at, t.arrival_at
+            FROM bookings b JOIN tickets t ON t.id = b.ticket_id
+            WHERE b.id = ${id}
+        `;
+    const booking = result[0];
+    if (!booking) return response.status(404).send({ error: "رزرو پیدا نشد" });
+
+    const seats = await sql`
+            SELECT bs.*, s.seat_number, s.seat_class
+            FROM booking_seats bs JOIN seats s ON s.id = bs.seat_id
+            WHERE bs.booking_id = ${booking.id}
+        `;
+    response.send({ ...booking, seats });
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ error: "خطا در دریافت رزرو" });
+  }
+});
+
+// PATCH /bookings/:id/cancel
+app.patch("/bookings/:id/cancel", async (req, res) => {
+  const client = await sql.connect();
+
+  try {
+    await client`BEGIN`;
+
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const bookingResult = await client`
+      SELECT * FROM bookings WHERE id = ${id} FOR UPDATE
+    `;
+
+    const booking = bookingResult[0];
+
+    if (!booking) {
+      await client`ROLLBACK`;
+      return res.status(404).send({ error: "رزرو پیدا نشد" });
+    }
+
+    if (booking.status === "cancelled") {
+      await client`ROLLBACK`;
+      return res.status(400).send({ error: "این رزرو قبلا لغو شده است" });
+    }
+
+    await client`
+      UPDATE bookings
+      SET status = 'cancelled',
+          cancellation_reason = ${reason || "Cancelled"},
+          updated_at = now()
+      WHERE id = ${id}
+    `;
+
+    await client`
+      UPDATE seats
+      SET is_available = true
+      WHERE id IN (
+        SELECT seat_id FROM booking_seats WHERE booking_id = ${id}
+      )
+    `;
+
+    await client`
+      UPDATE tickets
+      SET available_seats = available_seats + ${booking.number_of_seats}
+      WHERE id = ${booking.ticket_id}
+    `;
+
+    await client`
+      INSERT INTO notifications (booking_id, user_id, type, content)
+      VALUES (${booking.id}, ${booking.user_id}, 'cancellation', ${reason || "Cancelled"})
+    `;
+
+    await client`COMMIT`;
+
+    const userInfo =
+      await sql`SELECT email, username FROM "Users" WHERE id = ${booking.user_id}`;
+
+    const user = userInfo[0];
+
+    if (user?.email) {
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: "Booking Cancelled",
+          html: `<p>Hi ${user.username}, your booking was cancelled.</p>`,
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    res.send({ message: "رزرو لغو شد" });
+  } catch (error) {
+    await client`ROLLBACK`;
+    console.error(error);
+    res.status(500).send({ error: "لغو کردن رزرو با شکست مواجه شد" });
+  } finally {
+    client.release?.();
+  }
+});
 //PROVIDERS
 function getFromProviderTable(route, response) {
   const table = PROVIDER_TABLES[route];
@@ -1121,7 +1417,7 @@ app.get("/:providerRoute", async (request, response) => {
       );
 
     if (filtered.length === 0) {
-      return response.status(404).send({ error: "بدون نتیجه" });
+      return res.status(404).send({ error: "بدون نتیجه" });
     }
 
     response.send(filtered);
@@ -1151,7 +1447,7 @@ app.post("/:providerRoute", async (request, response) => {
     const table = getFromProviderTable(request.params.providerRoute, response);
     if (!table) return;
     const { name, contactEmail, contactPhone, isActive = true } = request.body;
-    if (!name) return response.status(400).send({ error: "نام الزامی است" });
+    if (!name) return response.status(400).send({ error: "اسم الزامی است" });
     const result = await sql`
             INSERT INTO ${sql.unsafe(table)} (name, contact_email, contact_phone, is_active)
             VALUES (${name}, ${contactEmail || null}, ${contactPhone || null}, ${isActive})
@@ -1203,258 +1499,3 @@ app.delete("/:providerRoute/:id", async (request, response) => {
     response.status(500).send({ error: "خطا در غیرفعال سازی ارائه دهنده" });
   }
 });
-
-//BOOKINGS
-// POST /bookings
-// Body: { userId, ticket_id, seat_ids: [...], passengers?: [{first_name,last_name,phone_number}] }
-app.post("/bookings", async (req, res) => {
-  const client = await sql.connect();
-
-  try {
-    await client`BEGIN`;
-
-    const { userId, ticket_id, seat_ids, passengers } = req.body;
-
-    if (
-      !userId ||
-      !ticket_id ||
-      !Array.isArray(seat_ids) ||
-      seat_ids.length === 0
-    ) {
-      return res.status(400).send({ error: "ورودی نامعتبر" });
-    }
-
-    const ticketResult = await client`
-      SELECT * FROM tickets
-      WHERE id = ${ticket_id}
-      FOR UPDATE
-    `;
-
-    const ticket = ticketResult[0];
-
-    if (!ticket) {
-      await client`ROLLBACK`;
-      return res.status(404).send({ error: "تیکت پیدا نشد" });
-    }
-
-    const bookedResult = await client`
-      SELECT COALESCE(SUM(number_of_seats), 0) AS booked
-      FROM bookings
-      WHERE ticket_id = ${ticket_id} AND status != 'cancelled'
-    `;
-
-    const bookedSeats = Number(bookedResult[0].booked || 0);
-    const availableSeats = ticket.capacity - bookedSeats;
-
-    if (availableSeats < seat_ids.length) {
-      await client`ROLLBACK`;
-      return res
-        .status(400)
-        .send({ error: "تعداد کافی صندلی در دسترس وجود ندارد" });
-    }
-
-    const seats = await client`
-      SELECT * FROM seats
-      WHERE id = ANY(${seat_ids}) AND ticket_id = ${ticket_id}
-      FOR UPDATE
-    `;
-
-    if (seats.length !== seat_ids.length) {
-      await client`ROLLBACK`;
-      return res.status(400).send({ error: "صندلی های نامعتبر" });
-    }
-
-    if (seats.some((s) => !s.is_available)) {
-      await client`ROLLBACK`;
-      return res.status(409).send({ error: "صندلی ها از قبل رزرو شده اند" });
-    }
-
-    const totalAmount = Number(ticket.base_price) * seat_ids.length;
-
-    const bookingResult = await client`
-      INSERT INTO bookings (user_id, ticket_id, total_amount, number_of_seats, status)
-      VALUES (${userId}, ${ticket_id}, ${totalAmount}, ${seat_ids.length}, 'booked')
-      RETURNING *
-    `;
-
-    const booking = bookingResult[0];
-
-    await client`
-      UPDATE seats
-      SET is_available = false
-      WHERE id = ANY(${seat_ids})
-    `;
-
-    await client`COMMIT`;
-
-    const userInfo =
-      await sql`SELECT email, username FROM "Users" WHERE id = ${userId}`;
-
-    const user = userInfo[0];
-
-    if (user?.email) {
-      try {
-        await sendEmail({
-          to: user.email,
-          subject: "Booking Confirmed",
-          html: `
-            <p>Hi ${user.username},</p>
-            <p>Your booking (ID: ${booking.id}) has been confirmed.</p>
-            <p>Total amount: ${totalAmount}</p>
-          `,
-        });
-      } catch (err) {
-        console.error("Email failed:", err);
-      }
-    }
-
-    return res.status(201).send(booking);
-  } catch (err) {
-    await client`ROLLBACK`;
-    console.error(err);
-    return res.status(500).send({ error: "رزرو ناموفقیت آمیز" });
-  } finally {
-    client.release?.();
-  }
-});
-
-// GET /bookings - filters: status, user_id, ticket_type, date_from, date_to
-app.get("/bookings", async (request, response) => {
-  try {
-    const { status, user_id, ticket_type, date_from, date_to } = request.query;
-    let filtered = await sql`
-            SELECT b.*, tt.name AS ticket_type, u.username
-            FROM bookings b
-            JOIN tickets t ON t.id = b.ticket_id
-            JOIN ticket_types tt ON tt.id = t.type_id
-            JOIN "Users" u ON u.id = b.user_id
-            ORDER BY b.booked_at DESC
-        `;
-
-    if (status) filtered = filtered.filter((b) => b.status === status);
-    if (user_id)
-      filtered = filtered.filter((b) => String(b.user_id) === String(user_id));
-    if (ticket_type)
-      filtered = filtered.filter((b) => b.ticket_type === ticket_type);
-    if (date_from)
-      filtered = filtered.filter(
-        (b) => new Date(b.booked_at) >= new Date(date_from),
-      );
-    if (date_to)
-      filtered = filtered.filter(
-        (b) => new Date(b.booked_at) <= new Date(date_to),
-      );
-
-    if (filtered.length === 0) {
-      return res.status(404).send({ error: "بدون نتیجه" });
-    }
-
-    response.send(filtered);
-  } catch (error) {
-    console.error("Error fetching bookings:", error);
-    response.status(500).send({ error: "خطا در دریافت رزرو ها" });
-  }
-});
-// GET /bookings/:id
-app.get("/bookings/:id", async (request, response) => {
-  try {
-    const { id } = request.params;
-    const result = await sql`
-            SELECT b.*, t.origin, t.destination, t.departure_at, t.arrival_at
-            FROM bookings b JOIN tickets t ON t.id = b.ticket_id
-            WHERE b.id = ${id}
-        `;
-    const booking = result[0];
-    if (!booking) return response.status(404).send({ error: "رزرو پیدا نشد" });
-
-    const seats = await sql`
-            SELECT bs.*, s.seat_number, s.seat_class
-            FROM booking_seats bs JOIN seats s ON s.id = bs.seat_id
-            WHERE bs.booking_id = ${booking.id}
-        `;
-    response.send({ ...booking, seats });
-  } catch (error) {
-    console.error(error);
-    response.status(500).send({ error: "خطا در دریافت رزرو" });
-  }
-});
-
-// PATCH /bookings/:id/cancel
-app.patch("/bookings/:id/cancel", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { reason } = req.body;
-
-    const bookingResult = await sql`
-      SELECT * FROM bookings WHERE id = ${id}
-    `;
-
-    const booking = bookingResult[0];
-
-    if (!booking) {
-      return res.status(404).send({ error: "رزرو پیدا نشد" });
-    }
-
-    await sql`
-      UPDATE bookings
-      SET status = 'cancelled',
-          cancellation_reason = ${reason || "Cancelled"},
-          updated_at = now()
-      WHERE id = ${id}
-    `;
-
-    await sql`
-      UPDATE seats
-      SET is_available = true
-      WHERE id IN (
-        SELECT seat_id FROM booking_seats WHERE booking_id = ${id}
-      )
-    `;
-
-    await sql`
-      INSERT INTO notifications (booking_id, user_id, type, content)
-      VALUES (${booking.id}, ${booking.user_id}, 'cancellation', ${reason || "Cancelled"})
-    `;
-
-    const userInfo =
-      await sql`SELECT email, username FROM "Users" WHERE id = ${booking.user_id}`;
-
-    const user = userInfo[0];
-
-    if (user?.email) {
-      try {
-        await sendEmail({
-          to: user.email,
-          subject: "Booking Cancelled",
-          html: `<p>Hi ${user.username}, your booking was cancelled.</p>`,
-        });
-      } catch (err) {
-        console.log(err);
-      }
-    }
-
-    res.send({ message: "رزرو لغو شد" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: "لغو کردن رزرو با شکست مواجه شد" });
-  }
-});
-//NOTIFICATIONS
-// GET /notifications?userId=123
-app.get("/notifications", async (request, response) => {
-  try {
-    const { userId } = request.query;
-    if (!userId)
-      return response.status(400).send({ error: "آیدی کاربر الزامی است" });
-    const result =
-      await sql`SELECT * FROM notifications WHERE user_id = ${userId} ORDER BY sent_at DESC`;
-    response.send(result);
-  } catch (error) {
-    console.error(error);
-    response.status(500).send({ error: "خطا در دریافت اعلان ها" });
-  }
-});
-
-app.listen(PORT, () =>
-  console.log(` My App listening at http://localhost:${PORT}`),
-);
