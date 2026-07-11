@@ -553,7 +553,7 @@ app.delete("/discounts/:id", async (req, res) => {
     res.send({ success: true });
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).send({ success: false, error: "خطا در حذف تخفیف" });
+    res.status(500).send({ success: false, error: "خطا در حذف کد تخفیف" });
   }
 });
 
