@@ -15,7 +15,7 @@ import Button from "../../components/common/Button";
 import { showError, showPromise } from "../../utils/toast";
 
 export default function Register() {
-  useDocumentTitle("ثبت نام")
+  useDocumentTitle("ثبت نام");
   const navigate = useNavigate();
 
   const { isAuthenticated, isAdmin, isCustomer } = useAuth();
@@ -78,7 +78,7 @@ export default function Register() {
         gap: 20,
       }}
     >
-      <h1 style={{fontWeight: 'bold'}}>ثبت نام</h1>
+      <h1 style={{ fontWeight: "bold" }}>ثبت نام</h1>
 
       <div style={{ display: "flex", flexDirection: "row", gap: 20 }}>
         <Input

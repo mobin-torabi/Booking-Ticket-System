@@ -20,7 +20,11 @@ import { useAuth } from "../../context/AuthContext";
 
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 
+<<<<<<< HEAD
 import { formatDateTime} from "../../utils/formatDate";
+=======
+import { formatDateTime } from "../../utils/formatDate";
+>>>>>>> ca85fe99604bf0c872470b33d0263ee75e74aa34
 import { showError } from "../../utils/toast";
 
 import Card from "../../components/common/Card";
@@ -77,7 +81,7 @@ export default function Notifications() {
       const { data } = await getNotifications(user.id);
 
       const sorted = [...data].sort(
-        (a, b) => new Date(b.sent_at) - new Date(a.sent_at)
+        (a, b) => new Date(b.sent_at) - new Date(a.sent_at),
       );
 
       setNotifications(sorted);
@@ -126,7 +130,7 @@ export default function Notifications() {
         <Stack spacing={2}>
           {notifications.map((notification) => {
             const meta = getMeta(notification.type);
-                        console.log(notification.sent_at)
+            // console.log(notification.sent_at);
 
             return (
               <Card key={notification.id}>
@@ -154,7 +158,11 @@ export default function Notifications() {
                         color={meta.color}
                       />
 
+<<<<<<< HEAD
                       <Typography variant="caption" color="text.secondary" sx={{ml:"auto"}}>
+=======
+                      <Typography variant="caption" color="text.secondary">
+>>>>>>> ca85fe99604bf0c872470b33d0263ee75e74aa34
                         {formatDateTime(notification.sent_at)}
                       </Typography>
                     </Stack>
