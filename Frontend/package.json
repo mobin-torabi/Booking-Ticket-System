@@ -22,7 +22,6 @@
     "axios": "^1.18.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.21",
-    "jalali-plugin-dayjs": "^1.1.4",
     "jalaliday": "^3.1.1",
     "nodemon": "^3.1.14",
     "react": "^19.2.7",
