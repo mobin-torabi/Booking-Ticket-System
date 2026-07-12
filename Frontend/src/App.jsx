@@ -1,8 +1,6 @@
 import { Routes, Route, Navigate } from "react-router";
 
 import MainLayout from "./layouts/MainLayout";
-import DashboardLayout from "./layouts/DashboardLayout";
-import AdminLayout from "./layouts/AdminLayout";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
@@ -11,6 +9,7 @@ import AdminRoute from "./routes/AdminRoute";
 
 import Login from "./pages/public/Login";
 import Register from "./pages/public/Register";
+import Profile from "./pages/public/Profile";
 import Tickets from "./pages/public/Tickets";
 import TicketDetails from "./pages/public/TicketDetails";
 import NotFound from "./pages/public/NotFound";
@@ -20,14 +19,12 @@ import NotFound from "./pages/public/NotFound";
 import Payment from "./pages/customer/Payment";
 import Booking from "./pages/customer/Booking";
 import Dashboard from "./pages/customer/Dashboard";
-import Profile from "./pages/customer/Profile";
 import Bookings from "./pages/customer/Bookings";
 import BookingDetails from "./pages/customer/BookingDetails";
 import Notifications from "./pages/customer/Notifications";
 
 /* Admin */
 
-import AdminProfile from "./pages/admin/Profile";
 import Users from "./pages/admin/Users";
 import Providers from "./pages/admin/Providers";
 import AdminBookings from "./pages/admin/Bookings";
@@ -86,7 +83,7 @@ export default function App() {
           </AdminRoute>
         }
       >
-        <Route path="/admin/profile" element={<AdminProfile />} />
+        <Route path="/admin/profile" element={<Profile />} />
 
         <Route path="/admin/users" element={<Users />} />
 
