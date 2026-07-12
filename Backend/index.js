@@ -1130,10 +1130,7 @@ app.get("/cities", async (request, response) => {
 //NOTIFICATIONS
 // GET /notifications?userId=123
 app.get("/notifications", async (request, response) => {
-<<<<<<< HEAD
-=======
   // console.log("fetchNotifications called");
->>>>>>> ca85fe99604bf0c872470b33d0263ee75e74aa34
   try {
     
     const { userId } = request.query;
