@@ -682,30 +682,23 @@ app.get("/tickets", async (req, res) => {
     }
 
     if (available_seats_min) {
-      const result = [];
+      // NOTE: capacity lives on seats.is_available, not a counter on
+      // tickets/bookings, so "available seats" is counted directly from the
+      // seats table (one query for all tickets, not one per ticket).
+      const availableCounts = await sql`
+        SELECT ticket_id, COUNT(*) AS available_seats
+        FROM seats
+        WHERE is_available = true
+        GROUP BY ticket_id
+      `;
 
-      for (const t of filtered) {
-        const availableSeats = await sql`
-          SELECT
-            t.id,
-            (t.total_seats - COALESCE(SUM(b.number_of_seats), 0)) AS available_seats
-          FROM tickets t
-          LEFT JOIN bookings b
-            ON b.ticket_id = t.id
-            AND b.status != 'cancelled'
-          WHERE t.id = ${t.id}
-          GROUP BY t.id;
-        `;
+      const availableByTicketId = new Map(
+        availableCounts.map((r) => [r.ticket_id, Number(r.available_seats)]),
+      );
 
-        if (
-          Number(availableSeats[0].available_seats) >=
-          Number(available_seats_min)
-        ) {
-          result.push(t);
-        }
-      }
-
-      filtered = result;
+      filtered = filtered.filter(
+        (t) => (availableByTicketId.get(t.id) || 0) >= Number(available_seats_min),
+      );
     }
 
     const sortFunctions = {
@@ -1116,7 +1109,6 @@ app.get("/cities", async (request, response) => {
 //NOTIFICATIONS
 // GET /notifications?userId=123
 app.get("/notifications", async (request, response) => {
-  console.log("fetchNotifications called");
   try {
     
     const { userId } = request.query;
@@ -1133,14 +1125,18 @@ app.get("/notifications", async (request, response) => {
 
 //BOOKINGS
 
-// GET /bookings - filters: userId, status, ticket_id
+// GET /bookings - filters: user_id (or userId), status, ticket_id
 // NOTE: this was missing before, which meant GET /bookings fell through to the
 // generic "/:providerRoute" handler further down and returned
 // "خطا، مسیر ارائه دهنده نامعتبر: bookings". Declaring it here (above the
 // catch-all provider routes) fixes that.
 app.get("/bookings", async (req, res) => {
   try {
-    const { userId, status, ticket_id } = req.query;
+    // The frontend sends `user_id` (see bookingApi.getBookings), but this
+    // only checked `userId` — since that was always undefined, the filter
+    // never ran and every user saw every booking. Accept both spellings.
+    const { user_id, userId, status, ticket_id } = req.query;
+    const effectiveUserId = user_id ?? userId;
 
     let filtered = await sql`
       SELECT b.*, t.origin, t.destination, t.departure_at, t.arrival_at
@@ -1149,8 +1145,10 @@ app.get("/bookings", async (req, res) => {
       ORDER BY b.booked_at DESC
     `;
 
-    if (userId) {
-      filtered = filtered.filter((b) => String(b.user_id) === String(userId));
+    if (effectiveUserId) {
+      filtered = filtered.filter(
+        (b) => String(b.user_id) === String(effectiveUserId),
+      );
     }
 
     if (status) {
@@ -1175,112 +1173,128 @@ app.get("/bookings", async (req, res) => {
 });
 
 // POST /bookings
-// Body: { userId, ticket_id, seat_ids: [...], passengers?: [{first_name,last_name,phone_number}] }
+// Body: { userId, ticket_id, seat_ids: [...], passengers: [{first_name,last_name,phone_number?}] }
+// `passengers` is REQUIRED and must have one entry per seat_id, in the same
+// order — booking_seats.passenger_first_name/passenger_last_name are NOT NULL
+// in the schema, so there's no valid "anonymous seat" to insert.
+//
+// NOTE ON APPROACH: `sql` here comes from neon()'s HTTP driver, which has no
+// real session/connection to hold BEGIN/COMMIT/FOR UPDATE across statements
+// (that's what sql.connect()/Pool is for, and it isn't what neon() gives you).
+// So instead of a real transaction, each write is made atomic on its own via
+// a conditional `UPDATE ... WHERE ... RETURNING`, and if a later step fails
+// we manually undo ("compensate") the earlier steps.
+//
+// NOTE ON SCHEMA: `tickets` has no `available_seats` column — capacity is
+// tracked per-seat via `seats.is_available`. So there's no ticket-level
+// counter to keep in sync; the atomic seat UPDATE below is both the
+// concurrency guard and the "are there enough seats?" check in one step.
 app.post("/bookings", async (req, res) => {
-  const client = await sql.connect();
+  const { userId, ticket_id, seat_ids, passengers } = req.body;
+
+  if (!userId || !ticket_id || !Array.isArray(seat_ids) || seat_ids.length === 0) {
+    return res.status(400).send({ error: "ورودی نامعتبر" });
+  }
+
+  if (
+    !Array.isArray(passengers) ||
+    passengers.length !== seat_ids.length ||
+    passengers.some((p) => !p || !p.first_name || !p.last_name)
+  ) {
+    return res.status(400).send({
+      error: "برای هر صندلی، نام و نام خانوادگی مسافر الزامی است",
+    });
+  }
+
+  let seatsFlipped = false;
+  let seatsFlippedIds = [];
+  let bookingId = null;
 
   try {
-    await client`BEGIN`;
-
-    const { userId, ticket_id, seat_ids, passengers } = req.body;
-
-    if (!userId || !ticket_id || !Array.isArray(seat_ids) || seat_ids.length === 0) {
-      await client`ROLLBACK`;
-      return res.status(400).send({ error: "ورودی نامعتبر" });
-    }
-
-    const ticketResult = await client`
-      SELECT * FROM tickets
-      WHERE id = ${ticket_id}
-      FOR UPDATE
-    `;
-
+    // Step 1: make sure the ticket exists, and confirm the requested seats
+    // actually belong to it before touching anything.
+    const ticketResult = await sql`SELECT * FROM tickets WHERE id = ${ticket_id}`;
     const ticket = ticketResult[0];
 
     if (!ticket) {
-      await client`ROLLBACK`;
       return res.status(404).send({ error: "تیکت پیدا نشد" });
     }
 
-    if (ticket.available_seats < seat_ids.length) {
-      await client`ROLLBACK`;
-      return res.status(400).send({ error: "تعداد کافی صندلی در دسترس وجود ندارد" });
-    }
-
-    const seats = await client`
-      SELECT * FROM seats
-      WHERE id = ANY(${seat_ids}) AND ticket_id = ${ticket_id}
-      FOR UPDATE
+    const requestedSeats = await sql`
+      SELECT * FROM seats WHERE id = ANY(${seat_ids}) AND ticket_id = ${ticket_id}
     `;
 
-    if (seats.length !== seat_ids.length) {
-      await client`ROLLBACK`;
+    if (requestedSeats.length !== seat_ids.length) {
       return res.status(400).send({ error: "صندلی های نامعتبر" });
     }
 
-    if (seats.some((s) => !s.is_available)) {
-      await client`ROLLBACK`;
+    // Step 2: atomically flip only the seats that are still available.
+    // The WHERE is_available = true guard means two simultaneous bookings
+    // can never both "win" the same seat, even without a session-level lock.
+    const flipped = await sql`
+      UPDATE seats
+      SET is_available = false
+      WHERE id = ANY(${seat_ids}) AND ticket_id = ${ticket_id} AND is_available = true
+      RETURNING id
+    `;
+
+    seatsFlippedIds = flipped.map((s) => s.id);
+    seatsFlipped = seatsFlippedIds.length > 0;
+
+    if (flipped.length !== seat_ids.length) {
+      // Someone else grabbed one or more of these seats first (or they were
+      // never available). Undo the ones we did manage to flip, then report
+      // the conflict.
+      if (seatsFlipped) {
+        await sql`UPDATE seats SET is_available = true WHERE id = ANY(${seatsFlippedIds})`;
+        seatsFlipped = false;
+      }
       return res.status(409).send({ error: "صندلی ها از قبل رزرو شده اند" });
     }
 
+    // Step 3: create the booking.
     const totalAmount = Number(ticket.base_price) * seat_ids.length;
-
-    const bookingResult = await client`
+    const bookingResult = await sql`
       INSERT INTO bookings (user_id, ticket_id, total_amount, number_of_seats, status)
       VALUES (${userId}, ${ticket_id}, ${totalAmount}, ${seat_ids.length}, 'booked')
       RETURNING *
     `;
-
     const booking = bookingResult[0];
+    bookingId = booking.id;
 
-    await client`
-      UPDATE seats
-      SET is_available = false
-      WHERE id = ANY(${seat_ids})
-    `;
-
-    await client`
-      UPDATE tickets
-      SET available_seats = available_seats - ${seat_ids.length}
-      WHERE id = ${ticket_id}
-    `;
-
-    // Insert passengers and link them to seats if provided.
-    if (Array.isArray(passengers) && passengers.length > 0) {
-      for (let i = 0; i < seat_ids.length; i++) {
-        const passenger = passengers[i] || {};
-        await client`
-          INSERT INTO booking_seats (booking_id, seat_id, first_name, last_name, phone_number)
-          VALUES (
-            ${booking.id},
-            ${seat_ids[i]},
-            ${passenger.first_name || null},
-            ${passenger.last_name || null},
-            ${passenger.phone_number || null}
-          )
-        `;
-      }
-    } else {
-      for (const seatId of seat_ids) {
-        await client`
-          INSERT INTO booking_seats (booking_id, seat_id)
-          VALUES (${booking.id}, ${seatId})
-        `;
-      }
+    // Step 4: link seats + required passenger info to the booking.
+    for (let i = 0; i < seat_ids.length; i++) {
+      const passenger = passengers[i];
+      await sql`
+        INSERT INTO booking_seats (booking_id, seat_id, passenger_first_name, passenger_last_name, phone_number)
+        VALUES (
+          ${booking.id},
+          ${seat_ids[i]},
+          ${passenger.first_name},
+          ${passenger.last_name},
+          ${passenger.phone_number || null}
+        )
+      `;
     }
 
-    await client`COMMIT`;
-
-    // FIX: the original handler committed the transaction but never sent a
-    // response, so a successful booking would hang until the client timed
-    // out. Now we return the created booking.
     return res.status(201).send(booking);
   } catch (err) {
-    await client`ROLLBACK`;
     console.error(err);
+
+    // Best-effort compensation: undo whatever succeeded before the failure.
+    try {
+      if (bookingId) {
+        await sql`DELETE FROM booking_seats WHERE booking_id = ${bookingId}`;
+        await sql`DELETE FROM bookings WHERE id = ${bookingId}`;
+      }
+      if (seatsFlipped) {
+        await sql`UPDATE seats SET is_available = true WHERE id = ANY(${seatsFlippedIds})`;
+      }
+    } catch (cleanupErr) {
+      console.error("Cleanup after failed booking also failed:", cleanupErr);
+    }
+
     return res.status(500).send({ error: "رزرو ناموفقیت آمیز" });
-  } finally {
-    client.release?.();
   }
 });
 
@@ -1309,40 +1323,44 @@ app.get("/bookings/:id", async (request, response) => {
 });
 
 // PATCH /bookings/:id/cancel
+//
+// Same approach as POST /bookings above: no sql.connect()/client/BEGIN, just
+// plain `sql` calls. The first UPDATE is guarded with
+// `WHERE status != 'cancelled'` so two simultaneous cancel requests can't
+// both "succeed" and double-release seats; if anything after that fails, we
+// compensate by re-marking the booking as cancelled was already done, so we
+// simply retry-safe re-run the remaining release steps rather than reverting
+// the cancellation (a booking that's cancelled should stay cancelled).
 app.patch("/bookings/:id/cancel", async (req, res) => {
-  const client = await sql.connect();
-
   try {
-    await client`BEGIN`;
-
     const { id } = req.params;
     const { reason } = req.body;
 
-    const bookingResult = await client`
-      SELECT * FROM bookings WHERE id = ${id} FOR UPDATE
-    `;
-
-    const booking = bookingResult[0];
-
-    if (!booking) {
-      await client`ROLLBACK`;
-      return res.status(404).send({ error: "رزرو پیدا نشد" });
-    }
-
-    if (booking.status === "cancelled") {
-      await client`ROLLBACK`;
-      return res.status(400).send({ error: "این رزرو قبلا لغو شده است" });
-    }
-
-    await client`
+    // Atomically claim the cancellation: only succeeds if it wasn't already cancelled.
+    const cancelResult = await sql`
       UPDATE bookings
       SET status = 'cancelled',
           cancellation_reason = ${reason || "Cancelled"},
           updated_at = now()
-      WHERE id = ${id}
+      WHERE id = ${id} AND status != 'cancelled'
+      RETURNING *
     `;
 
-    await client`
+    if (cancelResult.length === 0) {
+      // Either the booking doesn't exist, or it was already cancelled.
+      const existing = await sql`SELECT id, status FROM bookings WHERE id = ${id}`;
+      if (existing.length === 0) {
+        return res.status(404).send({ error: "رزرو پیدا نشد" });
+      }
+      return res.status(400).send({ error: "این رزرو قبلا لغو شده است" });
+    }
+
+    const booking = cancelResult[0];
+
+    // Release the seats. NOTE: there's no tickets.available_seats column in
+    // this schema — capacity is derived from seats.is_available, so this
+    // single UPDATE is all that's needed to free the booking's seats back up.
+    await sql`
       UPDATE seats
       SET is_available = true
       WHERE id IN (
@@ -1350,18 +1368,10 @@ app.patch("/bookings/:id/cancel", async (req, res) => {
       )
     `;
 
-    await client`
-      UPDATE tickets
-      SET available_seats = available_seats + ${booking.number_of_seats}
-      WHERE id = ${booking.ticket_id}
-    `;
-
-    await client`
+    await sql`
       INSERT INTO notifications (booking_id, user_id, type, content)
       VALUES (${booking.id}, ${booking.user_id}, 'cancellation', ${reason || "Cancelled"})
     `;
-
-    await client`COMMIT`;
 
     const userInfo =
       await sql`SELECT email, username FROM "Users" WHERE id = ${booking.user_id}`;
@@ -1382,11 +1392,8 @@ app.patch("/bookings/:id/cancel", async (req, res) => {
 
     res.send({ message: "رزرو لغو شد" });
   } catch (error) {
-    await client`ROLLBACK`;
     console.error(error);
     res.status(500).send({ error: "لغو کردن رزرو با شکست مواجه شد" });
-  } finally {
-    client.release?.();
   }
 });
 //PROVIDERS

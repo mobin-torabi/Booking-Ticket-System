@@ -86,7 +86,7 @@ export default function Bookings() {
       setError(null);
 
       const { data } = await bookingApi.getBookings({
-        user_id: user.id,
+        userId: user.id,
       });
 
       const enriched = await Promise.all(

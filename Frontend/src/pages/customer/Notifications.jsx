@@ -20,7 +20,7 @@ import { useAuth } from "../../context/AuthContext";
 
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 
-import { formatDateTimeJalali } from "../../utils/formatDate";
+import { formatDateTime} from "../../utils/formatDate";
 import { showError } from "../../utils/toast";
 
 import Card from "../../components/common/Card";
@@ -154,8 +154,8 @@ export default function Notifications() {
                         color={meta.color}
                       />
 
-                      <Typography variant="caption" color="text.secondary">
-                        {formatDateTimeJalali(notification.sent_at)}
+                      <Typography variant="caption" color="text.secondary" sx={{ml:"auto"}}>
+                        {formatDateTime(notification.sent_at)}
                       </Typography>
                     </Stack>
 
