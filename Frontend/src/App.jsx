@@ -19,7 +19,7 @@ import NotFound from "./pages/public/NotFound";
 
 import Payment from "./pages/customer/Payment";
 import Booking from "./pages/customer/Booking";
-import Dashboard from "./pages/customer/Dashboard";
+// import Dashboard from "./pages/customer/Dashboard";
 import Profile from "./pages/customer/Profile";
 import Bookings from "./pages/customer/Bookings";
 import BookingDetails from "./pages/customer/BookingDetails";
@@ -60,19 +60,19 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route path="/dashboard" element={<Dashboard />} />
+        {/* <Route path="/dashboard" element={<Dashboard />} /> */}
 
-        <Route path="/dashboard/profile" element={<Profile />} />
+        <Route path="/profile" element={<Profile />} />
 
-        <Route path="/dashboard/bookings" element={<Bookings />} />
+        <Route path="/bookings" element={<Bookings />} />
 
         <Route path="/booking/:ticketId" element={<Booking />} />
 
         <Route path="/payment/:bookingId" element={<Payment />} />
 
-        <Route path="/dashboard/bookings/:id" element={<BookingDetails />} />
+        <Route path="/bookings/:id" element={<BookingDetails />} />
 
-        <Route path="/dashboard/notifications" element={<Notifications />} />
+        <Route path="/notifications" element={<Notifications />} />
       </Route>
 
       {/* ===========================

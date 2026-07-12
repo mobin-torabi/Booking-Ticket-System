@@ -5,10 +5,10 @@ export const ROUTES = {
     REGISTER: "/register",
 
     // Customer
-    DASHBOARD: "/dashboard",
-    PROFILE: "/dashboard/profile",
-    BOOKINGS: "/dashboard/bookings",
-    NOTIFICATIONS: "/dashboard/notifications",
+    // DASHBOARD: "/dashboard",
+    PROFILE: "/profile",
+    BOOKINGS: "/bookings",
+    NOTIFICATIONS: "/notifications",
 
     // Admin
     ADMIN: "/admin/profile",
