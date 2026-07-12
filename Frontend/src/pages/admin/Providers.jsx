@@ -339,7 +339,7 @@ export default function Providers() {
                       <Chip
                         size="medium"
                         label={p.is_active ? "فعال" : "غیرفعال"}
-                        color={p.is_active ? "success" : "default"}
+                        color={p.is_active ? "success" : "error"}
                       />
                     </TableCell>
                     <TableCell align="center">
