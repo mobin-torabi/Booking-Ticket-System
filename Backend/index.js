@@ -453,6 +453,27 @@ app.get("/discounts", async (req, res) => {
   }
 });
 
+// Get /discounts/:id
+app.get("/discounts/:id", async (req, res) => {
+  try {
+    const {id} = req.params;
+
+    const result = await sql`SELECT * FROM discounts WHERE id = ${id}`
+
+    const discount = result[0];
+
+    if (!discount)
+      return res
+        .status(404)
+        .send({ error: "کد تخفیف پیدا نشد" });
+
+    res.send(discount);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "خطا در دریافت کد تخفیف" });
+  }
+})
+
 // Get /discounts/validate?code=X&amount=Y
 app.get("/discounts/validate", async (req, res) => {
   try {
