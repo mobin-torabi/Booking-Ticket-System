@@ -453,6 +453,27 @@ app.get("/discounts", async (req, res) => {
   }
 });
 
+// Get /discounts/:id
+app.get("/discounts/:id", async (req, res) => {
+  try {
+    const {id} = req.params;
+
+    const result = await sql`SELECT * FROM discounts WHERE id = ${id}`
+
+    const discount = result[0];
+
+    if (!discount)
+      return res
+        .status(404)
+        .send({ error: "کد تخفیف پیدا نشد" });
+
+    res.send(discount);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "خطا در دریافت کد تخفیف" });
+  }
+})
+
 // Get /discounts/validate?code=X&amount=Y
 app.get("/discounts/validate", async (req, res) => {
   try {
@@ -1109,6 +1130,10 @@ app.get("/cities", async (request, response) => {
 //NOTIFICATIONS
 // GET /notifications?userId=123
 app.get("/notifications", async (request, response) => {
+<<<<<<< HEAD
+=======
+  // console.log("fetchNotifications called");
+>>>>>>> 70986d43425d7d29a3bb4b1f540e8e0a1c6a2477
   try {
     
     const { userId } = request.query;

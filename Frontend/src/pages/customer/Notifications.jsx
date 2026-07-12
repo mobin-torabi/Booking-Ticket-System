@@ -20,7 +20,11 @@ import { useAuth } from "../../context/AuthContext";
 
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 
+<<<<<<< HEAD
 import { formatDateTime} from "../../utils/formatDate";
+=======
+import { formatDateTime } from "../../utils/formatDate";
+>>>>>>> 70986d43425d7d29a3bb4b1f540e8e0a1c6a2477
 import { showError } from "../../utils/toast";
 
 import Card from "../../components/common/Card";
@@ -155,6 +159,7 @@ export default function Notifications() {
                       />
 
                       <Typography variant="caption" color="text.secondary" sx={{ml:"auto"}}>
+<<<<<<< HEAD
                         {/* {formatDateTime(notification.sent_at)} */}
                         
                                   <JalaliDatePicker
@@ -162,6 +167,9 @@ export default function Notifications() {
                                     
                                     required
                                   />
+=======
+                        {formatDateTime(notification.sent_at)}
+>>>>>>> 70986d43425d7d29a3bb4b1f540e8e0a1c6a2477
                       </Typography>
                     </Stack>
 

@@ -11,6 +11,8 @@ import useDocumentTitle from "../../hooks/useDocumentTitle";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Button from "../../components/common/Button";
+import JalaliDatePicker from "../../components/common/JalaliDatePicker";
+
 
 import { showError, showPromise } from "../../utils/toast";
 
@@ -147,13 +149,22 @@ export default function Register() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "row", gap: 20 }}>
-        <Input
+        {/* <Input
           label="تاریخ تولد"
           type="date"
           name="birthDate"
           value={form.birthDate}
           onChange={handleChange}
           required={true}
+        /> */}
+
+        <JalaliDatePicker
+          label="تاریخ تولد"
+          value={form.birthDate}
+          onChange={(isoDate) =>
+            setForm((prev) => ({ ...prev, birthDate: isoDate }))
+          }
+          required
         />
 
         <Input

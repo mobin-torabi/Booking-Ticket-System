@@ -39,7 +39,6 @@ import EmptyState from "../../components/common/EmptyState";
 import ErrorState from "../../components/common/ErrorState";
 import JalaliDatePicker from "../../components/common/JalaliDatePicker";
 
-
 const STATUS_OPTIONS = [
   { value: "", label: "همه وضعیت‌ها" },
   { value: "true", label: "فعال" },
@@ -356,6 +355,7 @@ export default function Discounts() {
                               size="small"
                               color="success"
                               onClick={() => setDeactivatingDiscount(d)}
+                              disabled={status.label === "منقضی شده"}
                             >
                               <ToggleOnIcon fontSize="medium" />
                             </IconButton>
@@ -366,6 +366,7 @@ export default function Discounts() {
                               size="small"
                               color="error"
                               onClick={() => handleActivate(d)}
+                              disabled={status.label === "منقضی شده"}
                             >
                               <ToggleOffIcon fontSize="medium" />
                             </IconButton>
