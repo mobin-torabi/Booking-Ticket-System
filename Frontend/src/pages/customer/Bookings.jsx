@@ -332,7 +332,7 @@ export default function Bookings() {
                         >
                           <PaymentsIcon fontSize="small" color="action" />
                           <Typography variant="body2" color="text.secondary">
-                            {formatPrice(booking.total_amount)} تومان
+                            {formatPrice(booking.total_amount)}
                           </Typography>
                         </Stack>
                       </Stack>

@@ -1,15 +1,3 @@
-/*
-This file is the heart of the application. It should:
-
-store user
-login
-logout
-persist login
-know if user is admin
-know if user is authenticated
-
-*/
-
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
