@@ -12,21 +12,20 @@ import Register from "./pages/public/Register";
 import Profile from "./pages/public/Profile";
 import Tickets from "./pages/public/Tickets";
 import TicketDetails from "./pages/public/TicketDetails";
+import Bookings from "./pages/public/Bookings";
+import BookingDetails from "./pages/public/BookingDetails";
 import NotFound from "./pages/public/NotFound";
 
 /* Customer */
 
 import Payment from "./pages/customer/Payment";
 import Booking from "./pages/customer/Booking";
-import Bookings from "./pages/customer/Bookings";
-import BookingDetails from "./pages/customer/BookingDetails";
 import Notifications from "./pages/customer/Notifications";
 
 /* Admin */
 
 import Users from "./pages/admin/Users";
 import Providers from "./pages/admin/Providers";
-import AdminBookings from "./pages/admin/Bookings";
 import Payments from "./pages/admin/Payments";
 import Discounts from "./pages/admin/Discounts";
 import FAQ from "./pages/public/FAQ";
@@ -95,7 +94,9 @@ export default function App() {
 
         <Route path="/admin/providers" element={<Providers />} />
 
-        <Route path="/admin/bookings" element={<AdminBookings />} />
+        <Route path="/admin/bookings" element={<Bookings />} />
+
+        <Route path="/admin/bookings/:id" element={<BookingDetails />} />
 
         <Route path="/admin/payments" element={<Payments />} />
 

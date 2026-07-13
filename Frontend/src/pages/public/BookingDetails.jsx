@@ -63,7 +63,7 @@ export default function BookingDetails() {
 
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   const [booking, setBooking] = useState(null);
   const [ticket, setTicket] = useState(null);
@@ -92,7 +92,7 @@ export default function BookingDetails() {
       // A booking belongs to a specific user. The API itself doesn't
       // enforce ownership, so we guard against viewing someone else's
       // booking by id here on the client.
-      if (String(data.user_id) !== String(user.id)) {
+      if (!isAdmin && String(data.user_id) !== String(user.id)) {
         setError("شما اجازه مشاهده این رزرو را ندارید.");
         setBooking(null);
         return;
@@ -105,7 +105,7 @@ export default function BookingDetails() {
       // shouldn't block showing the core booking details.
       try {
         const { data: ticketData } = await ticketApi.getTicketById(
-          data.ticket_id,
+          data.ticket_id
         );
         setTicket(ticketData);
 
@@ -199,7 +199,7 @@ export default function BookingDetails() {
             variant="text"
             // sx={{border:"none"}}
             startIcon={<ArrowBackIcon />}
-            onClick={() => navigate(ROUTES.BOOKINGS)}
+            onClick={() => isAdmin ? navigate(ROUTES.ADMIN_BOOKINGS) : navigate(ROUTES.BOOKINGS)}
           >
             بازگشت به رزروها
           </Button>
@@ -210,7 +210,7 @@ export default function BookingDetails() {
         <CardBox>
           <Stack
             direction={{ xs: "column", sm: "row" }}
-            alignItems={{ xs: "stretch", sm: "center" }}
+            alignitems={{ xs: "stretch", sm: "center" }}
             spacing={2.5}
           >
             <Box
@@ -233,8 +233,8 @@ export default function BookingDetails() {
               <Stack
                 direction="row"
                 spacing={1}
-                alignItems="center"
-                flexWrap="wrap"
+                alignitems="center"
+                flexwrap="wrap"
                 useFlexGap
               >
                 <Typography
@@ -260,7 +260,7 @@ export default function BookingDetails() {
                 <Stack
                   direction="row"
                   spacing={0.5}
-                  alignItems="center"
+                  alignitems="center"
                   mt={0.5}
                 >
                   <ApartmentIcon fontSize="small" color="action" />
@@ -285,7 +285,7 @@ export default function BookingDetails() {
           </Typography>
 
           <Stack spacing={1.5}>
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" spacing={1} alignitems="center">
               <FlightTakeoffIcon fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
                 زمان حرکت:
@@ -295,7 +295,7 @@ export default function BookingDetails() {
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" spacing={1} alignitems="center">
               <FlightLandIcon fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
                 زمان رسیدن:
@@ -304,7 +304,7 @@ export default function BookingDetails() {
                 {formatDateTime(booking.arrival_at)}
               </Typography>
             </Stack>
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" spacing={1} alignitems="center">
               {" "}
               <ReceiptLongIcon
                 fontSize="small"
@@ -322,15 +322,15 @@ export default function BookingDetails() {
             اطلاعات پرداخت
           </Typography>
 
-          <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
-            <Stack direction="row" spacing={0.5} alignItems="center">
+          <Stack direction="row" spacing={3} flexwrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={0.5} alignitems="center">
               <EventSeatIcon fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
                 {booking.number_of_seats} صندلی
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={0.5} alignItems="center">
+            <Stack direction="row" spacing={0.5} alignitems="center">
               <PaymentsIcon fontSize="small" color="action" />
               <Typography variant="body2" fontWeight={600}>
                 {formatPrice(booking.total_amount)} تومان
@@ -338,7 +338,7 @@ export default function BookingDetails() {
             </Stack>
 
             {booking.created_at && (
-              <Stack direction="row" spacing={0.5} alignItems="center">
+              <Stack direction="row" spacing={0.5} alignitems="center">
                 <CalendarMonthIcon fontSize="small" color="action" />
                 <Typography variant="body2" color="text.secondary">
                   تاریخ رزرو: {formatDateTime(booking.created_at)}
@@ -358,12 +358,12 @@ export default function BookingDetails() {
               <Stack
                 key={seat.id}
                 direction={{ xs: "column", sm: "row" }}
-                justifyContent="space-between"
-                alignItems={{ xs: "flex-start", sm: "center" }}
+                justifycontent="space-between"
+                alignitems={{ xs: "flex-start", sm: "center" }}
                 spacing={1}
                 py={0.5}
               >
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} alignitems="center">
                   <EventSeatIcon fontSize="small" color="action" />
                   <Typography variant="body2" fontWeight={600}>
                     صندلی {seat.seat_number}
@@ -377,9 +377,9 @@ export default function BookingDetails() {
                   )}
                 </Stack>
 
-                <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                <Stack direction="row" spacing={2} flexwrap="wrap" useFlexGap>
                   {(seat.passenger_first_name || seat.passenger_last_name) && (
-                    <Stack direction="row" spacing={0.5} alignItems="center">
+                    <Stack direction="row" spacing={0.5} alignitems="center">
                       <PersonIcon fontSize="small" color="action" />
                       <Typography variant="body2" color="text.secondary">
                         {seat.passenger_first_name} {seat.passenger_last_name}
@@ -388,7 +388,7 @@ export default function BookingDetails() {
                   )}
 
                   {seat.phone_number && (
-                    <Stack direction="row" spacing={0.5} alignItems="center">
+                    <Stack direction="row" spacing={0.5} alignitems="center">
                       <PhoneIcon fontSize="small" color="action" />
                       <Typography variant="body2" color="text.secondary">
                         {seat.phone_number}
@@ -401,9 +401,9 @@ export default function BookingDetails() {
           </Stack>
         </CardBox>
 
-        <Stack direction="row" spacing={0.5} alignItems="center"></Stack>
+        <Stack direction="row" spacing={0.5} alignitems="center"></Stack>
 
-        {booking.status === "booked" && (
+        {!isAdmin && booking.status === "booked" && (
           <Box               sx={{ fontSize: "30px" }}
 >
             <Button

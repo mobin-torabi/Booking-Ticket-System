@@ -456,23 +456,20 @@ app.get("/discounts", async (req, res) => {
 // Get /discounts/:id
 app.get("/discounts/:id", async (req, res) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
 
-    const result = await sql`SELECT * FROM discounts WHERE id = ${id}`
+    const result = await sql`SELECT * FROM discounts WHERE id = ${id}`;
 
     const discount = result[0];
 
-    if (!discount)
-      return res
-        .status(404)
-        .send({ error: "کد تخفیف پیدا نشد" });
+    if (!discount) return res.status(404).send({ error: "کد تخفیف پیدا نشد" });
 
     res.send(discount);
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send({ error: "خطا در دریافت کد تخفیف" });
   }
-})
+});
 
 // Get /discounts/validate?code=X&amount=Y
 app.get("/discounts/validate", async (req, res) => {
@@ -718,7 +715,8 @@ app.get("/tickets", async (req, res) => {
       );
 
       filtered = filtered.filter(
-        (t) => (availableByTicketId.get(t.id) || 0) >= Number(available_seats_min),
+        (t) =>
+          (availableByTicketId.get(t.id) || 0) >= Number(available_seats_min),
       );
     }
 
@@ -744,10 +742,12 @@ app.get("/tickets", async (req, res) => {
   }
 });
 
-// Get /tickets/:id
+// Get /tickets/:id - query: wantSeats: boolean
 app.get("/tickets/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    let  wantSeats  = req.query.wantSeats === undefined ? null : req.query.wantSeats === 'true';
+    if (wantSeats === null ) wantSeats = true
 
     const result = await sql`
             SELECT t.*, tt.name AS ticket_type, tp.provider_id, tp.provider_type
@@ -760,10 +760,13 @@ app.get("/tickets/:id", async (req, res) => {
     if (result.length === 0)
       return res.status(404).send({ error: "تیکت پیدا نشد" });
 
-    const seats =
-      await sql`SELECT * FROM seats WHERE ticket_id = ${id} ORDER BY seat_number`;
+    if (wantSeats) {
+      const seats =
+        await sql`SELECT * FROM seats WHERE ticket_id = ${id} ORDER BY seat_number`;
+      res.send({ ...result[0], seats });
+    }
 
-    res.send({ ...result[0], seats });
+    res.send({ ...result[0] });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send({ error: "خطا در دریافت تیکت" });
@@ -838,11 +841,9 @@ app.post("/tickets", async (req, res) => {
 
     const meta = PROVIDER_META[type];
     if (!meta) {
-      return res
-        .status(400)
-        .send({
-          error: "نوع تیکت باید 'پرواز', 'قطار', 'اتوبوس' یا 'تور باشد'",
-        });
+      return res.status(400).send({
+        error: "نوع تیکت باید 'پرواز', 'قطار', 'اتوبوس' یا 'تور باشد'",
+      });
     }
 
     if (type === "tour" && !return_date) {
@@ -1100,7 +1101,6 @@ app.get("/cities", async (request, response) => {
     const { has_airport, has_train, search } = request.query;
     let filtered = await sql`SELECT * FROM "City" ORDER BY name`;
 
-
     if (has_train !== undefined) {
       const wantTrain = has_train === "true";
       filtered = filtered.filter((c) => c["has-train"] === wantTrain);
@@ -1131,7 +1131,6 @@ app.get("/cities", async (request, response) => {
 // GET /notifications?userId=123
 app.get("/notifications", async (request, response) => {
   try {
-    
     const { userId } = request.query;
     if (!userId)
       return response.status(400).send({ error: "آیدی کاربر الزامی است" });
@@ -1139,7 +1138,7 @@ app.get("/notifications", async (request, response) => {
       await sql`SELECT * FROM notifications WHERE user_id = ${userId} ORDER BY sent_at DESC`;
     response.send(result);
   } catch (error) {
-     response.status(500).send({ error: "خطا در دریافت اعلان ها" });
+    response.status(500).send({ error: "خطا در دریافت اعلان ها" });
   }
 });
 //SUPPORT
@@ -1150,9 +1149,7 @@ app.post("/support", async (req, res) => {
     const { name, email, subject, message } = req.body;
 
     if (!name || !email || !message) {
-      return res
-        .status(400)
-        .send({ error: "نام، ایمیل و پیام الزامی اند" });
+      return res.status(400).send({ error: "نام، ایمیل و پیام الزامی اند" });
     }
 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1182,7 +1179,6 @@ app.post("/support", async (req, res) => {
     res.status(500).send({ error: "ارسال پیام با خطا مواجه شد" });
   }
 });
-
 
 //BOOKINGS
 
@@ -1253,7 +1249,12 @@ app.get("/bookings", async (req, res) => {
 app.post("/bookings", async (req, res) => {
   const { userId, ticket_id, seat_ids, passengers } = req.body;
 
-  if (!userId || !ticket_id || !Array.isArray(seat_ids) || seat_ids.length === 0) {
+  if (
+    !userId ||
+    !ticket_id ||
+    !Array.isArray(seat_ids) ||
+    seat_ids.length === 0
+  ) {
     return res.status(400).send({ error: "ورودی نامعتبر" });
   }
 
@@ -1274,7 +1275,8 @@ app.post("/bookings", async (req, res) => {
   try {
     // Step 1: make sure the ticket exists, and confirm the requested seats
     // actually belong to it before touching anything.
-    const ticketResult = await sql`SELECT * FROM tickets WHERE id = ${ticket_id}`;
+    const ticketResult =
+      await sql`SELECT * FROM tickets WHERE id = ${ticket_id}`;
     const ticket = ticketResult[0];
 
     if (!ticket) {
@@ -1409,7 +1411,8 @@ app.patch("/bookings/:id/cancel", async (req, res) => {
 
     if (cancelResult.length === 0) {
       // Either the booking doesn't exist, or it was already cancelled.
-      const existing = await sql`SELECT id, status FROM bookings WHERE id = ${id}`;
+      const existing =
+        await sql`SELECT id, status FROM bookings WHERE id = ${id}`;
       if (existing.length === 0) {
         return res.status(404).send({ error: "رزرو پیدا نشد" });
       }
