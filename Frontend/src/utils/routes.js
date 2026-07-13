@@ -1,22 +1,24 @@
 export const ROUTES = {
-    // Public
-    HOME: "/tickets",
-    LOGIN: "/login",
-    REGISTER: "/register",
+  // Public
+  HOME: "/tickets",
+  LOGIN: "/login",
+  REGISTER: "/register",
+  FAQ: "/faq",
+  SUPPORT: "/support",
+  POLICY: "/policy",
+  // Customer
+  // DASHBOARD: "/dashboard",
+  PROFILE: "/profile",
+  BOOKINGS: "/bookings",
+  NOTIFICATIONS: "/notifications",
 
-    // Customer
-    // DASHBOARD: "/dashboard",
-    PROFILE: "/profile",
-    BOOKINGS: "/bookings",
-    NOTIFICATIONS: "/notifications",
-
-    // Admin
-    ADMIN: "/admin/profile",
-    USERS: "/admin/users",
-    PROVIDERS: "/admin/providers",
-    ADMIN_BOOKINGS: "/admin/bookings",
-    PAYMENTS: "/admin/payments",
-    DISCOUNTS: "/admin/discounts",
+  // Admin
+  ADMIN: "/admin/profile",
+  USERS: "/admin/users",
+  PROVIDERS: "/admin/providers",
+  ADMIN_BOOKINGS: "/admin/bookings",
+  PAYMENTS: "/admin/payments",
+  DISCOUNTS: "/admin/discounts",
 };
 
 /* 

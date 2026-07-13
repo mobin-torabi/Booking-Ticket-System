@@ -207,7 +207,6 @@ export default function BookingDetails() {
       />
 
       <Stack spacing={2.5}>
-        {/* Overview */}
         <CardBox>
           <Stack
             direction={{ xs: "column", sm: "row" }}
@@ -280,7 +279,6 @@ export default function BookingDetails() {
           )}
         </CardBox>
 
-        {/* Trip info */}
         <CardBox>
           <Typography variant="subtitle1" fontWeight={700} mb={2}>
             اطلاعات سفر
@@ -319,7 +317,6 @@ export default function BookingDetails() {
           </Stack>
         </CardBox>
 
-        {/* Payment info */}
         <CardBox>
           <Typography variant="subtitle1" fontWeight={700} mb={2}>
             اطلاعات پرداخت
@@ -351,7 +348,6 @@ export default function BookingDetails() {
           </Stack>
         </CardBox>
 
-        {/* Seats & passengers */}
         <CardBox>
           <Typography variant="subtitle1" fontWeight={700} mb={2}>
             صندلی ها و مسافران
@@ -405,10 +401,8 @@ export default function BookingDetails() {
           </Stack>
         </CardBox>
 
-        {/* Booking reference */}
         <Stack direction="row" spacing={0.5} alignItems="center"></Stack>
 
-        {/* Actions */}
         {booking.status === "booked" && (
           <Box               sx={{ fontSize: "30px" }}
 >

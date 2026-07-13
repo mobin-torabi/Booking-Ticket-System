@@ -15,17 +15,28 @@ import EmailIcon from "@mui/icons-material/Email";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import { useState } from "react";
+import { useNavigate } from "react-router";
+import { ROUTES } from "../../utils/routes";
+
 
 export default function Footer() {
   const [open, setOpen] = useState(false);
   const theme = useTheme();
-
+const navigate = useNavigate();
   const emails = [
     "tickisupport@gmail.com",
     "mobintorabi592@gmail.com",
     "aylinamjad@gmail.com",
   ];
-
+function navigateFAQ(){
+  navigate(ROUTES.FAQ)
+}
+function navigatePolicy(){
+  navigate(ROUTES.POLICY)
+}
+function navigateSupport(){
+  navigate(ROUTES.SUPPORT)
+}
   return (
     <footer
 
@@ -44,15 +55,15 @@ export default function Footer() {
             </Typography>
 
             <div className="flex flex-col gap-2">
-              <Link href="#" underline="hover" color="text.secondary">
+              <Link sx={{ cursor:"pointer"}} onClick={navigateSupport} underline="hover" color="text.secondary">
                 پشتیبانی
               </Link>
 
-              <Link href="#" underline="hover" color="text.secondary">
+              <Link sx={{ cursor:"pointer"}} onClick={navigateFAQ} underline="hover" color="text.secondary">
                 پرسش و پاسخ
               </Link>
 
-              <Link href="#" underline="hover" color="text.secondary">
+              <Link sx={{ cursor:"pointer"}} onClick={navigatePolicy} underline="hover" color="text.secondary">
                 قوانین و مقررات
               </Link>
             </div>

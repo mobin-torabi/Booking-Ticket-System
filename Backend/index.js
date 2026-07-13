@@ -1130,10 +1130,6 @@ app.get("/cities", async (request, response) => {
 //NOTIFICATIONS
 // GET /notifications?userId=123
 app.get("/notifications", async (request, response) => {
-<<<<<<< HEAD
-=======
-  // console.log("fetchNotifications called");
->>>>>>> 70986d43425d7d29a3bb4b1f540e8e0a1c6a2477
   try {
     
     const { userId } = request.query;
@@ -1144,6 +1140,46 @@ app.get("/notifications", async (request, response) => {
     response.send(result);
   } catch (error) {
      response.status(500).send({ error: "خطا در دریافت اعلان ها" });
+  }
+});
+//SUPPORT
+// POST /support - body: { name, email, subject, message }
+
+app.post("/support", async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+
+    if (!name || !email || !message) {
+      return res
+        .status(400)
+        .send({ error: "نام، ایمیل و پیام الزامی اند" });
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      return res.status(400).send({ error: "ایمیل نامعتبر است" });
+    }
+
+    await sendEmail({
+      to: "tickisupport@gmail.com",
+      replyTo: email,
+      subject: `[فرم پشتیبانی] ${subject || "بدون موضوع"}`,
+      html: `
+        <div dir="rtl" style="font-family: Tahoma, sans-serif;">
+          <p><strong>نام:</strong> ${name}</p>
+          <p><strong>ایمیل:</strong> ${email}</p>
+          <p><strong>موضوع:</strong> ${subject || "بدون موضوع"}</p>
+          <p><strong>پیام:</strong></p>
+          <p>${String(message).replace(/\n/g, "<br/>")}</p>
+        </div>
+      `,
+      text: `نام: ${name}\nایمیل: ${email}\nموضوع: ${subject || "بدون موضوع"}\n\n${message}`,
+    });
+
+    res.send({ message: "پیام شما با موفقیت ارسال شد" });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "ارسال پیام با خطا مواجه شد" });
   }
 });
 
