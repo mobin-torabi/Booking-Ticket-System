@@ -214,7 +214,7 @@ export default function JalaliDatePicker({
                   <Typography
                     key={w}
                     variant="caption"
-                    textAlign="center"
+                    textalign="center"
                     color="text.secondary"
                   >
                     {w}

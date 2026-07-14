@@ -453,26 +453,9 @@ app.get("/discounts", async (req, res) => {
   }
 });
 
-// Get /discounts/:id
-app.get("/discounts/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const result = await sql`SELECT * FROM discounts WHERE id = ${id}`;
-
-    const discount = result[0];
-
-    if (!discount) return res.status(404).send({ error: "کد تخفیف پیدا نشد" });
-
-    res.send(discount);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).send({ error: "خطا در دریافت کد تخفیف" });
-  }
-});
-
 // Get /discounts/validate?code=X&amount=Y
 app.get("/discounts/validate", async (req, res) => {
+  console.log(5555)
   try {
     const { code, amount } = req.query;
     if (!code) return res.status(400).send({ error: "کد تخفیف الزامی است" });
@@ -508,6 +491,25 @@ app.get("/discounts/validate", async (req, res) => {
     res.status(500).send({ error: "خطا در اعتبارسنجی کد تخفیف" });
   }
 });
+
+// Get /discounts/:id
+app.get("/discounts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await sql`SELECT * FROM discounts WHERE id = ${id}`;
+
+    const discount = result[0];
+
+    if (!discount) return res.status(404).send({ error: "کد تخفیف پیدا نشد" });
+
+    res.send(discount);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: "خطا در دریافت کد تخفیف" });
+  }
+});
+
 
 // Post /discounts
 app.post("/discounts", async (req, res) => {
@@ -763,10 +765,10 @@ app.get("/tickets/:id", async (req, res) => {
     if (wantSeats) {
       const seats =
         await sql`SELECT * FROM seats WHERE ticket_id = ${id} ORDER BY seat_number`;
-      res.send({ ...result[0], seats });
+      return res.send({ ...result[0], seats });
     }
 
-    res.send({ ...result[0] });
+    res.send( {...result[0] } );
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send({ error: "خطا در دریافت تیکت" });
