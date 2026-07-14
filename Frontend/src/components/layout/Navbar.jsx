@@ -58,46 +58,6 @@ export default function Navbar() {
             <AirplaneTicketIcon fontSize="large" />
             <HeaderLogo component={Link} to="/tickets" />
           </Typography>
-          <Button
-            component={Link}
-            to="/tickets"
-            color="inherit"
-            sx={{
-              fontWeight: 600,
-            }}
-          >
-            بلیط هوایپما
-          </Button>
-          <Button
-            component={Link}
-            to="/tickets"
-            color="inherit"
-            sx={{
-              fontWeight: 600,
-            }}
-          >
-            بلیط قطار
-          </Button>
-          <Button
-            component={Link}
-            to="/tickets"
-            color="inherit"
-            sx={{
-              fontWeight: 600,
-            }}
-          >
-            بلیط اتوبوس
-          </Button>
-          <Button
-            component={Link}
-            to="/tickets"
-            color="inherit"
-            sx={{
-              fontWeight: 600,
-            }}
-          >
-            بلیط تور
-          </Button>
         </Box>
 
         {/* Left Side */}

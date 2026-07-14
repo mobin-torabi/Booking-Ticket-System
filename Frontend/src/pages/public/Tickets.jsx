@@ -22,12 +22,14 @@ import TuneIcon from "@mui/icons-material/Tune";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import ClearIcon from "@mui/icons-material/Clear";
 
 import { ticketApi } from "../../api";
 import { formatPrice } from "../../utils/formatPrice";
 import { formatDateTime } from "../../utils/formatDate";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import usePagination from "../../hooks/usePagination";
+import useDebounce from "../../hooks/useDebounce";
 import { showError } from "../../utils/toast";
 
 import CardBox from "../../components/common/Card";
@@ -123,7 +125,10 @@ export default function Tickets() {
   const [type, setType] = useState("flight");
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-  const [departureDate, setDepartureDate] = useState("");
+  const [departureDateFrom, setDepartureDateFrom] = useState("");
+
+  const debouncedOrigin = useDebounce(origin, 500);
+  const debouncedDestination = useDebounce(destination, 500);
 
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [tripType, setTripType] = useState("");
@@ -134,11 +139,12 @@ export default function Tickets() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [clearButtonCounter, setClearButtonCounter] = useState(0);
 
   useEffect(() => {
     fetchTickets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type]);
+  }, [type, debouncedOrigin, debouncedDestination, clearButtonCounter]);
 
   async function fetchTickets(e) {
     e?.preventDefault();
@@ -151,7 +157,7 @@ export default function Tickets() {
         type,
         origin: origin || undefined,
         destination: destination || undefined,
-        departure_date: departureDate || undefined,
+        departure_date_from: departureDateFrom || undefined,
         trip_type: tripType || undefined,
         price_min: priceMin || undefined,
         price_max: priceMax || undefined,
@@ -173,8 +179,9 @@ export default function Tickets() {
   }
 
   function handleSwap() {
+    const originState = origin;
     setOrigin(destination);
-    setDestination(origin);
+    setDestination(originState);
   }
 
   function handleTourClick(tour) {
@@ -186,6 +193,19 @@ export default function Tickets() {
     tickets,
     PAGE_SIZE,
   );
+
+  function clearFilters() {
+    setType("flight");
+    setOrigin("");
+    setDestination("");
+    setDepartureDateFrom("");
+    setShowMoreFilters(false);
+    setTripType("");
+    setPriceMin("");
+    setPriceMax("");
+    setSort("departure_at_asc");
+    setClearButtonCounter((prev) => prev + 1);
+  }
 
   return (
     <Box dir="rtl">
@@ -279,8 +299,9 @@ export default function Tickets() {
                   sx={{
                     bgcolor: "background.paper",
                     border: "1px solid #E2E8F0",
-                    mx: { sm: -2.5 },
+                    mx: { sm: 0.5 },
                     my: { xs: -1, sm: 0 },
+
                     zIndex: 1,
                     "&:hover": { bgcolor: "#E8F1FF" },
                   }}
@@ -297,20 +318,18 @@ export default function Tickets() {
 
               {/* Date */}
               <Box sx={{ flex: 1 }}>
-                <Input
+                {/* <Input
                   label="تاریخ حرکت"
                   type="date"
-                  value={departureDate}
-                  onChange={(e) => setDepartureDate(e.target.value)}
+                  value={departureDateFrom}
+                  onChange={(e) => setDepartureDateFrom(e.target.value)}
                   slotProps={{ inputLabel: { shrink: true } }}
-                />
-                {/* <JalaliDatePicker
-                  label="تاریخ حرکت"
-                  value={departureDate}
-                  onChange={(isoDate) =>
-                    setDepartureDate((prev) => ({ ...prev, startsAt: isoDate }))
-                  }
                 /> */}
+                <JalaliDatePicker
+                  label="تاریخ حرکت"
+                  value={departureDateFrom}
+                  onChange={(isoDate) => setDepartureDateFrom(isoDate)}
+                />
               </Box>
 
               {/* Search button */}
@@ -325,13 +344,20 @@ export default function Tickets() {
             </Stack>
 
             {/* More filters toggle */}
-            <Stack direction="row" justifycontent="flex-end" mt={1}>
+            <Stack direction="row" justifycontent="flex-end" sx={{mt: 3, mb: 3}}>
               <Button
                 variant="text"
                 startIcon={<TuneIcon />}
                 onClick={() => setShowMoreFilters((prev) => !prev)}
               >
                 فیلترهای بیشتر
+              </Button>
+              <Button
+                variant="text"
+                startIcon={<ClearIcon />}
+                onClick={clearFilters}
+              >
+                حذف همه فیلتر ها
               </Button>
             </Stack>
 
@@ -478,7 +504,7 @@ export default function Tickets() {
                           fontWeight={700}
                           color="primary.main"
                         >
-                          {formatPrice(ticket.base_price)} تومان
+                          {formatPrice(ticket.base_price)}
                         </Typography>
                       </Stack>
 
@@ -492,11 +518,15 @@ export default function Tickets() {
             </Box>
 
             {totalPages > 1 && (
-              <Pagination
-                page={page}
-                count={totalPages}
-                onChange={(_, value) => setPage(value)}
-              />
+              <Box
+                sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 0 }}
+              >
+                <Pagination
+                  page={page}
+                  count={totalPages}
+                  onChange={(_, value) => setPage(value)}
+                />
+              </Box>
             )}
           </>
         )}
@@ -515,7 +545,7 @@ export default function Tickets() {
         <Typography variant="h5" fontWeight={700} mb={0.5}>
           تورهای پیشنهادی
         </Typography>
-        <Typography variant="body2" color="text.secondary" mb={2.5}>
+        <Typography variant="body2" color="text.secondary" sx={{mb: 2}}>
           یک مقصد را انتخاب کنید تا تورهای مربوط به آن را ببینید
         </Typography>
 
