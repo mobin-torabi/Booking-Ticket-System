@@ -240,7 +240,6 @@ export default function Bookings() {
                       gap: 2.5,
                     }}
                   >
-                    {/* Icon */}
                     <Box
                       sx={{
                         width: 52,
@@ -257,7 +256,6 @@ export default function Bookings() {
                       <TypeIcon />
                     </Box>
 
-                    {/* Main info */}
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Stack
                         direction="row"
@@ -332,7 +330,7 @@ export default function Bookings() {
                         >
                           <PaymentsIcon fontSize="small" color="action" />
                           <Typography variant="body2" color="text.secondary">
-                            {formatPrice(booking.total_amount)}
+                            {formatPrice(booking.total_amount)} تومان
                           </Typography>
                         </Stack>
                       </Stack>
@@ -365,7 +363,6 @@ export default function Bookings() {
                         )}
                     </Box>
 
-                    {/* Actions */}
                     <Stack
                       spacing={1}
                       sx={{
