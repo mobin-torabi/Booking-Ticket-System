@@ -69,7 +69,7 @@ function navigateSupport(){
             </div>
           </div>
 
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-start">
             <img src="/logo.png" alt="Ticki" className="h-12 w-60" />
 
             <div className="mt-2">

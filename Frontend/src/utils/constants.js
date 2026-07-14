@@ -20,4 +20,17 @@ export const PAYMENT_METHODS = [
     "online",
 ];
 
-/*Later we can add ticket types and seat classes here too. */
+export const TICKET_TYPE_LABELS = {
+    flight: "پرواز",
+    train: "قطار",
+    bus: "اتوبوس",
+    tour: "تور",
+};
+
+export const SEAT_CLASS_LABELS = {
+    economy: "اکونومی",
+    business: "بیزینس",
+    first: "فرست کلاس",
+};
+
+export const SEAT_CLASS_ORDER = ["first", "business", "economy"];
