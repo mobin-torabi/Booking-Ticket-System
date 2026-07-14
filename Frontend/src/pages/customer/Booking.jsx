@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Box, Stack, Chip, Typography, Paper, Divider } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Chip,
+  Typography,
+  Paper,
+  Divider,
+  IconButton,
+} from "@mui/material";
 
 import FlightIcon from "@mui/icons-material/Flight";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
@@ -10,8 +18,10 @@ import EventSeatIcon from "@mui/icons-material/EventSeat";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import PersonIcon from "@mui/icons-material/Person";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import CloseIcon from "@mui/icons-material/Close";
 
-import { ticketApi, bookingApi } from "../../api";
+import { ticketApi, bookingApi, discountApi } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { formatPrice } from "../../utils/formatPrice";
 import { formatDateTime } from "../../utils/formatDate";
@@ -84,9 +94,7 @@ function seatSortValue(seat) {
 // Each row of the bus has 3 seats: 2 seats, an aisle, then 1 seat (a
 // standard 2+1 coach layout), read left-to-right across the vehicle.
 function buildBusRows(seats) {
-  const sorted = [...seats].sort(
-    (a, b) => seatSortValue(a) - seatSortValue(b),
-  );
+  const sorted = [...seats].sort((a, b) => seatSortValue(a) - seatSortValue(b));
 
   const rows = [];
 
@@ -148,6 +156,10 @@ export default function Booking() {
   ]);
   const [submitting, setSubmitting] = useState(false);
 
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountApplied, setDiscountApplied] = useState(null);
+  const [checkingDiscount, setCheckingDiscount] = useState(false);
+
   useEffect(() => {
     fetchTicket();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -178,19 +190,26 @@ export default function Booking() {
   );
 
   const isTrain = ticket?.ticket_type === "train";
-  const isFlight = ticket?.ticket_type === "flight";
+  const isTour = ticket?.ticket_type === "tour";
 
+  const isFlight = ticket?.ticket_type === "flight";
   const seatsByClass = useMemo(() => {
     const groups = {};
-    for (const seat of availableSeats) {
-      groups[seat.seat_class] = groups[seat.seat_class] || [];
+
+    for (const seat of ticket?.seats || []) {
+      if (!groups[seat.seat_class]) {
+        groups[seat.seat_class] = [];
+      }
+
       groups[seat.seat_class].push(seat);
     }
+
     for (const cls of Object.keys(groups)) {
       groups[cls].sort((a, b) => a.seat_number.localeCompare(b.seat_number));
     }
+
     return groups;
-  }, [availableSeats]);
+  }, [ticket]);
 
   const sortedAvailableSeats = useMemo(
     () =>
@@ -209,13 +228,20 @@ export default function Booking() {
   // N available seats automatically whenever the passenger count (or the
   // available seats) changes, and the manual seat map is hidden entirely.
   useEffect(() => {
-    if (!isTrain) return;
+    if (!isTrain && !isTour) return;
 
     setSelectedSeatIds(
       sortedAvailableSeats.slice(0, passengerCount).map((s) => s.id),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isTrain, passengerCount, sortedAvailableSeats]);
+  }, [isTrain, isTour, passengerCount, sortedAvailableSeats]);
+
+  // The discount was validated against a specific total amount — if the
+  // passenger count changes, that amount is stale, so make the user re-check
+  // the code instead of silently trusting an old validation.
+  useEffect(() => {
+    setDiscountApplied(null);
+  }, [passengerCount]);
 
   const maxSelectable = Math.min(availableSeats.length, MAX_PASSENGERS) || 1;
 
@@ -242,7 +268,7 @@ export default function Booking() {
   }
 
   function toggleSeat(seatId) {
-    if (isTrain) return;
+    if (isTrain || isTour) return;
 
     setSelectedSeatIds((prev) => {
       if (prev.includes(seatId)) {
@@ -260,6 +286,30 @@ export default function Booking() {
     setPassengers((prev) =>
       prev.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
     );
+  }
+
+  async function handleCheckDiscount() {
+    const code = discountCode.trim();
+    if (!code || !ticket) return;
+
+    const amount = Number(ticket.base_price) * passengerCount;
+
+    try {
+      setCheckingDiscount(true);
+      const { data } = await discountApi.validateDiscount(code, amount);
+      setDiscountApplied(data.discount);
+      showSuccess(`کد تخفیف اعمال شد (٪${data.discount.percentage} تخفیف)`);
+    } catch (err) {
+      setDiscountApplied(null);
+      showError(err.response?.data?.error ?? "کد تخفیف نامعتبر است");
+    } finally {
+      setCheckingDiscount(false);
+    }
+  }
+
+  function handleRemoveDiscount() {
+    setDiscountApplied(null);
+    setDiscountCode("");
   }
 
   function seatLabel(seatId) {
@@ -295,10 +345,12 @@ export default function Booking() {
   async function handleSubmit() {
     if (!validate()) return;
 
+    let booking = null;
+
     try {
       setSubmitting(true);
 
-      const { data } = await bookingApi.createBooking({
+      const created = await bookingApi.createBooking({
         userId: user.id,
         ticket_id: ticketId,
         seat_ids: selectedSeatIds,
@@ -308,10 +360,31 @@ export default function Booking() {
           phone_number: p.phone_number.trim() || undefined,
         })),
       });
+      booking = created.data;
 
-      showSuccess("رزرو با موفقیت ثبت شد");
-      navigate(`/payment/${data.id}`);
+      // There's no real payment gateway here, so booking finalizes the
+      // purchase itself — this call also applies the discount (if any) and
+      // marks the booking as paid/confirmed.
+      await bookingApi.payBooking(
+        booking.id,
+        discountApplied ? discountCode.trim() : undefined,
+      );
+
+      showSuccess("بلیط شما با موفقیت رزرو شد");
+      navigate(`/bookings/${booking.id}`);
     } catch (err) {
+      // If the booking was created but finalizing it failed (e.g. the
+      // discount code became invalid in the meantime), don't leave an
+      // unpaid booking sitting on the seats — release it and let the user
+      // try again.
+      if (booking) {
+        try {
+          await bookingApi.cancelBooking(booking.id, "خطا در تکمیل رزرو");
+        } catch {
+          // best-effort rollback; surface the original error either way
+        }
+      }
+
       const message =
         err.response?.status === 409
           ? "برخی از صندلی‌های انتخابی توسط شخص دیگری رزرو شده‌اند"
@@ -336,6 +409,19 @@ export default function Booking() {
   const isCancelled = ticket.status === "cancelled";
   const soldOut = availableSeats.length === 0;
   const totalPrice = Number(ticket.base_price) * passengerCount;
+
+  let discountAmount = 0;
+  if (discountApplied) {
+    discountAmount = totalPrice * (discountApplied.percentage / 100);
+    if (discountApplied.max_discount_amount) {
+      discountAmount = Math.min(
+        discountAmount,
+        Number(discountApplied.max_discount_amount),
+      );
+    }
+    discountAmount = Math.round(discountAmount);
+  }
+  const finalPrice = totalPrice - discountAmount;
 
   if (isCancelled || soldOut) {
     return (
@@ -424,7 +510,6 @@ export default function Booking() {
             </Typography>
             <Box sx={{ maxWidth: 220 }}>
               <Select
-                label="تعداد مسافران"
                 name="passengerCount"
                 value={String(passengerCount)}
                 onChange={handlePassengerCountChange}
@@ -434,7 +519,7 @@ export default function Booking() {
           </Paper>
 
           {/* Seat map (flights: grouped by class / bus & tour: single list) */}
-          {!isTrain && (
+          {!isTrain && !isTour && (
             <Paper
               elevation={0}
               sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}
@@ -473,7 +558,11 @@ export default function Booking() {
                         mb={1}
                       >
                         {SEAT_CLASS_LABELS[cls] || cls} (
-                        {seatsByClass[cls].length} صندلی خالی)
+                        {
+                          seatsByClass[cls].filter((seat) => seat.is_available)
+                            .length
+                        }{" "}
+                        صندلی خالی)
                       </Typography>
                       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                         {seatsByClass[cls].map((seat) => (
@@ -481,9 +570,12 @@ export default function Booking() {
                             key={seat.id}
                             seat={seat}
                             selected={selectedSeatIds.includes(seat.id)}
-                            onClick={() => toggleSeat(seat.id)}
+                            booked={!seat.is_available}
+                            onClick={() =>
+                              seat.is_available && toggleSeat(seat.id)
+                            }
                           />
-                        ))}
+                        ))}{" "}
                       </Box>
                     </Box>
                   ))}
@@ -581,7 +673,7 @@ export default function Booking() {
           )}
 
           {/* Trains: no seat map — seats are assigned automatically */}
-          {isTrain && (
+          {(isTrain || isTour) && (
             <Paper
               elevation={0}
               sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}
@@ -596,6 +688,7 @@ export default function Booking() {
                 در بلیط قطار امکان انتخاب صندلی وجود ندارد؛ شماره صندلی‌ها به
                 صورت خودکار توسط سیستم تخصیص داده می‌شود.
               </Typography>
+
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {selectedSeatIds.map((seatId) => (
                   <Chip
@@ -712,10 +805,73 @@ export default function Booking() {
 
             <Divider sx={{ mb: 2 }} />
 
+            {/* Discount code */}
+            <Stack spacing={1} mb={2}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <LocalOfferIcon fontSize="small" color="primary" />
+                <Typography variant="body2" fontWeight={700}>
+                  کد تخفیف
+                </Typography>
+              </Stack>
+
+              {discountApplied ? (
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  justifyContent="space-between"
+                  sx={{
+                    bgcolor: "#F0FDF4",
+                    border: "1px solid #86EFAC",
+                    borderRadius: 2,
+                    px: 1.5,
+                    py: 1,
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    color="success.dark"
+                    fontWeight={700}
+                  >
+                    {discountApplied.code} (٪{discountApplied.percentage})
+                  </Typography>
+                  <IconButton size="small" onClick={handleRemoveDiscount}>
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              ) : (
+                <Stack direction="row" spacing={1}>
+                  <Input
+                    placeholder="کد تخفیف را وارد کنید"
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value)}
+                  />
+                  <Button
+                    variant="outlined"
+                    disabled={checkingDiscount || !discountCode.trim()}
+                    onClick={handleCheckDiscount}
+                  >
+                    {checkingDiscount ? "..." : "بررسی"}
+                  </Button>
+                </Stack>
+              )}
+            </Stack>
+
+            <Divider sx={{ mb: 2 }} />
+
+            {discountAmount > 0 && (
+              <Stack direction="row" justifyContent="space-between" mb={1}>
+                <Typography color="success.main">تخفیف</Typography>
+                <Typography color="success.main" fontWeight={600}>
+                  ‎-{formatPrice(discountAmount)}
+                </Typography>
+              </Stack>
+            )}
+
             <Stack direction="row" justifyContent="space-between" mb={2.5}>
               <Typography fontWeight={700}>مبلغ قابل پرداخت</Typography>
               <Typography fontWeight={700} color="primary.main">
-                {formatPrice(totalPrice)}
+                {formatPrice(finalPrice)}
               </Typography>
             </Stack>
 
@@ -724,7 +880,7 @@ export default function Booking() {
               disabled={submitting || selectedSeatIds.length !== passengerCount}
               onClick={handleSubmit}
             >
-              {submitting ? "در حال ثبت رزرو..." : "تایید و ادامه به پرداخت"}
+              {submitting ? "در حال ثبت رزرو..." : "تایید و رزرو"}
             </Button>
 
             <Typography

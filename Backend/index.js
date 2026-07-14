@@ -510,7 +510,6 @@ app.get("/discounts/:id", async (req, res) => {
   }
 });
 
-
 // Post /discounts
 app.post("/discounts", async (req, res) => {
   try {
