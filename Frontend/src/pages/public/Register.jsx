@@ -11,7 +11,7 @@ import useDocumentTitle from "../../hooks/useDocumentTitle";
 import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Button from "../../components/common/Button";
-import JalaliDatePicker from "../../components/common/JalaliDatePicker";
+import JalaliDatePicker from "../../components/common/Jalalidatepicker";
 
 
 import { showError, showPromise } from "../../utils/toast";

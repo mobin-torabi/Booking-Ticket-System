@@ -34,8 +34,8 @@ import calculateDuration from "../../utils/calculateDuration";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import { showError } from "../../utils/toast";
 
-import { POLICIES_DATA } from "./policiesData";
-import { getTourContent } from "./toursData";
+import { POLICIES_DATA } from "./PoliciesData";
+import { getTourContent } from "./ToursData";
 
 import Button from "../../components/common/Button";
 import Loading from "../../components/common/Loading";

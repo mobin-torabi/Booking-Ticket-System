@@ -37,7 +37,7 @@ import Pagination from "../../components/common/Pagination";
 import Loading from "../../components/common/Loading";
 import EmptyState from "../../components/common/EmptyState";
 import ErrorState from "../../components/common/ErrorState";
-import JalaliDatePicker from "../../components/common/JalaliDatePicker";
+import JalaliDatePicker from "../../components/common/Jalalidatepicker";
 
 const STATUS_OPTIONS = [
   { value: "", label: "همه وضعیت‌ها" },
