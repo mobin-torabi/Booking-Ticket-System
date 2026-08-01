@@ -9,7 +9,7 @@ export default function Pagination({
     return (
         <Stack
             spacing={2}
-            alignitems="center"
+            alignItems="center"
             mt={4}
         >
             <MuiPagination

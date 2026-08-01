@@ -61,9 +61,15 @@ async function sendEmail({ to, subject, text, html }) {
     console.error("Error while sending mail:", error);
   }
 }
-app.listen(PORT, () =>
-  console.log(` My App listening at http://localhost:${PORT}`),
-);
+// Vercel imports this file as a serverless function (see vercel.json) and
+// calls the exported app directly per-request, so app.listen() must only
+// run for local/traditional hosting — binding a port on every cold start
+// serves no purpose there and just wastes init time.
+if (!process.env.VERCEL) {
+  app.listen(PORT, () =>
+    console.log(` My App listening at http://localhost:${PORT}`),
+  );
+}
 // - - - - - Endpoints - - - - -
 
 // Users
@@ -381,6 +387,16 @@ app.post("/bookings/:id/pay", async (req, res) => {
     const booking = bookingResult[0];
     if (!booking) return res.status(404).send({ error: "رزرو پیدا نشد" });
 
+    if (booking.status === "cancelled") {
+      return res
+        .status(400)
+        .send({ error: "این رزرو لغو شده و قابل پرداخت نیست" });
+    }
+
+    if (booking.status === "booked") {
+      return res.status(400).send({ error: "این رزرو قبلا پرداخت شده است" });
+    }
+
     let amount = Number(booking.total_amount);
     let discountId = null;
 
@@ -418,7 +434,19 @@ app.post("/bookings/:id/pay", async (req, res) => {
 
     await sql`INSERT INTO payments (booking_id, discount_id, amount, paid_at) VALUES (${id}, ${discountId}, ${amount}, now())`;
 
-    await sql`UPDATE bookings SET status = 'booked', updated_at = now() WHERE id = ${id}`;
+    // Atomic guard: only flips to 'booked' if it was still 'pending', so two
+    // concurrent pay requests for the same booking can't both succeed.
+    const paidResult = await sql`
+      UPDATE bookings SET status = 'booked', updated_at = now()
+      WHERE id = ${id} AND status = 'pending'
+      RETURNING *
+    `;
+
+    if (paidResult.length === 0) {
+      return res
+        .status(409)
+        .send({ error: "وضعیت این رزرو همزمان تغییر کرده است" });
+    }
 
     await sql`INSERT INTO notifications (booking_id, user_id, type, content) VALUES (${booking.id}, ${booking.user_id}, 'confirmation', 'رزرو شما با موفقیت تایید شد.')`;
 
@@ -1316,11 +1344,13 @@ app.post("/bookings", async (req, res) => {
       return res.status(409).send({ error: "صندلی ها از قبل رزرو شده اند" });
     }
 
-    // Step 3: create the booking.
+    // Step 3: create the booking. Status starts as 'pending' — seats are
+    // already held (flipped unavailable above), but the booking only becomes
+    // 'booked' once POST /bookings/:id/pay actually runs.
     const totalAmount = Number(ticket.base_price) * seat_ids.length;
     const bookingResult = await sql`
       INSERT INTO bookings (user_id, ticket_id, total_amount, number_of_seats, status)
-      VALUES (${userId}, ${ticket_id}, ${totalAmount}, ${seat_ids.length}, 'booked')
+      VALUES (${userId}, ${ticket_id}, ${totalAmount}, ${seat_ids.length}, 'pending')
       RETURNING *
     `;
     const booking = bookingResult[0];
@@ -1571,3 +1601,5 @@ app.delete("/:providerRoute/:id", async (request, response) => {
     response.status(500).send({ error: "خطا در غیرفعال سازی ارائه دهنده" });
   }
 });
+
+module.exports = app;

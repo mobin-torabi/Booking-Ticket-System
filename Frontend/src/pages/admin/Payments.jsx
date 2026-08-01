@@ -22,12 +22,10 @@ import { truncate } from "../../utils/helpers";
 import { formatPrice } from "../../utils/formatPrice";
 
 import { formatDateTime } from "../../utils/formatDate";
-import { showError } from "../../utils/toast";
-import JalaliDatePicker from "../../components/common/JalaliDatePicker";
+import JalaliDatePicker from "../../components/common/Jalalidatepicker";
 
 import PageHeader from "../../components/common/PageHeader";
 import Select from "../../components/common/Select";
-import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
 import Pagination from "../../components/common/Pagination";
@@ -99,7 +97,9 @@ export default function Payments() {
           try {
             const discount = await discountApi.getDiscount(payment.discount_id);
             codes[payment.discount_id] = discount.data.code;
-          } catch (error) {}
+          } catch {
+            // best-effort lookup; a missing code label is harmless here
+          }
         }
       }
 

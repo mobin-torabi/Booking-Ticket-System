@@ -24,8 +24,10 @@ import Notifications from "./pages/customer/Notifications";
 
 /* Admin */
 
+import Dashboard from "./pages/admin/Dashboard";
 import Users from "./pages/admin/Users";
 import Providers from "./pages/admin/Providers";
+import AdminTickets from "./pages/admin/Tickets";
 import Payments from "./pages/admin/Payments";
 import Discounts from "./pages/admin/Discounts";
 import FAQ from "./pages/public/FAQ";
@@ -88,11 +90,15 @@ export default function App() {
           </AdminRoute>
         }
       >
+        <Route path="/admin/dashboard" element={<Dashboard />} />
+
         <Route path="/admin/profile" element={<Profile />} />
 
         <Route path="/admin/users" element={<Users />} />
 
         <Route path="/admin/providers" element={<Providers />} />
+
+        <Route path="/admin/tickets" element={<AdminTickets />} />
 
         <Route path="/admin/bookings" element={<Bookings />} />
 

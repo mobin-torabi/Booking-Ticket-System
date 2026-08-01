@@ -41,6 +41,7 @@ import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import Loading from "../../components/common/Loading";
 import ErrorState from "../../components/common/ErrorState";
+import EmptyState from "../../components/common/EmptyState";
 import Modal from "../../components/common/Modal";
 import Select from "../../components/common/Select";
 import ConfirmDialog from "../../components/common/ConfirmDialog";
@@ -139,12 +140,13 @@ export default function Profile() {
     };
   }, [user?.id]);
 
-  if (isCustomer) {
-    useEffect(() => {
+  useEffect(() => {
+    if (isCustomer) {
       fetchAddresses();
       fetchLocations();
-    }, []);
-  }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCustomer]);
 
   async function fetchAddresses() {
     try {
@@ -631,11 +633,11 @@ export default function Profile() {
             <Stack spacing={2}>
               <Stack
                 direction="row"
-                justifycontent="space-between"
-                alignitems="center"
+                justifyContent="space-between"
+                alignItems="center"
               >
                 <Box sx={{ display: "flex", alignItems: 'center', width: '100%'}}>
-                  <Stack direction="row" spacing={1} alignitems="center">
+                  <Stack direction="row" spacing={1} alignItems="center">
                     <HomeIcon color="primary" />
                     <Typography variant="h6" fontWeight="bold">
                       آدرس‌ های من
@@ -798,8 +800,9 @@ export default function Profile() {
         open={!!deleteTarget}
         title="حذف آدرس"
         message="آیا از حذف این آدرس مطمئن هستید؟ این عملیات قابل بازگشت نیست."
+        confirmText={deleting ? "در حال حذف..." : "حذف"}
         onConfirm={confirmDeleteAddress}
-        onCancel={cancelDeleteAddress}
+        onCancel={() => !deleting && cancelDeleteAddress()}
       />
     </Box>
   );

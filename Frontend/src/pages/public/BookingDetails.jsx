@@ -11,6 +11,7 @@ import EventSeatIcon from "@mui/icons-material/EventSeat";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CancelIcon from "@mui/icons-material/CancelOutlined";
+import CreditScoreIcon from "@mui/icons-material/CreditScore";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import PersonIcon from "@mui/icons-material/Person";
@@ -33,10 +34,12 @@ import Button from "../../components/common/Button";
 import Loading from "../../components/common/Loading";
 import ErrorState from "../../components/common/ErrorState";
 import ConfirmDialog from "../../components/common/ConfirmDialog";
+import { BOOKING_STATUS } from "../../utils/constants";
 
 const STATUS_META = {
-  booked: { label: "تایید شده", color: "success" },
-  cancelled: { label: "لغو شده", color: "error" },
+  [BOOKING_STATUS.PENDING]: { label: "در انتظار پرداخت", color: "warning" },
+  [BOOKING_STATUS.BOOKED]: { label: "تایید شده", color: "success" },
+  [BOOKING_STATUS.CANCELLED]: { label: "لغو شده", color: "error" },
 };
 
 const TYPE_ICONS = {
@@ -210,7 +213,7 @@ export default function BookingDetails() {
         <CardBox>
           <Stack
             direction={{ xs: "column", sm: "row" }}
-            alignitems={{ xs: "stretch", sm: "center" }}
+            alignItems={{ xs: "stretch", sm: "center" }}
             spacing={2.5}
           >
             <Box
@@ -233,8 +236,8 @@ export default function BookingDetails() {
               <Stack
                 direction="row"
                 spacing={1}
-                alignitems="center"
-                flexwrap="wrap"
+                alignItems="center"
+                flexWrap="wrap"
                 useFlexGap
               >
                 <Typography
@@ -260,7 +263,7 @@ export default function BookingDetails() {
                 <Stack
                   direction="row"
                   spacing={0.5}
-                  alignitems="center"
+                  alignItems="center"
                   mt={0.5}
                 >
                   <ApartmentIcon fontSize="small" color="action" />
@@ -285,7 +288,7 @@ export default function BookingDetails() {
           </Typography>
 
           <Stack spacing={1.5}>
-            <Stack direction="row" spacing={1} alignitems="center">
+            <Stack direction="row" spacing={1} alignItems="center">
               <FlightTakeoffIcon fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
                 زمان حرکت:
@@ -295,7 +298,7 @@ export default function BookingDetails() {
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={1} alignitems="center">
+            <Stack direction="row" spacing={1} alignItems="center">
               <FlightLandIcon fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
                 زمان رسیدن:
@@ -304,7 +307,7 @@ export default function BookingDetails() {
                 {formatDateTime(booking.arrival_at)}
               </Typography>
             </Stack>
-            <Stack direction="row" spacing={1} alignitems="center">
+            <Stack direction="row" spacing={1} alignItems="center">
               {" "}
               <ReceiptLongIcon
                 fontSize="small"
@@ -322,15 +325,15 @@ export default function BookingDetails() {
             اطلاعات پرداخت
           </Typography>
 
-          <Stack direction="row" spacing={3} flexwrap="wrap" useFlexGap>
-            <Stack direction="row" spacing={0.5} alignitems="center">
+          <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={0.5} alignItems="center">
               <EventSeatIcon fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
                 {booking.number_of_seats} صندلی
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={0.5} alignitems="center">
+            <Stack direction="row" spacing={0.5} alignItems="center">
               <PaymentsIcon fontSize="small" color="action" />
               <Typography variant="body2" fontWeight={600}>
                 {formatPrice(booking.total_amount)} تومان
@@ -338,7 +341,7 @@ export default function BookingDetails() {
             </Stack>
 
             {booking.created_at && (
-              <Stack direction="row" spacing={0.5} alignitems="center">
+              <Stack direction="row" spacing={0.5} alignItems="center">
                 <CalendarMonthIcon fontSize="small" color="action" />
                 <Typography variant="body2" color="text.secondary">
                   تاریخ رزرو: {formatDateTime(booking.created_at)}
@@ -358,12 +361,12 @@ export default function BookingDetails() {
               <Stack
                 key={seat.id}
                 direction={{ xs: "column", sm: "row" }}
-                justifycontent="space-between"
-                alignitems={{ xs: "flex-start", sm: "center" }}
+                justifyContent="space-between"
+                alignItems={{ xs: "flex-start", sm: "center" }}
                 spacing={1}
                 py={0.5}
               >
-                <Stack direction="row" spacing={1} alignitems="center">
+                <Stack direction="row" spacing={1} alignItems="center">
                   <EventSeatIcon fontSize="small" color="action" />
                   <Typography variant="body2" fontWeight={600}>
                     صندلی {seat.seat_number}
@@ -377,9 +380,9 @@ export default function BookingDetails() {
                   )}
                 </Stack>
 
-                <Stack direction="row" spacing={2} flexwrap="wrap" useFlexGap>
+                <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
                   {(seat.passenger_first_name || seat.passenger_last_name) && (
-                    <Stack direction="row" spacing={0.5} alignitems="center">
+                    <Stack direction="row" spacing={0.5} alignItems="center">
                       <PersonIcon fontSize="small" color="action" />
                       <Typography variant="body2" color="text.secondary">
                         {seat.passenger_first_name} {seat.passenger_last_name}
@@ -388,7 +391,7 @@ export default function BookingDetails() {
                   )}
 
                   {seat.phone_number && (
-                    <Stack direction="row" spacing={0.5} alignitems="center">
+                    <Stack direction="row" spacing={0.5} alignItems="center">
                       <PhoneIcon fontSize="small" color="action" />
                       <Typography variant="body2" color="text.secondary">
                         {seat.phone_number}
@@ -401,11 +404,18 @@ export default function BookingDetails() {
           </Stack>
         </CardBox>
 
-        <Stack direction="row" spacing={0.5} alignitems="center"></Stack>
+        {!isAdmin && booking.status === BOOKING_STATUS.PENDING && (
+          <Button
+            startIcon={<CreditScoreIcon />}
+            onClick={() => navigate(`/payment/${booking.id}`)}
+          >
+            تکمیل پرداخت
+          </Button>
+        )}
 
-        {!isAdmin && booking.status === "booked" && (
-          <Box               sx={{ fontSize: "30px" }}
->
+        {!isAdmin &&
+          (booking.status === BOOKING_STATUS.BOOKED ||
+            booking.status === BOOKING_STATUS.PENDING) && (
             <Button
               variant="text"
               color="error"
@@ -414,8 +424,7 @@ export default function BookingDetails() {
             >
               لغو رزرو
             </Button>
-          </Box>
-        )}
+          )}
       </Stack>
 
       <ConfirmDialog

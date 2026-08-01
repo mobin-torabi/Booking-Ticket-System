@@ -42,19 +42,20 @@ import EmptyState from "../../components/common/EmptyState";
 import Pagination from "../../components/common/Pagination";
 import ConfirmDialog from "../../components/common/ConfirmDialog";
 import SearchBar from "../../components/common/SearchBar";
-import Select from "../../components/common/Select";
+import { BOOKING_STATUS } from "../../utils/constants";
 
 const STATUS_TABS = [
   { value: "all", label: "همه" },
 
-  { value: "booked", label: "تایید شده" },
-  { value: "cancelled", label: "لغو شده" },
+  { value: BOOKING_STATUS.PENDING, label: "در انتظار پرداخت" },
+  { value: BOOKING_STATUS.BOOKED, label: "تایید شده" },
+  { value: BOOKING_STATUS.CANCELLED, label: "لغو شده" },
 ];
 
 const STATUS_META = {
-  booked: { label: "تایید شده", color: "success" },
-  cancelled: { label: "لغو شده", color: "error" },
-  available: { label: "در دسترس", color: "default" },
+  [BOOKING_STATUS.PENDING]: { label: "در انتظار پرداخت", color: "warning" },
+  [BOOKING_STATUS.BOOKED]: { label: "تایید شده", color: "success" },
+  [BOOKING_STATUS.CANCELLED]: { label: "لغو شده", color: "error" },
 };
 
 const TYPE_ICONS = {
@@ -146,13 +147,13 @@ export default function Bookings() {
     try {
       const { data } = await userApi.getUsers();
       setUserOptions(data);
-    } catch (error) {
+    } catch (err) {
       if (err.response?.status === 404) {
         setUserOptions([]);
       } else {
         setError(err.response?.data?.error || "خطا در دریافت لیست کاربران");
       }
-    } 
+    }
   }, []);
 
   useEffect(() => {
@@ -291,12 +292,6 @@ export default function Bookings() {
               </Box>
 
               <Box sx={{ width: "100%" }}>
-                {/* <Select
-                  label="کاربر"
-                  value={userFilter.username}
-                  onChange={(e) => setUserFilter(e.target.value)}
-                  options={userOptions}
-                /> */}
                 <Autocomplete
                   options={userOptions}
                   value={userFilter}
@@ -378,8 +373,8 @@ export default function Bookings() {
                           <Stack
                             direction="row"
                             spacing={1}
-                            alignitems="center"
-                            flexwrap="wrap"
+                            alignItems="center"
+                            flexWrap="wrap"
                             useFlexGap
                           >
                             <Typography
@@ -410,7 +405,7 @@ export default function Bookings() {
                           <Stack
                             direction="row"
                             spacing={2.5}
-                            flexwrap="wrap"
+                            flexWrap="wrap"
                             useFlexGap
                             mt={1}
                           >
@@ -418,7 +413,7 @@ export default function Bookings() {
                               <Stack
                                 direction="row"
                                 spacing={0.5}
-                                alignitems="center"
+                                alignItems="center"
                               >
                                 <CalendarMonthIcon
                                   fontSize="small"
@@ -436,7 +431,7 @@ export default function Bookings() {
                             <Stack
                               direction="row"
                               spacing={0.5}
-                              alignitems="center"
+                              alignItems="center"
                             >
                               <EventSeatIcon fontSize="small" color="action" />
                               <Typography
@@ -450,7 +445,7 @@ export default function Bookings() {
                             <Stack
                               direction="row"
                               spacing={0.5}
-                              alignitems="center"
+                              alignItems="center"
                             >
                               <PaymentsIcon fontSize="small" color="action" />
                               <Typography
@@ -465,7 +460,7 @@ export default function Bookings() {
                           <Stack
                             direction="row"
                             spacing={0.5}
-                            alignitems="center"
+                            alignItems="center"
                             mt={1}
                           >
                             <ReceiptLongIcon
@@ -507,28 +502,27 @@ export default function Bookings() {
                           >
                             مشاهده جزئیات
                           </Button>
-                          {/* 
-                                            {booking.status === "pending" && (
-                                                <Button
-                                                    startIcon={<CreditScoreIcon />}
-                                                    onClick={() =>
-                                                        handlePay(booking.id)
-                                                    }
-                                                >
-                                                    پرداخت
-                                                </Button>
-                                            // )} */}
-
-                          {!isAdmin && booking.status === "booked" && (
+                          {!isAdmin && booking.status === BOOKING_STATUS.PENDING && (
                             <Button
-                              variant="outlined"
-                              color="error"
-                              startIcon={<CancelIcon />}
-                              onClick={() => setCancelTarget(booking)}
+                              startIcon={<CreditScoreIcon />}
+                              onClick={() => handlePay(booking.id)}
                             >
-                              لغو رزرو
+                              تکمیل پرداخت
                             </Button>
                           )}
+
+                          {!isAdmin &&
+                            (booking.status === BOOKING_STATUS.BOOKED ||
+                              booking.status === BOOKING_STATUS.PENDING) && (
+                              <Button
+                                variant="outlined"
+                                color="error"
+                                startIcon={<CancelIcon />}
+                                onClick={() => setCancelTarget(booking)}
+                              >
+                                لغو رزرو
+                              </Button>
+                            )}
                         </Stack>
                       </Box>
                     </CardBox>

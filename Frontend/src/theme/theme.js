@@ -96,7 +96,6 @@ const theme = createTheme({
   },
 
   spacing: 8,
-  direction: "rtl",
   components: {
     MuiButton: {
       defaultProps: {

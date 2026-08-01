@@ -21,7 +21,7 @@ export const showPromise = (
   toast.promise(promise, {
     loading,
     success,
-    error: (err) => error,
+    error: () => error,
   });
 
 /*

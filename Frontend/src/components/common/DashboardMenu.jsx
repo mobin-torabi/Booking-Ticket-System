@@ -6,7 +6,6 @@ import MenuItem from "@mui/material/MenuItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
 import Tooltip from "@mui/material/Tooltip";
 import AirplaneTicketIcon from "@mui/icons-material/AirplaneTicket";
 import Person from "@mui/icons-material/Person";
@@ -16,6 +15,8 @@ import PaymentsIcon from "@mui/icons-material/Payments";
 import PercentIcon from "@mui/icons-material/Percent";
 import InboxIcon from "@mui/icons-material/Inbox";
 import Logout from "@mui/icons-material/Logout";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import { Chip } from "@mui/material";
 
 import { useAuth } from "../../context/AuthContext";
@@ -23,7 +24,7 @@ import { ROUTES } from "../../utils/routes";
 import { useNavigate } from "react-router";
 import { showSuccess } from "../../utils/toast";
 
-export default function DashboardMenu({ letter }) {
+export default function DashboardMenu() {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -54,8 +55,16 @@ export default function DashboardMenu({ letter }) {
     navigate(ROUTES.ADMIN);
   }
 
+  function navigateAdminOverview() {
+    navigate(ROUTES.ADMIN_DASHBOARD);
+  }
+
   function navigateTickets() {
     navigate(ROUTES.HOME);
+  }
+
+  function navigateAdminTickets() {
+    navigate(ROUTES.ADMIN_TICKETS);
   }
 
   function navigateUsers() {
@@ -176,11 +185,23 @@ export default function DashboardMenu({ letter }) {
               </div>
             </MenuItem>
             <Divider />
+            <MenuItem onClick={navigateAdminOverview}>
+              <ListItemIcon>
+                <DashboardIcon fontSize="small" />
+              </ListItemIcon>
+              داشبورد
+            </MenuItem>
             <MenuItem onClick={navigateTickets}>
               <ListItemIcon>
                 <AirplaneTicketIcon fontSize="small" />
               </ListItemIcon>
               تیکت ها
+            </MenuItem>
+            <MenuItem onClick={navigateAdminTickets}>
+              <ListItemIcon>
+                <ConfirmationNumberIcon fontSize="small" />
+              </ListItemIcon>
+              مدیریت تیکت‌ها
             </MenuItem>
             <MenuItem onClick={navigateUsers}>
               <ListItemIcon>
