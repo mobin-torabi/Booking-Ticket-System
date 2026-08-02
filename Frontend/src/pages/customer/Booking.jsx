@@ -25,11 +25,7 @@ import { ticketApi, bookingApi, discountApi } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { formatPrice } from "../../utils/formatPrice";
 import { formatDateTime } from "../../utils/formatDate";
-import {
-  TICKET_TYPE_LABELS,
-  SEAT_CLASS_LABELS,
-  SEAT_CLASS_ORDER,
-} from "../../utils/constants";
+import { TICKET_TYPE_LABELS } from "../../utils/constants";
 import { isValidPhone } from "../../utils/validators";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import { showError, showSuccess } from "../../utils/toast";
@@ -39,6 +35,11 @@ import Input from "../../components/common/Input";
 import Select from "../../components/common/Select";
 import Loading from "../../components/common/Loading";
 import ErrorState from "../../components/common/ErrorState";
+import {
+  FlightSeatMap,
+  BusSeatMap,
+  SeatMapLegend,
+} from "../../components/booking/SeatMap";
 
 const TYPE_ICONS = {
   flight: FlightIcon,
@@ -49,135 +50,16 @@ const TYPE_ICONS = {
 
 const MAX_PASSENGERS = 9;
 
-function SeatButton({ seat, selected, booked, onClick, wide = false }) {
-  return (
-    <Box
-      component="button"
-      type="button"
-      disabled={booked}
-      onClick={onClick}
-      sx={{
-        minWidth: wide ? 76 : 56,
-        height: 44,
-        borderRadius: 2,
-        border: "1px solid",
-        borderColor: selected ? "primary.main" : booked ? "#CBD5E1" : "#E2E8F0",
-        bgcolor: selected ? "primary.main" : booked ? "#E2E8F0" : "#F6F9FD",
-        color: selected ? "#fff" : booked ? "#94A3B8" : "text.primary",
-        fontWeight: 700,
-        fontFamily: "inherit",
-        fontSize: 13,
-        cursor: booked ? "not-allowed" : "pointer",
-        opacity: booked ? 0.8 : 1,
-        transition: "all .15s ease",
-        "&:hover": {
-          borderColor: booked ? "#CBD5E1" : "primary.main",
-        },
-      }}
-    >
-      {seat.seat_number}
-    </Box>
-  );
-}
+// Sticky sidebar / hero offsets have to clear the sticky navbar, which is
+// 72px tall (see components/layout/Navbar.jsx).
+const NAVBAR_HEIGHT = 72;
 
-function seatSortValue(seat) {
-  const parsed = parseInt(String(seat.seat_number).replace(/\D/g, ""), 10);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-// Each row of the bus has 3 seats: 2 seats, an aisle, then 1 seat (a
-// standard 2+1 coach layout), read left-to-right across the vehicle.
-function buildBusRows(seats) {
-  const sorted = [...seats].sort((a, b) => seatSortValue(a) - seatSortValue(b));
-
-  const rows = [];
-
-  for (let i = 0; i < sorted.length; i += 3) {
-    rows.push(sorted.slice(i, i + 3));
-  }
-
-  return rows;
-}
-
-// Flight seat maps mirror a real cabin: each class is its own section, rows
-// run front-to-back, and seats split evenly around a center aisle (a 6-wide
-// row becomes 3 + aisle + 3, a 4-wide row becomes 2 + aisle + 2, etc). The
-// column layout is derived from the actual seat letters present in that
-// class's data rather than a hardcoded scheme, so it adapts to whatever
-// seat_layout the ticket was created with.
-function parseSeatNumber(seat) {
-  const match = String(seat.seat_number).match(/^(\d+)(.*)$/);
-  if (!match) return { row: 0, col: String(seat.seat_number) };
-  return { row: parseInt(match[1], 10), col: match[2] };
-}
-
-function buildCabinRows(seats) {
-  const columns = Array.from(
-    new Set(seats.map((seat) => parseSeatNumber(seat).col)),
-  ).sort();
-
-  const seatsByRow = new Map();
-  for (const seat of seats) {
-    const { row, col } = parseSeatNumber(seat);
-    if (!seatsByRow.has(row)) seatsByRow.set(row, new Map());
-    seatsByRow.get(row).set(col, seat);
-  }
-
-  const rowNumbers = Array.from(seatsByRow.keys()).sort((a, b) => a - b);
-
-  return rowNumbers.map((rowNumber) => ({
-    rowNumber,
-    seats: columns.map((col) => seatsByRow.get(rowNumber).get(col) || null),
-  }));
-}
-
-// Wide-body cabins run two aisles instead of one: seats split into three
-// blocks (e.g. a 9-wide row becomes 3 + aisle + 3 + aisle + 3, a narrower
-// business row becomes 1 + aisle + 2 + aisle + 1). Zero-size blocks are
-// dropped so rows too narrow for three blocks fall back to one aisle.
-function splitSeatColumns(rowWidth, groups = 3) {
-  const base = Math.floor(rowWidth / groups);
-  const extra = rowWidth % groups;
-  const sizes = Array.from(
-    { length: groups },
-    (_, i) => base + (i < extra ? 1 : 0),
-  );
-  return sizes.filter((size) => size > 0);
-}
-
-function SeatMapLegend() {
-  const items = [
-    { label: "انتخاب شما", bg: "primary.main", border: "primary.main" },
-    { label: "قابل انتخاب", bg: "#F6F9FD", border: "#E2E8F0" },
-    { label: "رزرو شده", bg: "#E2E8F0", border: "#CBD5E1" },
-  ];
-  return (
-    <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap mb={2}>
-      {items.map((item) => (
-        <Stack
-          key={item.label}
-          direction="row"
-          spacing={0.75}
-          alignItems="center"
-        >
-          <Box
-            sx={{
-              width: 18,
-              height: 18,
-              borderRadius: 0.75,
-              bgcolor: item.bg,
-              border: "1px solid",
-              borderColor: item.border,
-            }}
-          />
-          <Typography variant="caption" color="text.secondary">
-            {item.label}
-          </Typography>
-        </Stack>
-      ))}
-    </Stack>
-  );
-}
+// Seat numbers sort naturally as numbers, not as strings — "10A" has to come
+// after "2A", which localeCompare on its own gets wrong.
+const seatCollator = new Intl.Collator("en", {
+  numeric: true,
+  sensitivity: "base",
+});
 
 export default function Booking() {
   const { ticketId } = useParams();
@@ -232,8 +114,11 @@ export default function Booking() {
 
   const isTrain = ticket?.ticket_type === "train";
   const isTour = ticket?.ticket_type === "tour";
-
   const isFlight = ticket?.ticket_type === "flight";
+
+  // Seats are grouped by cabin class for the flight map; every seat is kept
+  // (booked ones too, shown greyed out) so the map reads as a real floor
+  // plan rather than a shrinking list of only-available seats.
   const seatsByClass = useMemo(() => {
     const groups = {};
 
@@ -246,7 +131,9 @@ export default function Booking() {
     }
 
     for (const cls of Object.keys(groups)) {
-      groups[cls].sort((a, b) => a.seat_number.localeCompare(b.seat_number));
+      groups[cls].sort((a, b) =>
+        seatCollator.compare(a.seat_number, b.seat_number),
+      );
     }
 
     return groups;
@@ -255,19 +142,14 @@ export default function Booking() {
   const sortedAvailableSeats = useMemo(
     () =>
       [...availableSeats].sort((a, b) =>
-        a.seat_number.localeCompare(b.seat_number),
+        seatCollator.compare(a.seat_number, b.seat_number),
       ),
     [availableSeats],
   );
 
-  // Bus & tour seat map: include every seat (booked ones too, shown greyed
-  // out and disabled) so the layout reads as a real bus floor plan rather
-  // than a shrinking list of only-available seats.
-  const busRows = useMemo(() => buildBusRows(ticket?.seats || []), [ticket]);
-
-  // Trains don't let passengers pick a seat — the system assigns the first
-  // N available seats automatically whenever the passenger count (or the
-  // available seats) changes, and the manual seat map is hidden entirely.
+  // Trains and tours don't let passengers pick a seat — the system assigns
+  // the first N available seats automatically whenever the passenger count
+  // (or the available seats) changes, and the seat map is hidden entirely.
   useEffect(() => {
     if (!isTrain && !isTour) return;
 
@@ -458,7 +340,12 @@ export default function Booking() {
               : "ظرفیت این بلیط تکمیل شده است."
           }
         />
-        <Box textAlign="center" mt={2}>
+        <Box
+          sx={{
+            textAlign: "center",
+            mt: 2,
+          }}
+        >
           <Button
             variant="outlined"
             onClick={() => navigate(`/tickets/${ticketId}`)}
@@ -494,16 +381,22 @@ export default function Booking() {
           />
           <Typography
             variant="h4"
-            fontWeight={700}
-            sx={{ color: "#fff", wordBreak: "break-word" }}
+            sx={{
+              fontWeight: 700,
+              color: "#fff",
+              wordBreak: "break-word",
+            }}
           >
             {ticket.origin} ← {ticket.destination}
           </Typography>
           <Stack
             direction="row"
             spacing={0.75}
-            alignItems="center"
-            sx={{ color: "rgba(255,255,255,.85)", mt: 0.5 }}
+            sx={{
+              alignItems: "center",
+              color: "rgba(255,255,255,.85)",
+              mt: 0.5,
+            }}
           >
             <CalendarMonthIcon fontSize="small" />
             <Typography variant="body2">
@@ -519,19 +412,40 @@ export default function Booking() {
           maxWidth: 1100,
           mx: "auto",
           px: { xs: 2, md: 3 },
-          py: 4,
+          py: { xs: 3, md: 5 },
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", md: "2fr 1fr" },
-          gap: 3,
+          gridTemplateColumns: {
+            xs: "1fr",
+            md: "minmax(0, 2fr) minmax(300px, 1fr)",
+          },
+          gap: { xs: 2.5, md: 3 },
           alignItems: "start",
         }}
       >
         {/* -------- LEFT / MAIN COLUMN -------- */}
-        <Stack spacing={3}>
+        <Stack spacing={{ xs: 2.5, md: 3 }}>
           {/* Passenger count */}
-          <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
-            <Typography variant="h6" fontWeight={700} mb={2}>
+          <Paper
+            elevation={0}
+            sx={{ p: { xs: 2.5, md: 3.5 }, borderRadius: 3 }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                mb: 0.5,
+              }}
+            >
               تعداد مسافران
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+                mb: 2.5,
+              }}
+            >
+              حداکثر {maxSelectable} مسافر برای این بلیط قابل رزرو است.
             </Typography>
             <Box sx={{ maxWidth: 220 }}>
               <Select
@@ -543,19 +457,27 @@ export default function Booking() {
             </Box>
           </Paper>
 
-          {/* Seat map (flights: grouped by class / bus & tour: single list) */}
+          {/* Seat map (flights: grouped by cabin class / bus: 2+1 coach) */}
           {!isTrain && !isTour && (
             <Paper
               elevation={0}
-              sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}
+              sx={{ p: { xs: 2, sm: 2.5, md: 3.5 }, borderRadius: 3 }}
             >
               <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={2}
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
+                sx={{
+                  justifyContent: "space-between",
+                  alignItems: { xs: "flex-start", sm: "center" },
+                  mb: 0.5,
+                }}
               >
-                <Typography variant="h6" fontWeight={700}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                  }}
+                >
                   انتخاب صندلی
                 </Typography>
                 <Chip
@@ -570,250 +492,81 @@ export default function Booking() {
                 />
               </Stack>
 
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                  mb: 2.5,
+                }}
+              >
+                {isFlight
+                  ? "نقشه از جلوی هواپیما به سمت عقب چیده شده است. روی صندلی خالی بزنید تا انتخاب شود."
+                  : "نقشه از جلوی اتوبوس به سمت عقب چیده شده است. روی صندلی خالی بزنید تا انتخاب شود."}
+              </Typography>
+
+              <Box sx={{ mb: 2.5 }}>
+                <SeatMapLegend showExit={isFlight} />
+              </Box>
+
               {isFlight ? (
-                <Box
-                  sx={{
-                    border: "1px solid #E2E8F0",
-                    borderRadius: "48px 48px 20px 20px",
-                    bgcolor: "#FAFBFF",
-                    overflow: "hidden",
-                  }}
-                >
-                  {/* Nose of the plane */}
-                  <Stack
-                    alignItems="center"
-                    spacing={0.5}
-                    sx={{
-                      py: 2,
-                      borderBottom: "1px dashed #CBD5E1",
-                      color: "text.secondary",
-                    }}
-                  >
-                    <FlightIcon sx={{ transform: "rotate(90deg)" }} />
-                    <Typography variant="caption">جلوی هواپیما</Typography>
-                  </Stack>
-
-                  <Box sx={{ px: { xs: 1.5, sm: 3 }, pt: 2 }}>
-                    <SeatMapLegend />
-                  </Box>
-
-                  {SEAT_CLASS_ORDER.filter(
-                    (cls) => seatsByClass[cls]?.length,
-                  ).map((cls, clsIndex, arr) => {
-                    const cabinRows = buildCabinRows(seatsByClass[cls]);
-                    const rowWidth = cabinRows[0]?.seats.length || 0;
-                    const groupSizes = splitSeatColumns(rowWidth);
-
-                    return (
-                      <Box
-                        key={cls}
-                        sx={{
-                          px: { xs: 1.5, sm: 4 },
-                          py: 2.5,
-                          borderBottom:
-                            clsIndex < arr.length - 1
-                              ? "1px dashed #E2E8F0"
-                              : "none",
-                        }}
-                      >
-                        <Typography
-                          variant="body2"
-                          fontWeight={700}
-                          color="text.secondary"
-                          mb={1.5}
-                          textAlign="center"
-                        >
-                          {SEAT_CLASS_LABELS[cls] || cls} (
-                          {
-                            seatsByClass[cls].filter((s) => s.is_available)
-                              .length
-                          }{" "}
-                          صندلی خالی)
-                        </Typography>
-
-                        <Stack spacing={1} alignItems="center">
-                          {cabinRows.map((row) => (
-                            <Stack
-                              key={row.rowNumber}
-                              direction="row"
-                              alignItems="center"
-                              spacing={1.5}
-                            >
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  width: 20,
-                                  textAlign: "center",
-                                  color: "text.disabled",
-                                }}
-                              >
-                                {row.rowNumber}
-                              </Typography>
-
-                              {groupSizes.map((size, groupIndex) => {
-                                const start = groupSizes
-                                  .slice(0, groupIndex)
-                                  .reduce((sum, s) => sum + s, 0);
-                                const groupSeats = row.seats.slice(
-                                  start,
-                                  start + size,
-                                );
-
-                                return (
-                                  <Stack
-                                    key={groupIndex}
-                                    direction="row"
-                                    alignItems="center"
-                                    spacing={1.5}
-                                  >
-                                    <Stack direction="row" spacing={0.75}>
-                                      {groupSeats.map((seat, i) =>
-                                        seat ? (
-                                          <SeatButton
-                                            key={seat.id}
-                                            seat={seat}
-                                            wide={cls === "first"}
-                                            selected={selectedSeatIds.includes(
-                                              seat.id,
-                                            )}
-                                            booked={!seat.is_available}
-                                            onClick={() =>
-                                              seat.is_available &&
-                                              toggleSeat(seat.id)
-                                            }
-                                          />
-                                        ) : (
-                                          <Box key={i} sx={{ width: 56 }} />
-                                        ),
-                                      )}
-                                    </Stack>
-
-                                    {/* aisle */}
-                                    {groupIndex < groupSizes.length - 1 && (
-                                      <Box
-                                        sx={{ width: { xs: 20, sm: 32 } }}
-                                      />
-                                    )}
-                                  </Stack>
-                                );
-                              })}
-                            </Stack>
-                          ))}
-                        </Stack>
-                      </Box>
-                    );
-                  })}
-                </Box>
+                <FlightSeatMap
+                  seatsByClass={seatsByClass}
+                  selectedSeatIds={selectedSeatIds}
+                  onToggleSeat={toggleSeat}
+                />
               ) : (
-                // Bus & tour tickets only ever have one seat type — lay the
-                // seats out like an actual coach: columns of seats running
-                // front-to-back, with the driver's cabin marked at the
-                // front and booked seats shown greyed out instead of
-                // disappearing from the map.
-                <Box>
-                  <SeatMapLegend />
-                  <Box
-                    sx={{ display: "flex", alignItems: "flex-start", gap: 3 }}
-                  >
-                    {/* Driver */}
-                    <Stack
-                      alignItems="center"
-                      justifyContent="center"
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: 2,
-                        bgcolor: "#F1F5F9",
-                        color: "text.secondary",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <DirectionsBusIcon />
-                    </Stack>
-
-                    {/* Seat map */}
-                    <Stack spacing={1.2}>
-                      {busRows.map((row, rowIndex) => (
-                        <Box
-                          key={rowIndex}
-                          sx={{
-                            display: "grid",
-                            gridTemplateColumns: "56px 56px 28px 56px",
-                            columnGap: 1,
-                            alignItems: "center",
-                          }}
-                        >
-                          {/* Left */}
-                          {row[0] ? (
-                            <SeatButton
-                              seat={row[0]}
-                              selected={selectedSeatIds.includes(row[0].id)}
-                              booked={!row[0].is_available}
-                              onClick={() =>
-                                row[0].is_available && toggleSeat(row[0].id)
-                              }
-                            />
-                          ) : (
-                            <Box />
-                          )}
-
-                          {/* Middle */}
-                          {row[1] ? (
-                            <SeatButton
-                              seat={row[1]}
-                              selected={selectedSeatIds.includes(row[1].id)}
-                              booked={!row[1].is_available}
-                              onClick={() =>
-                                row[1].is_available && toggleSeat(row[1].id)
-                              }
-                            />
-                          ) : (
-                            <Box />
-                          )}
-
-                          {/* aisle */}
-                          <Box />
-
-                          {/* Right */}
-                          {row[2] ? (
-                            <SeatButton
-                              seat={row[2]}
-                              selected={selectedSeatIds.includes(row[2].id)}
-                              booked={!row[2].is_available}
-                              onClick={() =>
-                                row[2].is_available && toggleSeat(row[2].id)
-                              }
-                            />
-                          ) : (
-                            <Box />
-                          )}
-                        </Box>
-                      ))}
-                    </Stack>
-                  </Box>
-                </Box>
+                <BusSeatMap
+                  seats={ticket.seats || []}
+                  selectedSeatIds={selectedSeatIds}
+                  onToggleSeat={toggleSeat}
+                />
               )}
             </Paper>
           )}
 
-          {/* Trains: no seat map — seats are assigned automatically */}
+          {/* Trains & tours: no seat map — seats are assigned automatically */}
           {(isTrain || isTour) && (
             <Paper
               elevation={0}
               sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}
             >
-              <Stack direction="row" spacing={1} alignItems="center" mb={1.5}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                  mb: 1.5,
+                }}
+              >
                 <InfoOutlinedIcon color="primary" fontSize="small" />
-                <Typography variant="h6" fontWeight={700}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                  }}
+                >
                   صندلی‌های شما
                 </Typography>
               </Stack>
-              <Typography color="text.secondary" mb={2}>
-                در بلیط قطار امکان انتخاب صندلی وجود ندارد؛ شماره صندلی‌ها به
-                صورت خودکار توسط سیستم تخصیص داده می‌شود.
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                  mb: 2,
+                }}
+              >
+                {isTour
+                  ? "در رزرو تور امکان انتخاب صندلی وجود ندارد؛ شماره صندلی‌ها به صورت خودکار توسط سیستم تخصیص داده می‌شود."
+                  : "در بلیط قطار امکان انتخاب صندلی وجود ندارد؛ شماره صندلی‌ها به صورت خودکار توسط سیستم تخصیص داده می‌شود."}
               </Typography>
 
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{
+                  flexWrap: "wrap",
+                }}
+              >
                 {selectedSeatIds.map((seatId) => (
                   <Chip
                     key={seatId}
@@ -828,13 +581,26 @@ export default function Booking() {
           )}
 
           {/* Passenger details */}
-          <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
-            <Typography variant="h6" fontWeight={700} mb={2}>
+          <Paper
+            elevation={0}
+            sx={{ p: { xs: 2.5, md: 3.5 }, borderRadius: 3 }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                mb: 2.5,
+              }}
+            >
               مشخصات مسافران
             </Typography>
 
             {selectedSeatIds.length === 0 && (
-              <Typography color="text.secondary">
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                }}
+              >
                 ابتدا از بخش «انتخاب صندلی» صندلی مورد نظر خود را انتخاب کنید.
               </Typography>
             )}
@@ -846,11 +612,19 @@ export default function Booking() {
                   <Stack
                     direction="row"
                     spacing={1}
-                    alignItems="center"
-                    mb={1.5}
+                    sx={{
+                      alignItems: "center",
+                      mb: 1.5,
+                    }}
                   >
                     <PersonIcon fontSize="small" color="primary" />
-                    <Typography fontWeight={700}>مسافر {index + 1}</Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                      }}
+                    >
+                      مسافر {index + 1}
+                    </Typography>
                     <Chip
                       size="small"
                       icon={<EventSeatIcon />}
@@ -908,32 +682,97 @@ export default function Booking() {
         </Stack>
 
         {/* -------- RIGHT / SIDEBAR COLUMN -------- */}
-        <Stack spacing={3} sx={{ position: { md: "sticky" }, top: { md: 16 } }}>
+        <Stack
+          spacing={3}
+          sx={{
+            position: { md: "sticky" },
+            top: { md: `${NAVBAR_HEIGHT + 16}px` },
+          }}
+        >
           <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
-            <Typography variant="h6" fontWeight={700} mb={2}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                mb: 2,
+              }}
+            >
               خلاصه رزرو
             </Typography>
 
-            <Stack spacing={1} mb={2}>
-              <Stack direction="row" justifyContent="space-between">
-                <Typography color="text.secondary">قیمت هر نفر</Typography>
-                <Typography fontWeight={600}>
+            <Stack
+              spacing={1}
+              sx={{
+                mb: 2,
+              }}
+            >
+              <Stack
+                direction="row"
+                sx={{
+                  justifyContent: "space-between",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "text.secondary",
+                  }}
+                >
+                  قیمت هر نفر
+                </Typography>
+                <Typography
+                  sx={{
+                    fontWeight: 600,
+                  }}
+                >
                   {formatPrice(ticket.base_price)}
                 </Typography>
               </Stack>
-              <Stack direction="row" justifyContent="space-between">
-                <Typography color="text.secondary">تعداد مسافران</Typography>
-                <Typography fontWeight={600}>{passengerCount} نفر</Typography>
+              <Stack
+                direction="row"
+                sx={{
+                  justifyContent: "space-between",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "text.secondary",
+                  }}
+                >
+                  تعداد مسافران
+                </Typography>
+                <Typography
+                  sx={{
+                    fontWeight: 600,
+                  }}
+                >
+                  {passengerCount} نفر
+                </Typography>
               </Stack>
             </Stack>
 
             <Divider sx={{ mb: 2 }} />
 
             {/* Discount code */}
-            <Stack spacing={1} mb={2}>
-              <Stack direction="row" spacing={1} alignItems="center">
+            <Stack
+              spacing={1}
+              sx={{
+                mb: 2,
+              }}
+            >
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                }}
+              >
                 <LocalOfferIcon fontSize="small" color="primary" />
-                <Typography variant="body2" fontWeight={700}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 700,
+                  }}
+                >
                   کد تخفیف
                 </Typography>
               </Stack>
@@ -942,9 +781,9 @@ export default function Booking() {
                 <Stack
                   direction="row"
                   spacing={1}
-                  alignItems="center"
-                  justifyContent="space-between"
                   sx={{
+                    alignItems: "center",
+                    justifyContent: "space-between",
                     bgcolor: "#F0FDF4",
                     border: "1px solid #86EFAC",
                     borderRadius: 2,
@@ -954,8 +793,10 @@ export default function Booking() {
                 >
                   <Typography
                     variant="body2"
-                    color="success.dark"
-                    fontWeight={700}
+                    sx={{
+                      color: "success.dark",
+                      fontWeight: 700,
+                    }}
                   >
                     {discountApplied.code} (٪{discountApplied.percentage})
                   </Typography>
@@ -984,17 +825,51 @@ export default function Booking() {
             <Divider sx={{ mb: 2 }} />
 
             {discountAmount > 0 && (
-              <Stack direction="row" justifyContent="space-between" mb={1}>
-                <Typography color="success.main">تخفیف</Typography>
-                <Typography color="success.main" fontWeight={600}>
+              <Stack
+                direction="row"
+                sx={{
+                  justifyContent: "space-between",
+                  mb: 1,
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "success.main",
+                  }}
+                >
+                  تخفیف
+                </Typography>
+                <Typography
+                  sx={{
+                    color: "success.main",
+                    fontWeight: 600,
+                  }}
+                >
                   ‎-{formatPrice(discountAmount)}
                 </Typography>
               </Stack>
             )}
 
-            <Stack direction="row" justifyContent="space-between" mb={2.5}>
-              <Typography fontWeight={700}>مبلغ قابل پرداخت</Typography>
-              <Typography fontWeight={700} color="primary.main">
+            <Stack
+              direction="row"
+              sx={{
+                justifyContent: "space-between",
+                mb: 2.5,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                }}
+              >
+                مبلغ قابل پرداخت
+              </Typography>
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  color: "primary.main",
+                }}
+              >
                 {formatPrice(finalPrice)}
               </Typography>
             </Stack>
@@ -1009,9 +884,11 @@ export default function Booking() {
 
             <Typography
               variant="caption"
-              color="text.secondary"
-              display="block"
-              mt={1.5}
+              sx={{
+                color: "text.secondary",
+                display: "block",
+                mt: 1.5,
+              }}
             >
               با ثبت رزرو، قوانین و مقررات {TICKET_TYPE_LABELS[type]} را
               می‌پذیرید.

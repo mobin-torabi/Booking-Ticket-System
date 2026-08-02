@@ -6,7 +6,7 @@ export default function ProtectedRoute({ children }) {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  if (isAdmin) return <Navigate to="/tickets" replace/>;
+  if (isAdmin) return <Navigate to="/tickets" replace />;
 
   return children;
 }

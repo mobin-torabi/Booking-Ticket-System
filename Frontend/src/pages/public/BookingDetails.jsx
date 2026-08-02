@@ -108,7 +108,7 @@ export default function BookingDetails() {
       // shouldn't block showing the core booking details.
       try {
         const { data: ticketData } = await ticketApi.getTicketById(
-          data.ticket_id
+          data.ticket_id,
         );
         setTicket(ticketData);
 
@@ -191,7 +191,9 @@ export default function BookingDetails() {
         maxWidth: 900,
         mx: "auto",
         px: { xs: 2, md: 3 },
-        pt: { xs: "88px", md: "104px" },
+        // The navbar is sticky, not fixed — the page doesn't have to reserve
+        // its height as top padding.
+        pt: { xs: 3, md: 5 },
         pb: 6,
       }}
     >
@@ -202,7 +204,11 @@ export default function BookingDetails() {
             variant="text"
             // sx={{border:"none"}}
             startIcon={<ArrowBackIcon />}
-            onClick={() => isAdmin ? navigate(ROUTES.ADMIN_BOOKINGS) : navigate(ROUTES.BOOKINGS)}
+            onClick={() =>
+              isAdmin
+                ? navigate(ROUTES.ADMIN_BOOKINGS)
+                : navigate(ROUTES.BOOKINGS)
+            }
           >
             بازگشت به رزروها
           </Button>
@@ -213,8 +219,10 @@ export default function BookingDetails() {
         <CardBox>
           <Stack
             direction={{ xs: "column", sm: "row" }}
-            alignItems={{ xs: "stretch", sm: "center" }}
             spacing={2.5}
+            sx={{
+              alignItems: { xs: "stretch", sm: "center" },
+            }}
           >
             <Box
               sx={{
@@ -236,14 +244,18 @@ export default function BookingDetails() {
               <Stack
                 direction="row"
                 spacing={1}
-                alignItems="center"
-                flexWrap="wrap"
                 useFlexGap
+                sx={{
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
               >
                 <Typography
                   variant="h6"
-                  fontWeight={700}
-                  sx={{ wordBreak: "break-word" }}
+                  sx={{
+                    fontWeight: 700,
+                    wordBreak: "break-word",
+                  }}
                 >
                   {booking.origin} ← {booking.destination}
                 </Typography>
@@ -263,11 +275,18 @@ export default function BookingDetails() {
                 <Stack
                   direction="row"
                   spacing={0.5}
-                  alignItems="center"
-                  mt={0.5}
+                  sx={{
+                    alignItems: "center",
+                    mt: 0.5,
+                  }}
                 >
                   <ApartmentIcon fontSize="small" color="action" />
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                    }}
+                  >
                     {provider.name}
                   </Typography>
                 </Stack>
@@ -276,44 +295,99 @@ export default function BookingDetails() {
           </Stack>
 
           {booking.status === "cancelled" && booking.cancellation_reason && (
-            <Typography variant="body2" color="error" mt={2}>
+            <Typography
+              variant="body2"
+              color="error"
+              sx={{
+                mt: 2,
+              }}
+            >
               دلیل لغو: {booking.cancellation_reason}
             </Typography>
           )}
         </CardBox>
 
         <CardBox>
-          <Typography variant="subtitle1" fontWeight={700} mb={2}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 700,
+              mb: 2,
+            }}
+          >
             اطلاعات سفر
           </Typography>
 
           <Stack spacing={1.5}>
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+              }}
+            >
               <FlightTakeoffIcon fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                }}
+              >
                 زمان حرکت:
               </Typography>
-              <Typography variant="body2" fontWeight={600}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 600,
+                }}
+              >
                 {formatDateTime(booking.departure_at)}
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+              }}
+            >
               <FlightLandIcon fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                }}
+              >
                 زمان رسیدن:
               </Typography>
-              <Typography variant="body2" fontWeight={600}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 600,
+                }}
+              >
                 {formatDateTime(booking.arrival_at)}
               </Typography>
             </Stack>
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+              }}
+            >
               {" "}
               <ReceiptLongIcon
                 fontSize="small"
                 sx={{ color: "text.disabled" }}
               />
-              <Typography variant="body2" color="text.secondary">
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                }}
+              >
                 کد رزرو: {booking.id}
               </Typography>
             </Stack>
@@ -321,29 +395,75 @@ export default function BookingDetails() {
         </CardBox>
 
         <CardBox>
-          <Typography variant="subtitle1" fontWeight={700} mb={2}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 700,
+              mb: 2,
+            }}
+          >
             اطلاعات پرداخت
           </Typography>
 
-          <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
-            <Stack direction="row" spacing={0.5} alignItems="center">
+          <Stack
+            direction="row"
+            spacing={3}
+            useFlexGap
+            sx={{
+              flexWrap: "wrap",
+            }}
+          >
+            <Stack
+              direction="row"
+              spacing={0.5}
+              sx={{
+                alignItems: "center",
+              }}
+            >
               <EventSeatIcon fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                }}
+              >
                 {booking.number_of_seats} صندلی
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={0.5} alignItems="center">
+            <Stack
+              direction="row"
+              spacing={0.5}
+              sx={{
+                alignItems: "center",
+              }}
+            >
               <PaymentsIcon fontSize="small" color="action" />
-              <Typography variant="body2" fontWeight={600}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 600,
+                }}
+              >
                 {formatPrice(booking.total_amount)} تومان
               </Typography>
             </Stack>
 
             {booking.created_at && (
-              <Stack direction="row" spacing={0.5} alignItems="center">
+              <Stack
+                direction="row"
+                spacing={0.5}
+                sx={{
+                  alignItems: "center",
+                }}
+              >
                 <CalendarMonthIcon fontSize="small" color="action" />
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                  }}
+                >
                   تاریخ رزرو: {formatDateTime(booking.created_at)}
                 </Typography>
               </Stack>
@@ -352,7 +472,13 @@ export default function BookingDetails() {
         </CardBox>
 
         <CardBox>
-          <Typography variant="subtitle1" fontWeight={700} mb={2}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 700,
+              mb: 2,
+            }}
+          >
             صندلی ها و مسافران
           </Typography>
 
@@ -361,14 +487,27 @@ export default function BookingDetails() {
               <Stack
                 key={seat.id}
                 direction={{ xs: "column", sm: "row" }}
-                justifyContent="space-between"
-                alignItems={{ xs: "flex-start", sm: "center" }}
                 spacing={1}
-                py={0.5}
+                sx={{
+                  justifyContent: "space-between",
+                  alignItems: { xs: "flex-start", sm: "center" },
+                  py: 0.5,
+                }}
               >
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{
+                    alignItems: "center",
+                  }}
+                >
                   <EventSeatIcon fontSize="small" color="action" />
-                  <Typography variant="body2" fontWeight={600}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                    }}
+                  >
                     صندلی {seat.seat_number}
                   </Typography>
                   {seat.seat_class && (
@@ -380,20 +519,49 @@ export default function BookingDetails() {
                   )}
                 </Stack>
 
-                <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  useFlexGap
+                  sx={{
+                    flexWrap: "wrap",
+                  }}
+                >
                   {(seat.passenger_first_name || seat.passenger_last_name) && (
-                    <Stack direction="row" spacing={0.5} alignItems="center">
+                    <Stack
+                      direction="row"
+                      spacing={0.5}
+                      sx={{
+                        alignItems: "center",
+                      }}
+                    >
                       <PersonIcon fontSize="small" color="action" />
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "text.secondary",
+                        }}
+                      >
                         {seat.passenger_first_name} {seat.passenger_last_name}
                       </Typography>
                     </Stack>
                   )}
 
                   {seat.phone_number && (
-                    <Stack direction="row" spacing={0.5} alignItems="center">
+                    <Stack
+                      direction="row"
+                      spacing={0.5}
+                      sx={{
+                        alignItems: "center",
+                      }}
+                    >
                       <PhoneIcon fontSize="small" color="action" />
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "text.secondary",
+                        }}
+                      >
                         {seat.phone_number}
                       </Typography>
                     </Stack>

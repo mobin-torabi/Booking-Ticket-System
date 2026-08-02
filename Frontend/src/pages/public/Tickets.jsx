@@ -10,6 +10,8 @@ import {
   BottomNavigationAction,
   IconButton,
   Collapse,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 
 import FlightIcon from "@mui/icons-material/Flight";
@@ -23,10 +25,18 @@ import EventSeatIcon from "@mui/icons-material/EventSeat";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ClearIcon from "@mui/icons-material/Clear";
+import SyncAltIcon from "@mui/icons-material/SyncAlt";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import PublicIcon from "@mui/icons-material/Public";
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
+import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import { ticketApi } from "../../api";
 import { formatPrice } from "../../utils/formatPrice";
-import { formatDateTime } from "../../utils/formatDate";
+import { formatDate, formatDateTime } from "../../utils/formatDate";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import usePagination from "../../hooks/usePagination";
 import useDebounce from "../../hooks/useDebounce";
@@ -59,17 +69,59 @@ const TYPE_ICONS = {
   tour: TourIcon,
 };
 
-const TRIP_TYPE_OPTIONS = [
-  { value: "", label: "همه" },
-  { value: "oneway", label: "یک طرفه" },
-  { value: "roundtrip", label: "رفت و برگشت" },
-];
-
 const SORT_OPTIONS = [
   { value: "departure_at_asc", label: "زودترین حرکت" },
   { value: "departure_at_desc", label: "دیرترین حرکت" },
   { value: "price_asc", label: "ارزان ترین" },
   { value: "price_desc", label: "گران ترین" },
+];
+
+// Static marketing figures for the hero band. These are copy, not data — if
+// they should ever reflect the real catalogue, feed them from GET /tickets.
+const HERO_STATS = [
+  { icon: PublicIcon, value: "۴ نوع سفر", label: "پرواز، قطار، اتوبوس، تور" },
+  { icon: EventSeatIcon, value: "انتخاب صندلی", label: "روی نقشه واقعی" },
+  { icon: SupportAgentIcon, value: "۲۴ ساعته", label: "پشتیبانی تیکی" },
+];
+
+// One-tap origin/destination pairs under the search card. Values are matched
+// against origin/destination with a case-insensitive `includes` server-side,
+// so they just need to be the city names as they're stored.
+const POPULAR_ROUTES = [
+  { origin: "تهران", destination: "مشهد" },
+  { origin: "تهران", destination: "شیراز" },
+  { origin: "تهران", destination: "کیش" },
+  { origin: "اصفهان", destination: "تهران" },
+  { origin: "مشهد", destination: "تهران" },
+];
+
+const FEATURES = [
+  {
+    icon: EventSeatIcon,
+    title: "انتخاب صندلی روی نقشه",
+    text: "نقشه واقعی کابین هواپیما و اتوبوس؛ دقیقا همان صندلی که می‌خواهید.",
+  },
+  {
+    icon: LocalOfferIcon,
+    title: "کد تخفیف و قیمت شفاف",
+    text: "مبلغ نهایی پیش از پرداخت مشخص است؛ بدون هزینه پنهان.",
+  },
+  {
+    icon: VerifiedUserIcon,
+    title: "رزرو مطمئن",
+    text: "صندلی تا پایان پرداخت برای شما نگه داشته می‌شود.",
+  },
+  {
+    icon: SupportAgentIcon,
+    title: "پیگیری و لغو آسان",
+    text: "همه رزروها در پنل کاربری، با امکان لغو طبق قوانین کنسلی.",
+  },
+];
+
+const BOOKING_STEPS = [
+  { title: "جستجو کنید", text: "مبدا، مقصد و تاریخ سفر را وارد کنید." },
+  { title: "صندلی بگیرید", text: "روی نقشه، صندلی دلخواهتان را انتخاب کنید." },
+  { title: "پرداخت کنید", text: "مشخصات مسافران را ثبت و رزرو را نهایی کنید." },
 ];
 
 // Tour destination pictures. Fill in `image` with your own file paths once
@@ -131,7 +183,10 @@ export default function Tickets() {
   const debouncedDestination = useDebounce(destination, 500);
 
   const [showMoreFilters, setShowMoreFilters] = useState(false);
-  const [tripType, setTripType] = useState("");
+  // A ticket of any type is a round trip when it carries a return date, which
+  // the backend exposes as trip_type=roundtrip. Ticking the box narrows the
+  // results to those; leaving it off shows both one-way and round trips.
+  const [roundTripOnly, setRoundTripOnly] = useState(false);
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [sort, setSort] = useState("departure_at_asc");
@@ -144,7 +199,13 @@ export default function Tickets() {
   useEffect(() => {
     fetchTickets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, debouncedOrigin, debouncedDestination, clearButtonCounter]);
+  }, [
+    type,
+    debouncedOrigin,
+    debouncedDestination,
+    roundTripOnly,
+    clearButtonCounter,
+  ]);
 
   async function fetchTickets(e) {
     e?.preventDefault();
@@ -158,7 +219,7 @@ export default function Tickets() {
         origin: origin || undefined,
         destination: destination || undefined,
         departure_date_from: departureDateFrom || undefined,
-        trip_type: tripType || undefined,
+        trip_type: roundTripOnly ? "roundtrip" : undefined,
         price_min: priceMin || undefined,
         price_max: priceMax || undefined,
         available_seats_min: 1,
@@ -189,6 +250,11 @@ export default function Tickets() {
     setDestination(tour.title);
   }
 
+  function handleRouteClick(route) {
+    setOrigin(route.origin);
+    setDestination(route.destination);
+  }
+
   const { page, setPage, totalPages, currentData } = usePagination(
     tickets,
     PAGE_SIZE,
@@ -200,7 +266,7 @@ export default function Tickets() {
     setDestination("");
     setDepartureDateFrom("");
     setShowMoreFilters(false);
-    setTripType("");
+    setRoundTripOnly(false);
     setPriceMin("");
     setPriceMax("");
     setSort("departure_at_asc");
@@ -212,24 +278,136 @@ export default function Tickets() {
       {/* ===================== HERO / SEARCH ===================== */}
       <Box
         sx={{
+          position: "relative",
+          overflow: "hidden",
           background:
-            "linear-gradient(135deg, #0653C4 0%, #2A7BFF 60%, #5B8CFF 100%)",
-          pt: { xs: 5, md: 8 },
+            "linear-gradient(135deg, #062E7A 0%, #0653C4 45%, #2A7BFF 100%)",
+          pt: { xs: 6, md: 9 },
           pb: { xs: 12, md: 16 },
           px: 2,
         }}
       >
-        <Box sx={{ maxWidth: 1100, mx: "auto", textAlign: "center" }}>
+        {/* Decorative glow blobs — purely atmospheric, and pointer-events
+            none so they never intercept clicks on the search card. */}
+        <Box
+          aria-hidden
+          sx={{
+            position: "absolute",
+            pointerEvents: "none",
+            top: -140,
+            insetInlineStart: -100,
+            width: 380,
+            height: 380,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(91,140,255,.55) 0%, rgba(91,140,255,0) 70%)",
+          }}
+        />
+        <Box
+          aria-hidden
+          sx={{
+            position: "absolute",
+            pointerEvents: "none",
+            bottom: -160,
+            insetInlineEnd: -120,
+            width: 420,
+            height: 420,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(42,123,255,.5) 0%, rgba(42,123,255,0) 70%)",
+          }}
+        />
+
+        <Box
+          sx={{
+            position: "relative",
+            maxWidth: 1100,
+            mx: "auto",
+            textAlign: "center",
+          }}
+        >
+          <Chip
+            icon={<AutoAwesomeIcon sx={{ color: "#fff !important" }} />}
+            label="سفر، ساده‌تر از همیشه"
+            sx={{
+              bgcolor: "rgba(255,255,255,.16)",
+              color: "#fff",
+              fontWeight: 600,
+              mb: 2,
+              backdropFilter: "blur(4px)",
+            }}
+          />
+
           <Typography
             variant="h3"
-            fontWeight={700}
-            sx={{ color: "#fff", mb: 1 }}
+            sx={{
+              fontWeight: 800,
+              color: "#fff",
+              mb: 1.5,
+              fontSize: { xs: "1.9rem", sm: "2.4rem", md: "3rem" },
+              lineHeight: 1.25,
+            }}
           >
             بلیط هواپیما، قطار، اتوبوس و تور
           </Typography>
-          <Typography sx={{ color: "rgba(255,255,255,.85)" }}>
-            ارزان ترین قیمت ها را همین حالا جستجو و رزرو کنید
+
+          <Typography
+            sx={{
+              color: "rgba(255,255,255,.88)",
+              maxWidth: 620,
+              mx: "auto",
+              fontSize: { xs: "0.95rem", md: "1.05rem" },
+            }}
+          >
+            ارزان‌ترین قیمت‌ها را جستجو کنید، صندلی‌تان را روی نقشه انتخاب کنید
+            و در چند ثانیه رزرو را نهایی کنید.
           </Typography>
+
+          <Stack
+            direction="row"
+            spacing={{ xs: 2, sm: 5 }}
+            useFlexGap
+            sx={{
+              mt: 4,
+              justifyContent: "center",
+              flexWrap: "wrap",
+              rowGap: 2,
+            }}
+          >
+            {HERO_STATS.map((stat) => (
+              <Stack
+                key={stat.label}
+                direction="row"
+                spacing={1}
+                sx={{ alignItems: "center", color: "#fff" }}
+              >
+                <Box
+                  sx={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    bgcolor: "rgba(255,255,255,.16)",
+                  }}
+                >
+                  <stat.icon fontSize="small" />
+                </Box>
+                <Box sx={{ textAlign: "start" }}>
+                  <Typography sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                    {stat.value}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "rgba(255,255,255,.75)" }}
+                  >
+                    {stat.label}
+                  </Typography>
+                </Box>
+              </Stack>
+            ))}
+          </Stack>
         </Box>
       </Box>
 
@@ -278,14 +456,19 @@ export default function Tickets() {
             <Stack
               direction={{ xs: "column", md: "row" }}
               spacing={1.5}
-              alignItems={{ xs: "stretch", md: "center" }}
+              sx={{
+                alignItems: { xs: "stretch", md: "center" },
+              }}
             >
               {/* Origin / destination with swap button */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 spacing={0}
-                alignItems="center"
-                sx={{ flex: 2, position: "relative" }}
+                sx={{
+                  alignItems: "center",
+                  flex: 2,
+                  position: "relative",
+                }}
               >
                 <Input
                   label="مبدا"
@@ -318,13 +501,6 @@ export default function Tickets() {
 
               {/* Date */}
               <Box sx={{ flex: 1 }}>
-                {/* <Input
-                  label="تاریخ حرکت"
-                  type="date"
-                  value={departureDateFrom}
-                  onChange={(e) => setDepartureDateFrom(e.target.value)}
-                  slotProps={{ inputLabel: { shrink: true } }}
-                /> */}
                 <JalaliDatePicker
                   label="تاریخ حرکت"
                   value={departureDateFrom}
@@ -343,40 +519,89 @@ export default function Tickets() {
               </Button>
             </Stack>
 
-            {/* More filters toggle */}
-            <Stack direction="row" justifyContent="flex-end" sx={{mt: 3, mb: 3}}>
-              <Button
-                variant="text"
-                startIcon={<TuneIcon />}
-                onClick={() => setShowMoreFilters((prev) => !prev)}
-              >
-                فیلترهای بیشتر
-              </Button>
-              <Button
-                variant="text"
-                startIcon={<ClearIcon />}
-                onClick={clearFilters}
-              >
-                حذف همه فیلتر ها
-              </Button>
+            {/* Trip type + more filters toggle */}
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1}
+              sx={{
+                justifyContent: "space-between",
+                alignItems: { xs: "flex-start", sm: "center" },
+                mt: 2,
+              }}
+            >
+              {/* Rendered as a filled pill rather than a bare checkbox: when
+                  it's on, the whole control turns primary-blue so the active
+                  filter is obvious at a glance instead of hinging on a
+                  16px tick. */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={roundTripOnly}
+                    onChange={(e) => setRoundTripOnly(e.target.checked)}
+                    sx={{
+                      color: "primary.main",
+                      "&.Mui-checked": { color: "#fff" },
+                    }}
+                  />
+                }
+                label={
+                  <Stack
+                    direction="row"
+                    spacing={0.75}
+                    sx={{ alignItems: "center" }}
+                  >
+                    <SyncAltIcon fontSize="small" />
+                    <Box component="span">فقط بلیط‌های رفت و برگشت</Box>
+                  </Stack>
+                }
+                sx={{
+                  m: 0,
+                  pr: 1,
+                  pl: 2,
+                  py: 0.25,
+                  borderRadius: 999,
+                  border: "1.5px solid",
+                  borderColor: roundTripOnly ? "primary.main" : "#CBD5E1",
+                  bgcolor: roundTripOnly ? "primary.main" : "transparent",
+                  color: roundTripOnly ? "#fff" : "text.secondary",
+                  transition: "all .18s ease",
+                  "& .MuiFormControlLabel-label": {
+                    fontWeight: roundTripOnly ? 700 : 500,
+                    fontSize: 14,
+                  },
+                  "&:hover": {
+                    borderColor: "primary.main",
+                    bgcolor: roundTripOnly ? "primary.dark" : "#EAF2FF",
+                  },
+                }}
+              />
+
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="text"
+                  startIcon={<TuneIcon />}
+                  onClick={() => setShowMoreFilters((prev) => !prev)}
+                >
+                  فیلترهای بیشتر
+                </Button>
+                <Button
+                  variant="text"
+                  startIcon={<ClearIcon />}
+                  onClick={clearFilters}
+                >
+                  حذف همه فیلتر ها
+                </Button>
+              </Stack>
             </Stack>
 
             <Collapse in={showMoreFilters}>
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 spacing={1.5}
-                pt={1}
+                sx={{
+                  pt: 2.5,
+                }}
               >
-                <Box sx={{ flex: 1 }}>
-                  <Select
-                    label="نوع سفر"
-                    name="tripType"
-                    value={tripType}
-                    onChange={(e) => setTripType(e.target.value)}
-                    options={TRIP_TYPE_OPTIONS}
-                  />
-                </Box>
-
                 <Box sx={{ flex: 1 }}>
                   <Input
                     label="حداقل قیمت (تومان)"
@@ -408,6 +633,48 @@ export default function Tickets() {
             </Collapse>
           </Box>
         </Paper>
+
+        {/* One-tap popular routes */}
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          sx={{
+            mt: 2.5,
+            alignItems: "center",
+            flexWrap: "wrap",
+            rowGap: 1,
+          }}
+        >
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{ alignItems: "center", color: "text.secondary" }}
+          >
+            <TrendingUpIcon fontSize="small" />
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              مسیرهای پرطرفدار:
+            </Typography>
+          </Stack>
+
+          {POPULAR_ROUTES.map((route) => (
+            <Chip
+              key={`${route.origin}-${route.destination}`}
+              label={`${route.origin} ← ${route.destination}`}
+              onClick={() => handleRouteClick(route)}
+              sx={{
+                bgcolor: "background.paper",
+                border: "1px solid #E2E8F0",
+                fontWeight: 600,
+                "&:hover": {
+                  bgcolor: "#EAF2FF",
+                  borderColor: "primary.main",
+                  color: "primary.main",
+                },
+              }}
+            />
+          ))}
+        </Stack>
       </Box>
 
       {/* ===================== RESULTS ===================== */}
@@ -420,9 +687,35 @@ export default function Tickets() {
           pb: 2,
         }}
       >
-        <Typography variant="h5" fontWeight={700} mb={2.5}>
-          نتایج جستجو
-        </Typography>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          useFlexGap
+          sx={{ alignItems: "center", flexWrap: "wrap", mb: 2.5 }}
+        >
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            نتایج جستجو
+          </Typography>
+
+          {!loading && !error && tickets.length > 0 && (
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              {tickets.length} بلیط یافت شد
+            </Typography>
+          )}
+
+          {/* Repeat the active round-trip filter here — by the time you've
+              scrolled to the results, the pill in the search card is off
+              screen. Deletable, so it doubles as a way to clear it. */}
+          {roundTripOnly && (
+            <Chip
+              size="small"
+              icon={<SyncAltIcon />}
+              label="فقط رفت و برگشت"
+              color="primary"
+              onDelete={() => setRoundTripOnly(false)}
+            />
+          )}
+        </Stack>
 
         {loading && <Loading message="در حال دریافت بلیط ها..." />}
 
@@ -431,7 +724,22 @@ export default function Tickets() {
         {!loading && !error && tickets.length === 0 && (
           <EmptyState
             title="بلیطی یافت نشد"
-            description="با تغییر فیلترها دوباره تلاش کنید."
+            description={
+              roundTripOnly
+                ? "هیچ بلیط رفت و برگشتی برای این مسیر پیدا نشد. فیلتر «فقط رفت و برگشت» را بردارید تا بلیط‌های یک طرفه هم نمایش داده شوند."
+                : "با تغییر فیلترها دوباره تلاش کنید."
+            }
+            action={
+              roundTripOnly ? (
+                <Button
+                  variant="outlined"
+                  startIcon={<ClearIcon />}
+                  onClick={() => setRoundTripOnly(false)}
+                >
+                  حذف فیلتر رفت و برگشت
+                </Button>
+              ) : null
+            }
           />
         )}
 
@@ -453,8 +761,14 @@ export default function Tickets() {
 
                 return (
                   <CardBox key={ticket.id}>
-                    <Stack spacing={1.5}>
-                      <Stack direction="row" spacing={1} alignItems="center">
+                    <Stack spacing={1.5} sx={{ flex: 1 }}>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        sx={{
+                          alignItems: "center",
+                        }}
+                      >
                         <Box
                           sx={{
                             width: 40,
@@ -473,44 +787,95 @@ export default function Tickets() {
 
                         <Typography
                           variant="subtitle1"
-                          fontWeight={700}
-                          sx={{ wordBreak: "break-word" }}
+                          sx={{
+                            fontWeight: 700,
+                            wordBreak: "break-word",
+                          }}
                         >
                           {ticket.origin} ← {ticket.destination}
                         </Typography>
                       </Stack>
 
-                      <Stack direction="row" spacing={0.5} alignItems="center">
+                      <Stack
+                        direction="row"
+                        spacing={0.5}
+                        sx={{
+                          alignItems: "center",
+                        }}
+                      >
                         <CalendarMonthIcon fontSize="small" color="action" />
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "text.secondary",
+                          }}
+                        >
                           {formatDateTime(ticket.departure_at)}
                         </Typography>
                       </Stack>
 
+                      {ticket.return_date && (
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          sx={{ alignItems: "center" }}
+                        >
+                          <SyncAltIcon fontSize="small" color="primary" />
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.secondary" }}
+                          >
+                            برگشت: {formatDate(ticket.return_date)}
+                          </Typography>
+                        </Stack>
+                      )}
+
                       <Stack
                         direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
+                        sx={{
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
                       >
                         <Chip
                           size="small"
-                          icon={<EventSeatIcon />}
-                          label={`${ticket.total_seats} صندلی`}
+                          icon={
+                            ticket.return_date ? (
+                              <SyncAltIcon />
+                            ) : (
+                              <EventSeatIcon />
+                            )
+                          }
+                          label={
+                            ticket.return_date
+                              ? "رفت و برگشت"
+                              : `${ticket.total_seats} صندلی`
+                          }
+                          color={ticket.return_date ? "primary" : "default"}
                           variant="outlined"
                         />
 
                         <Typography
                           variant="subtitle1"
-                          fontWeight={700}
-                          color="primary.main"
+                          sx={{
+                            fontWeight: 700,
+                            color: "primary.main",
+                          }}
                         >
                           {formatPrice(ticket.base_price)}
                         </Typography>
                       </Stack>
 
-                      <Button onClick={() => navigate(`/tickets/${ticket.id}`)}>
-                        مشاهده و رزرو
-                      </Button>
+                      {/* mt:auto keeps the action pinned to the bottom of the
+                          card so every card in a row lines up. */}
+                      <Box sx={{ mt: "auto", pt: 0.5 }}>
+                        <Button
+                          fullWidth
+                          onClick={() => navigate(`/tickets/${ticket.id}`)}
+                        >
+                          مشاهده و رزرو
+                        </Button>
+                      </Box>
                     </Stack>
                   </CardBox>
                 );
@@ -542,10 +907,22 @@ export default function Tickets() {
           pb: 8,
         }}
       >
-        <Typography variant="h5" fontWeight={700} mb={0.5}>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 700,
+            mb: 0.5,
+          }}
+        >
           تورهای پیشنهادی
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{mb: 2}}>
+        <Typography
+          variant="body2"
+          sx={{
+            color: "text.secondary",
+            mb: 2,
+          }}
+        >
           یک مقصد را انتخاب کنید تا تورهای مربوط به آن را ببینید
         </Typography>
 
@@ -601,8 +978,8 @@ export default function Tickets() {
               <Stack
                 direction="row"
                 spacing={0.5}
-                alignItems="center"
                 sx={{
+                  alignItems: "center",
                   position: "absolute",
                   bottom: 10,
                   insetInlineStart: 10,
@@ -610,10 +987,213 @@ export default function Tickets() {
                 }}
               >
                 <LocationOnIcon fontSize="small" />
-                <Typography fontWeight={700}>{tour.title}</Typography>
+                <Typography
+                  sx={{
+                    fontWeight: 700,
+                  }}
+                >
+                  {tour.title}
+                </Typography>
               </Stack>
             </Box>
           ))}
+        </Box>
+      </Box>
+
+      {/* ===================== WHY TICKI ===================== */}
+      <Box
+        sx={{ bgcolor: "background.paper", borderBlock: "1px solid #E2E8F0" }}
+      >
+        <Box
+          sx={{
+            maxWidth: 1100,
+            mx: "auto",
+            px: { xs: 2, md: 3 },
+            py: { xs: 5, md: 8 },
+          }}
+        >
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: 700, textAlign: "center", mb: 0.5 }}
+          >
+            چرا تیکی؟
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{ color: "text.secondary", textAlign: "center", mb: 4 }}
+          >
+            هر چیزی که برای یک رزرو بی‌دردسر لازم دارید
+          </Typography>
+
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(4, 1fr)",
+              },
+              gap: 2.5,
+            }}
+          >
+            {FEATURES.map((feature) => (
+              <Box
+                key={feature.title}
+                sx={{
+                  p: 2.5,
+                  height: "100%",
+                  borderRadius: 3,
+                  border: "1px solid #E2E8F0",
+                  bgcolor: "#F8FAFF",
+                  transition: "border-color .18s ease, transform .18s ease",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                    transform: "translateY(-3px)",
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    mb: 1.5,
+                    borderRadius: "50%",
+                    bgcolor: "#E8F1FF",
+                    color: "primary.main",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <feature.icon />
+                </Box>
+
+                <Typography sx={{ fontWeight: 700, mb: 0.5 }}>
+                  {feature.title}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  {feature.text}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+
+      {/* ===================== HOW IT WORKS ===================== */}
+      <Box
+        sx={{
+          maxWidth: 1100,
+          mx: "auto",
+          px: { xs: 2, md: 3 },
+          py: { xs: 5, md: 8 },
+        }}
+      >
+        <Typography
+          variant="h5"
+          sx={{ fontWeight: 700, textAlign: "center", mb: 4 }}
+        >
+          رزرو در سه قدم
+        </Typography>
+
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
+            gap: { xs: 2.5, md: 3 },
+          }}
+        >
+          {BOOKING_STEPS.map((step, index) => (
+            <Stack
+              key={step.title}
+              direction="row"
+              spacing={2}
+              sx={{ alignItems: "flex-start" }}
+            >
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  flexShrink: 0,
+                  borderRadius: "50%",
+                  bgcolor: "primary.main",
+                  color: "#fff",
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {index + 1}
+              </Box>
+
+              <Box>
+                <Typography sx={{ fontWeight: 700, mb: 0.5 }}>
+                  {step.title}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  {step.text}
+                </Typography>
+              </Box>
+            </Stack>
+          ))}
+        </Box>
+      </Box>
+
+      {/* ===================== SUPPORT CTA ===================== */}
+      <Box sx={{ px: { xs: 2, md: 3 }, pb: { xs: 5, md: 8 } }}>
+        <Box
+          sx={{
+            maxWidth: 1100,
+            mx: "auto",
+            p: { xs: 3, md: 5 },
+            borderRadius: 4,
+            background:
+              "linear-gradient(135deg, #062E7A 0%, #0653C4 55%, #2A7BFF 100%)",
+            color: "#fff",
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            alignItems: { xs: "flex-start", md: "center" },
+            justifyContent: "space-between",
+            gap: 3,
+          }}
+        >
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+              سوالی درباره سفرتان دارید؟
+            </Typography>
+            <Typography sx={{ color: "rgba(255,255,255,.85)" }}>
+              تیم پشتیبانی تیکی هر روز هفته پاسخگوی شماست.
+            </Typography>
+          </Box>
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+            <Button
+              endIcon={<ArrowBackIcon />}
+              onClick={() => navigate("/support")}
+              sx={{
+                bgcolor: "#fff",
+                color: "primary.main",
+                "&:hover": { bgcolor: "#EAF2FF" },
+              }}
+            >
+              تماس با پشتیبانی
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => navigate("/faq")}
+              sx={{
+                borderColor: "rgba(255,255,255,.6)",
+                color: "#fff",
+                "&:hover": {
+                  borderColor: "#fff",
+                  bgcolor: "rgba(255,255,255,.12)",
+                },
+              }}
+            >
+              پرسش‌های متداول
+            </Button>
+          </Stack>
         </Box>
       </Box>
     </Box>

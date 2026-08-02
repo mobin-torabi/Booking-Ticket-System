@@ -54,13 +54,15 @@ export default function JalaliDatePicker({
   required = false,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [viewDate, setViewDate] = useState(() => (value ? dayjs(value) : dayjs()));
+  const [viewDate, setViewDate] = useState(() =>
+    value ? dayjs(value) : dayjs(),
+  );
 
   // "days": the normal day-grid view. "years": a fast year-picker grid,
   // opened by tapping the year — this is the "change year quickly" fix.
   const [view, setView] = useState("days");
-  const [yearRangeStart, setYearRangeStart] = useState(() =>
-    Math.floor(dayjs().year() / YEARS_PER_PAGE) * YEARS_PER_PAGE,
+  const [yearRangeStart, setYearRangeStart] = useState(
+    () => Math.floor(dayjs().year() / YEARS_PER_PAGE) * YEARS_PER_PAGE,
   );
 
   const selected = value ? dayjs(value) : null;
@@ -214,8 +216,10 @@ export default function JalaliDatePicker({
                   <Typography
                     key={w}
                     variant="caption"
-                    textAlign="center"
-                    color="text.secondary"
+                    sx={{
+                      textAlign: "center",
+                      color: "text.secondary",
+                    }}
                   >
                     {w}
                   </Typography>

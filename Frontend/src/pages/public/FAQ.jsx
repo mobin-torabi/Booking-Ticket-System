@@ -80,7 +80,7 @@ const FAQ_DATA = {
       },
       {
         q: "آیا امکان رزرو بلیط رفت و برگشت وجود دارد؟",
-        a: "بله، در فیلترهای جستجو می‌توانید نوع سفر را «رفت و برگشت» انتخاب کنید تا فقط پروازهایی که تاریخ بازگشت دارند نمایش داده شوند.",
+        a: "بله. در فرم جستجو گزینه «فقط بلیط‌های رفت و برگشت» را تیک بزنید تا تنها بلیط‌هایی که تاریخ برگشت دارند نمایش داده شوند. بلیط‌های رفت و برگشت با نشان «رفت و برگشت» و تاریخ برگشتشان در نتایج جستجو و صفحه جزئیات مشخص شده‌اند. تورها همیشه رفت و برگشت هستند.",
       },
     ],
   },
@@ -195,7 +195,14 @@ export default function FAQ() {
         }}
       >
         <Box sx={{ maxWidth: 720, mx: "auto", textAlign: "center" }}>
-          <Typography variant="h4" fontWeight={700} sx={{ color: "#fff", mb: 1 }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              color: "#fff",
+              mb: 1,
+            }}
+          >
             سوالات متداول
           </Typography>
           <Typography sx={{ color: "rgba(255,255,255,.85)", mb: 3 }}>
@@ -215,7 +222,13 @@ export default function FAQ() {
       <Box sx={{ maxWidth: 820, mx: "auto", px: { xs: 2, md: 3 }, py: 5 }}>
         {isSearching ? (
           <>
-            <Typography variant="subtitle1" fontWeight={700} mb={2}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 700,
+                mb: 2,
+              }}
+            >
               نتایج جستجو برای «{search}»
             </Typography>
 
@@ -230,14 +243,31 @@ export default function FAQ() {
                   <Accordion key={`${item.category}-${index}`} disableGutters>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                       <Stack sx={{ width: "100%" }}>
-                        <Typography fontWeight={600}>{item.q}</Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography
+                          sx={{
+                            fontWeight: 600,
+                          }}
+                        >
+                          {item.q}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: "text.secondary",
+                          }}
+                        >
                           {item.category}
                         </Typography>
                       </Stack>
                     </AccordionSummary>
                     <AccordionDetails>
-                      <Typography color="text.secondary">{item.a}</Typography>
+                      <Typography
+                        sx={{
+                          color: "text.secondary",
+                        }}
+                      >
+                        {item.a}
+                      </Typography>
                     </AccordionDetails>
                   </Accordion>
                 ))}
@@ -274,10 +304,22 @@ export default function FAQ() {
               {activeItems.map((item, index) => (
                 <Accordion key={index} disableGutters>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography fontWeight={600}>{item.q}</Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 600,
+                      }}
+                    >
+                      {item.q}
+                    </Typography>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <Typography color="text.secondary">{item.a}</Typography>
+                    <Typography
+                      sx={{
+                        color: "text.secondary",
+                      }}
+                    >
+                      {item.a}
+                    </Typography>
                   </AccordionDetails>
                 </Accordion>
               ))}
@@ -286,21 +328,42 @@ export default function FAQ() {
         )}
 
         {/* Support box */}
-        <Box mt={5}>
+        <Box
+          sx={{
+            mt: 5,
+          }}
+        >
           <CardBox>
             <Stack
               direction={{ xs: "column", sm: "row" }}
               spacing={2}
-              alignItems={{ xs: "flex-start", sm: "center" }}
-              justifyContent="space-between"
+              sx={{
+                alignItems: { xs: "flex-start", sm: "center" },
+                justifyContent: "space-between",
+              }}
             >
-              <Stack direction="row" spacing={1.5} alignItems="center">
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{
+                  alignItems: "center",
+                }}
+              >
                 <SupportAgentIcon color="primary" fontSize="large" />
                 <Box>
-                  <Typography fontWeight={700}>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                    }}
+                  >
                     پاسخ سوال خود را پیدا نکردید؟
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                    }}
+                  >
                     پشتیبانی ما آماده پاسخگویی به شماست.
                   </Typography>
                 </Box>
@@ -309,15 +372,24 @@ export default function FAQ() {
               <Stack
                 direction="row"
                 spacing={0.5}
-                alignItems="center"
                 component="a"
                 href="https://mail.google.com/mail/?view=cm&fs=1&to=tickisupport@gmail.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                sx={{ color: "primary.main", textDecoration: "none" }}
+                sx={{
+                  alignItems: "center",
+                  color: "primary.main",
+                  textDecoration: "none",
+                }}
               >
                 <EmailOutlinedIcon fontSize="small" />
-                <Typography fontWeight={600}>tickisupport@gmail.com</Typography>
+                <Typography
+                  sx={{
+                    fontWeight: 600,
+                  }}
+                >
+                  tickisupport@gmail.com
+                </Typography>
               </Stack>
             </Stack>
           </CardBox>

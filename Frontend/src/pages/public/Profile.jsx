@@ -507,7 +507,12 @@ export default function Profile() {
               </Typography>
 
               <Tooltip title="نام کاربری">
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                  }}
+                >
                   {profile.username}
                 </Typography>
               </Tooltip>
@@ -522,11 +527,21 @@ export default function Profile() {
           </Box>
 
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mb: 3 }}>
-            <Typography variant="body1" color="text.secondary">
+            <Typography
+              variant="body1"
+              sx={{
+                color: "text.secondary",
+              }}
+            >
               جنسیت: {GENDER_LABELS[profile.gender] || profile.gender}
             </Typography>
 
-            <Typography variant="body1" color="text.secondary">
+            <Typography
+              variant="body1"
+              sx={{
+                color: "text.secondary",
+              }}
+            >
               تاریخ تولد: {formatDate(profile.birth_date)}
             </Typography>
           </Box>
@@ -633,17 +648,32 @@ export default function Profile() {
             <Stack spacing={2}>
               <Stack
                 direction="row"
-                justifyContent="space-between"
-                alignItems="center"
+                sx={{
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
               >
-                <Box sx={{ display: "flex", alignItems: 'center', width: '100%'}}>
-                  <Stack direction="row" spacing={1} alignItems="center">
+                <Box
+                  sx={{ display: "flex", alignItems: "center", width: "100%" }}
+                >
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{
+                      alignItems: "center",
+                    }}
+                  >
                     <HomeIcon color="primary" />
-                    <Typography variant="h6" fontWeight="bold">
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: "bold",
+                      }}
+                    >
                       آدرس‌ های من
                     </Typography>
                   </Stack>
-                  <Box sx={{marginInlineStart: "auto"}}>
+                  <Box sx={{ marginInlineStart: "auto" }}>
                     <Button
                       startIcon={<AddIcon />}
                       onClick={openAddAddressModal}
@@ -691,12 +721,17 @@ export default function Profile() {
                       }}
                     >
                       <Box>
-                        <Typography sx={{fontWeight: "bold"}}>
+                        <Typography sx={{ fontWeight: "bold" }}>
                           {getProvinceName(address["province-id"])} ،{" "}
                           {getCityName(address["city-id"])}
                         </Typography>
 
-                        <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+                        <Typography
+                          sx={{
+                            color: "text.secondary",
+                            mt: 0.5,
+                          }}
+                        >
                           {address["address-details"]}
                           {address["house-number"]
                             ? ` - پلاک ${address["house-number"]}`
@@ -757,7 +792,6 @@ export default function Profile() {
               name="provinceId"
               value={addressForm.provinceId}
               onChange={handleAddressFormChange}
-              defaultValue=""
               options={provinces.map((p) => ({
                 label: p.name,
                 value: String(p["province-id"]),
@@ -769,7 +803,6 @@ export default function Profile() {
               name="cityId"
               value={addressForm.cityId}
               onChange={handleAddressFormChange}
-              defaultValue=""
               options={citiesForProvince(addressForm.provinceId).map((c) => ({
                 label: c.name,
                 value: c.id,

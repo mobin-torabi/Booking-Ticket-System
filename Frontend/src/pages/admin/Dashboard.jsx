@@ -16,13 +16,18 @@ import { formatPrice } from "../../utils/formatPrice";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 
 import PageHeader from "../../components/common/PageHeader";
+import PageContainer from "../../components/common/PageContainer";
 import Card from "../../components/common/Card";
 import Loading from "../../components/common/Loading";
 
 const QUICK_LINKS = [
   { label: "کاربران", icon: PeopleIcon, route: ROUTES.USERS },
   { label: "ارائه‌دهندگان", icon: BusinessIcon, route: ROUTES.PROVIDERS },
-  { label: "تیکت‌ها", icon: ConfirmationNumberIcon, route: ROUTES.ADMIN_TICKETS },
+  {
+    label: "تیکت‌ها",
+    icon: ConfirmationNumberIcon,
+    route: ROUTES.ADMIN_TICKETS,
+  },
   { label: "رزروها", icon: BookOnlineIcon, route: ROUTES.ADMIN_BOOKINGS },
   { label: "پرداخت‌ها", icon: PaymentsIcon, route: ROUTES.PAYMENTS },
   { label: "تخفیفات", icon: PercentIcon, route: ROUTES.DISCOUNTS },
@@ -94,7 +99,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <Box sx={{ p: 1, mb: 2 }}>
+    <PageContainer>
       <PageHeader title="داشبورد مدیریت" subtitle="نمای کلی سیستم رزرو بلیط" />
 
       {loading ? (
@@ -121,10 +126,20 @@ export default function Dashboard() {
                     <s.icon />
                   </Box>
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "text.secondary",
+                      }}
+                    >
                       {s.label}
                     </Typography>
-                    <Typography variant="h5" fontWeight={700}>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: 700,
+                      }}
+                    >
                       {s.value}
                     </Typography>
                   </Box>
@@ -135,7 +150,13 @@ export default function Dashboard() {
         </Box>
       )}
 
-      <Typography variant="h6" fontWeight={700} mb={2}>
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: 700,
+          mb: 2,
+        }}
+      >
         دسترسی سریع
       </Typography>
 
@@ -160,11 +181,17 @@ export default function Dashboard() {
               }}
             >
               <link.icon color="primary" />
-              <Typography fontWeight={600}>{link.label}</Typography>
+              <Typography
+                sx={{
+                  fontWeight: 600,
+                }}
+              >
+                {link.label}
+              </Typography>
             </Box>
           </Box>
         ))}
       </Box>
-    </Box>
+    </PageContainer>
   );
 }

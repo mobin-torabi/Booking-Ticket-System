@@ -34,7 +34,6 @@ import FAQ from "./pages/public/FAQ";
 import Policy from "./pages/public/Policy";
 import Support from "./pages/public/Support";
 
-
 export default function App() {
   return (
     <Routes>
@@ -46,10 +45,10 @@ export default function App() {
       <Route element={<MainLayout />}>
         <Route path="/tickets" element={<Tickets />} /> {/*Home page*/}
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} /> 
+        <Route path="/register" element={<Register />} />
         <Route path="/tickets/:id" element={<TicketDetails />} />
         <Route path="/faq" element={<FAQ />} />
-        <Route path="/support" element={<Support/>} />
+        <Route path="/support" element={<Support />} />
         <Route path="/policy" element={<Policy />} />
       </Route>
 

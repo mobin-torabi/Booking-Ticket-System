@@ -14,10 +14,13 @@ import {
   Tooltip,
   Divider,
   Typography,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import BlockIcon from "@mui/icons-material/Block";
+import SyncAltIcon from "@mui/icons-material/SyncAlt";
 
 import { ticketApi, providerApi } from "../../api";
 
@@ -26,10 +29,11 @@ import useDocumentTitle from "../../hooks/useDocumentTitle";
 
 import { showError, showPromise } from "../../utils/toast";
 import { formatPrice } from "../../utils/formatPrice";
-import { formatDateTime } from "../../utils/formatDate";
+import { formatDate, formatDateTime } from "../../utils/formatDate";
 import { TICKET_TYPE_LABELS } from "../../utils/constants";
 
 import PageHeader from "../../components/common/PageHeader";
+import PageContainer from "../../components/common/PageContainer";
 import Select from "../../components/common/Select";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
@@ -75,6 +79,10 @@ const EMPTY_FORM = {
   departureAt: "",
   arrivalAt: "",
   departureDate: "",
+  // A ticket is a round trip exactly when it carries a return date — that is
+  // what GET /tickets reads as trip_type. Tours are always round trips, so
+  // this is forced on for them (see isRoundTrip below).
+  roundTrip: false,
   returnDate: "",
   basePrice: "",
   seatsPerRow: 6,
@@ -101,9 +109,9 @@ function buildSeatLayout(form) {
           { class: "business", rows: Number(form.rowsBusiness) || 0 },
           { class: "economy", rows: Number(form.rowsEconomy) || 0 },
         ].filter((c) => c.rows > 0)
-      : [
-          { class: "economy", rows: Number(form.rowsSingle) || 0 },
-        ].filter((c) => c.rows > 0);
+      : [{ class: "economy", rows: Number(form.rowsSingle) || 0 }].filter(
+          (c) => c.rows > 0,
+        );
 
   const totalRows = classes.reduce((sum, c) => sum + c.rows, 0);
 
@@ -124,10 +132,7 @@ export default function Tickets() {
 
   const [typeFilter, setTypeFilter] = useState("");
 
-  const { page, setPage, totalPages, currentData } = usePagination(
-    tickets,
-    10,
-  );
+  const { page, setPage, totalPages, currentData } = usePagination(tickets, 10);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState(null); // null => create mode
@@ -199,6 +204,10 @@ export default function Tickets() {
 
   const seatLayout = useMemo(() => buildSeatLayout(form), [form]);
 
+  // Tours are always sold as a round trip, so the checkbox is forced on (and
+  // locked) for them; every other type opts in.
+  const isRoundTrip = form.type === "tour" || form.roundTrip;
+
   function openCreateModal() {
     setEditingTicket(null);
     setForm(EMPTY_FORM);
@@ -220,12 +229,32 @@ export default function Tickets() {
 
   function handleFormChange(e) {
     const { name, value } = e.target;
+    setForm((prev) => {
+      if (name !== "type") return { ...prev, [name]: value };
+
+      // Changing the ticket type invalidates whichever provider was picked
+      // for the previous type's provider list. It can also hide the return
+      // date field (tour -> flight with the box unticked), so drop a date
+      // that is no longer reachable rather than submitting it unseen.
+      const stillRoundTrip = value === "tour" || prev.roundTrip;
+
+      return {
+        ...prev,
+        type: value,
+        providerId: "",
+        returnDate: stillRoundTrip ? prev.returnDate : "",
+      };
+    });
+  }
+
+  function handleRoundTripChange(e) {
+    const roundTrip = e.target.checked;
+    // Unticking clears the date so a hidden field can't smuggle a return date
+    // onto a one-way ticket.
     setForm((prev) => ({
       ...prev,
-      [name]: value,
-      // Changing the ticket type invalidates whichever provider was picked
-      // for the previous type's provider list.
-      ...(name === "type" ? { providerId: "" } : {}),
+      roundTrip,
+      returnDate: roundTrip ? prev.returnDate : "",
     }));
   }
 
@@ -249,7 +278,9 @@ export default function Tickets() {
         closeModal();
         fetchTickets();
       } catch (err) {
-        showError(err.response?.data?.error ?? "بروزرسانی تیکت با خطا مواجه شد");
+        showError(
+          err.response?.data?.error ?? "بروزرسانی تیکت با خطا مواجه شد",
+        );
       } finally {
         setSaving(false);
       }
@@ -273,8 +304,20 @@ export default function Tickets() {
       return;
     }
 
-    if (form.type === "tour" && !form.returnDate) {
-      showError("تور ها باید تاریخ برگشت داشته باشند");
+    if (isRoundTrip && !form.returnDate) {
+      showError(
+        form.type === "tour"
+          ? "تور ها باید تاریخ برگشت داشته باشند"
+          : "برای بلیط رفت و برگشت، تاریخ برگشت را وارد کنید",
+      );
+      return;
+    }
+
+    if (
+      isRoundTrip &&
+      new Date(form.returnDate) < new Date(form.departureDate)
+    ) {
+      showError("تاریخ برگشت نمی‌تواند قبل از تاریخ رفت باشد");
       return;
     }
 
@@ -295,7 +338,7 @@ export default function Tickets() {
           base_price: basePrice,
           total_seats: seatLayout.totalSeats,
           departure_date: form.departureDate,
-          return_date: form.type === "tour" ? form.returnDate : undefined,
+          return_date: isRoundTrip ? form.returnDate : undefined,
           provider_id: form.providerId,
           seat_layout: {
             rows: seatLayout.rows,
@@ -336,7 +379,7 @@ export default function Tickets() {
   }
 
   return (
-    <Box sx={{ p: 1, mb: 2 }}>
+    <PageContainer>
       <PageHeader
         title="مدیریت تیکت‌ها"
         subtitle={`مجموع ${tickets.length} تیکت`}
@@ -375,6 +418,7 @@ export default function Tickets() {
                 <TableRow>
                   <TableCell>نوع</TableCell>
                   <TableCell>مسیر</TableCell>
+                  <TableCell>نوع سفر</TableCell>
                   <TableCell>حرکت</TableCell>
                   <TableCell>قیمت</TableCell>
                   <TableCell>ظرفیت</TableCell>
@@ -397,6 +441,27 @@ export default function Tickets() {
                       </TableCell>
                       <TableCell sx={{ wordBreak: "break-word" }}>
                         {t.origin} ← {t.destination}
+                      </TableCell>
+                      <TableCell>
+                        {t.return_date ? (
+                          <Tooltip
+                            title={`تاریخ برگشت: ${formatDate(t.return_date)}`}
+                          >
+                            <Chip
+                              size="small"
+                              icon={<SyncAltIcon />}
+                              label="رفت و برگشت"
+                              color="primary"
+                              variant="outlined"
+                            />
+                          </Tooltip>
+                        ) : (
+                          <Chip
+                            size="small"
+                            label="یک طرفه"
+                            variant="outlined"
+                          />
+                        )}
                       </TableCell>
                       <TableCell>{formatDateTime(t.departure_at)}</TableCell>
                       <TableCell>{formatPrice(t.base_price)}</TableCell>
@@ -497,7 +562,12 @@ export default function Tickets() {
               ]}
             />
             {loadingProviders && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "text.secondary",
+                }}
+              >
                 در حال بارگذاری ارائه‌دهندگان...
               </Typography>
             )}
@@ -540,6 +610,24 @@ export default function Tickets() {
               />
             </Box>
 
+            {/* A ticket becomes a round trip by having a return date. Tours
+                always do, so their checkbox is ticked and locked. */}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="roundTrip"
+                  checked={isRoundTrip}
+                  disabled={form.type === "tour"}
+                  onChange={handleRoundTripChange}
+                />
+              }
+              label={
+                form.type === "tour"
+                  ? "رفت و برگشت (تورها همیشه رفت و برگشت هستند)"
+                  : "بلیط رفت و برگشت"
+              }
+            />
+
             <Box sx={{ display: "flex", gap: 2 }}>
               <JalaliDatePicker
                 label="تاریخ رفت"
@@ -549,7 +637,7 @@ export default function Tickets() {
                 }
                 required
               />
-              {form.type === "tour" && (
+              {isRoundTrip && (
                 <JalaliDatePicker
                   label="تاریخ برگشت"
                   value={form.returnDate}
@@ -572,7 +660,12 @@ export default function Tickets() {
 
             <Divider />
 
-            <Typography variant="subtitle2" fontWeight={700}>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                fontWeight: 700,
+              }}
+            >
               نقشه صندلی
             </Typography>
 
@@ -619,7 +712,12 @@ export default function Tickets() {
               />
             )}
 
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+              }}
+            >
               مجموع ظرفیت: {seatLayout.totalSeats} صندلی
             </Typography>
           </Box>
@@ -639,6 +737,6 @@ export default function Tickets() {
         onConfirm={handleConfirmCancel}
         onCancel={() => !cancelling && setCancellingTicket(null)}
       />
-    </Box>
+    </PageContainer>
   );
 }

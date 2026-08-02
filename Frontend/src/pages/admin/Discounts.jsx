@@ -27,6 +27,7 @@ import { formatDate } from "../../utils/formatDate";
 import { showError, showPromise } from "../../utils/toast";
 
 import PageHeader from "../../components/common/PageHeader";
+import PageContainer from "../../components/common/PageContainer";
 import SearchBar from "../../components/common/SearchBar";
 import Select from "../../components/common/Select";
 import Input from "../../components/common/Input";
@@ -257,7 +258,7 @@ export default function Discounts() {
   }
 
   return (
-    <Box sx={{ p: 1, mb: 2 }}>
+    <PageContainer>
       <PageHeader
         title="مدیریت تخفیف‌ ها"
         subtitle={`مجموع ${filteredDiscounts.length} کد تخفیف`}
@@ -507,6 +508,6 @@ export default function Discounts() {
         onConfirm={handleConfirmDelete}
         onCancel={() => !deleting && setDeletingDiscount(null)}
       />
-    </Box>
+    </PageContainer>
   );
 }

@@ -91,7 +91,9 @@ export default function Notifications() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ pt: { xs: 12, md: 14 }, pb: 6 }}>
+    // The navbar is sticky rather than fixed, so the page doesn't need to
+    // reserve ~100px of top padding to clear it.
+    <Container maxWidth="md" sx={{ pt: { xs: 3, md: 5 }, pb: 6 }}>
       <PageHeader
         title="اعلان‌ها"
         actions={
@@ -130,7 +132,13 @@ export default function Notifications() {
 
             return (
               <Card key={notification.id}>
-                <Stack direction="row" spacing={2} alignItems="flex-start">
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  sx={{
+                    alignItems: "flex-start",
+                  }}
+                >
                   <Avatar
                     sx={{
                       bgcolor: `${meta.color}.main`,
@@ -143,10 +151,12 @@ export default function Notifications() {
                   <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                     <Stack
                       direction="row"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      flexWrap="wrap"
-                      rowGap={1}
+                      sx={{
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        rowGap: 1,
+                      }}
                     >
                       <Chip
                         size="small"
@@ -154,7 +164,13 @@ export default function Notifications() {
                         color={meta.color}
                       />
 
-                      <Typography variant="caption" color="text.secondary" sx={{ml:"auto"}}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: "text.secondary",
+                          ml: "auto",
+                        }}
+                      >
                         {formatDateTime(notification.sent_at)}
                       </Typography>
                     </Stack>
