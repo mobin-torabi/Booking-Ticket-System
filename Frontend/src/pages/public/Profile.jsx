@@ -44,6 +44,7 @@ import ErrorState from "../../components/common/ErrorState";
 import Modal from "../../components/common/Modal";
 import Select from "../../components/common/Select";
 import ConfirmDialog from "../../components/common/ConfirmDialog";
+import EmptyState from "../../components/common/EmptyState"
 
 const GENDER_LABELS = {
   male: "مرد",
