@@ -278,13 +278,13 @@ export default function Tickets() {
             <Stack
               direction={{ xs: "column", md: "row" }}
               spacing={1.5}
-              alignitems={{ xs: "stretch", md: "center" }}
+              alignItems={{ xs: "stretch", md: "center" }}
             >
               {/* Origin / destination with swap button */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 spacing={0}
-                alignitems="center"
+                alignItems="center"
                 sx={{ flex: 2, position: "relative" }}
               >
                 <Input
@@ -344,7 +344,7 @@ export default function Tickets() {
             </Stack>
 
             {/* More filters toggle */}
-            <Stack direction="row" justifycontent="flex-end" sx={{mt: 3, mb: 3}}>
+            <Stack direction="row" justifyContent="flex-end" sx={{mt: 3, mb: 3}}>
               <Button
                 variant="text"
                 startIcon={<TuneIcon />}
@@ -454,7 +454,7 @@ export default function Tickets() {
                 return (
                   <CardBox key={ticket.id}>
                     <Stack spacing={1.5}>
-                      <Stack direction="row" spacing={1} alignitems="center">
+                      <Stack direction="row" spacing={1} alignItems="center">
                         <Box
                           sx={{
                             width: 40,
@@ -480,7 +480,7 @@ export default function Tickets() {
                         </Typography>
                       </Stack>
 
-                      <Stack direction="row" spacing={0.5} alignitems="center">
+                      <Stack direction="row" spacing={0.5} alignItems="center">
                         <CalendarMonthIcon fontSize="small" color="action" />
                         <Typography variant="body2" color="text.secondary">
                           {formatDateTime(ticket.departure_at)}
@@ -489,8 +489,8 @@ export default function Tickets() {
 
                       <Stack
                         direction="row"
-                        justifycontent="space-between"
-                        alignitems="center"
+                        justifyContent="space-between"
+                        alignItems="center"
                       >
                         <Chip
                           size="small"
@@ -601,7 +601,7 @@ export default function Tickets() {
               <Stack
                 direction="row"
                 spacing={0.5}
-                alignitems="center"
+                alignItems="center"
                 sx={{
                   position: "absolute",
                   bottom: 10,

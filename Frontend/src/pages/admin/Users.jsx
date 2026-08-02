@@ -13,7 +13,6 @@ import {
   IconButton,
   Tooltip,
   Typography,
-  Divider,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -124,7 +123,7 @@ export default function Users() {
     return () => {
       ignore = true;
     };
-  }, [debouncedSearch, roleFilter, genderFilter]);
+  }, [debouncedSearch, roleFilter, genderFilter, setPage]);
 
   function openEditModal(user) {
     setEditingUser(user);

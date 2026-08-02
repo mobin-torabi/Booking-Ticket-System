@@ -7,7 +7,6 @@ import SendIcon from "@mui/icons-material/Send";
 import GitHubIcon from "@mui/icons-material/GitHub";
 
 import { supportApi } from "../../api";
-import { useAuth } from "../../context/AuthContext";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import { showPromise, showError } from "../../utils/toast";
 
@@ -21,8 +20,6 @@ const EMPTY_FORM = { name: "", email: "", subject: "", message: "" };
 
 export default function Support() {
   useDocumentTitle("پشتیبانی | سیستم رزرو بلیط");
-
-  const { user } = useAuth();
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});

@@ -249,7 +249,7 @@ export default function Discounts() {
 
       setDeletingDiscount(null);
       fetchDiscounts();
-    } catch {
+    } catch (error) {
       showError(error.response?.data?.error || "حذف کد تخفیف با خطا مواجه شد");
     } finally {
       setDeleting(false);

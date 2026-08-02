@@ -130,8 +130,7 @@ function navigateSupport(){
                    sx={{mt:3}}
                     variant="h5"
                     fontWeight={700}
-                    textalign="center"
-                 
+                    textAlign="center"
                   >
                     تماس با ما
                   </Typography>
@@ -142,7 +141,7 @@ function navigateSupport(){
                       key={email}
                       component="a"
                       href={`https://mail.google.com/mail/?view=cm&fs=1&to=${email}`}
-                      target="_balnk"
+                      target="_blank"
                       rel="noopener noreferrer"
                       sx={{
                         display: "flex",
@@ -167,7 +166,7 @@ function navigateSupport(){
                     </Box>
                   ))}
 
-                  <Box display="flex" justifycontent="center" mt={2}>
+                  <Box display="flex" justifyContent="center" mt={2}>
                     <Button variant="contained" onClick={() => setOpen(false)}>
                       بستن
                     </Button>
@@ -188,7 +187,7 @@ function navigateSupport(){
   }}  />
 
         <div className="flex justify-center text-center">
-          <Typography sx={{mb:3}} textalign="center" color="text.secondary">
+          <Typography sx={{mb:3}} textAlign="center" color="text.secondary">
             ©2026 استفاده از مطالب این وب سایت فقط برای مقاصد غیر تجاری و با ذکر
             منبع بلامانع است. کلیه حقوق این سایت متعلق به تیکی می‌باشد.
           </Typography>

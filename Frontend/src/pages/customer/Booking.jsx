@@ -49,7 +49,7 @@ const TYPE_ICONS = {
 
 const MAX_PASSENGERS = 9;
 
-function SeatButton({ seat, selected, booked, onClick }) {
+function SeatButton({ seat, selected, booked, onClick, wide = false }) {
   return (
     <Box
       component="button"
@@ -57,7 +57,7 @@ function SeatButton({ seat, selected, booked, onClick }) {
       disabled={booked}
       onClick={onClick}
       sx={{
-        minWidth: 56,
+        minWidth: wide ? 76 : 56,
         height: 44,
         borderRadius: 2,
         border: "1px solid",
@@ -80,12 +80,6 @@ function SeatButton({ seat, selected, booked, onClick }) {
   );
 }
 
-// Bus / tour seat maps are laid out the way a real coach is: seats fill one
-// column top-to-bottom (rows) before moving to the next column, with the
-// driver's cabin marked at the front. A fixed number of rows per column
-// mirrors the physical row structure of the bus.
-const BUS_ROWS_PER_COLUMN = 4;
-
 function seatSortValue(seat) {
   const parsed = parseInt(String(seat.seat_number).replace(/\D/g, ""), 10);
   return Number.isNaN(parsed) ? 0 : parsed;
@@ -104,6 +98,53 @@ function buildBusRows(seats) {
 
   return rows;
 }
+
+// Flight seat maps mirror a real cabin: each class is its own section, rows
+// run front-to-back, and seats split evenly around a center aisle (a 6-wide
+// row becomes 3 + aisle + 3, a 4-wide row becomes 2 + aisle + 2, etc). The
+// column layout is derived from the actual seat letters present in that
+// class's data rather than a hardcoded scheme, so it adapts to whatever
+// seat_layout the ticket was created with.
+function parseSeatNumber(seat) {
+  const match = String(seat.seat_number).match(/^(\d+)(.*)$/);
+  if (!match) return { row: 0, col: String(seat.seat_number) };
+  return { row: parseInt(match[1], 10), col: match[2] };
+}
+
+function buildCabinRows(seats) {
+  const columns = Array.from(
+    new Set(seats.map((seat) => parseSeatNumber(seat).col)),
+  ).sort();
+
+  const seatsByRow = new Map();
+  for (const seat of seats) {
+    const { row, col } = parseSeatNumber(seat);
+    if (!seatsByRow.has(row)) seatsByRow.set(row, new Map());
+    seatsByRow.get(row).set(col, seat);
+  }
+
+  const rowNumbers = Array.from(seatsByRow.keys()).sort((a, b) => a - b);
+
+  return rowNumbers.map((rowNumber) => ({
+    rowNumber,
+    seats: columns.map((col) => seatsByRow.get(rowNumber).get(col) || null),
+  }));
+}
+
+// Wide-body cabins run two aisles instead of one: seats split into three
+// blocks (e.g. a 9-wide row becomes 3 + aisle + 3 + aisle + 3, a narrower
+// business row becomes 1 + aisle + 2 + aisle + 1). Zero-size blocks are
+// dropped so rows too narrow for three blocks fall back to one aisle.
+function splitSeatColumns(rowWidth, groups = 3) {
+  const base = Math.floor(rowWidth / groups);
+  const extra = rowWidth % groups;
+  const sizes = Array.from(
+    { length: groups },
+    (_, i) => base + (i < extra ? 1 : 0),
+  );
+  return sizes.filter((size) => size > 0);
+}
+
 function SeatMapLegend() {
   const items = [
     { label: "انتخاب شما", bg: "primary.main", border: "primary.main" },
@@ -345,8 +386,6 @@ export default function Booking() {
   async function handleSubmit() {
     if (!validate()) return;
 
-    let booking = null;
-
     try {
       setSubmitting(true);
 
@@ -360,31 +399,17 @@ export default function Booking() {
           phone_number: p.phone_number.trim() || undefined,
         })),
       });
-      booking = created.data;
 
-      // There's no real payment gateway here, so booking finalizes the
-      // purchase itself — this call also applies the discount (if any) and
-      // marks the booking as paid/confirmed.
-      await bookingApi.payBooking(
-        booking.id,
-        discountApplied ? discountCode.trim() : undefined,
-      );
-
-      showSuccess("بلیط شما با موفقیت رزرو شد");
-      navigate(`/bookings/${booking.id}`);
+      // Seats are held (booking is created as 'pending') but not finalized
+      // yet — the payment page is where the discount actually gets applied
+      // and the booking becomes 'booked'.
+      showSuccess("رزرو شما ثبت شد؛ برای تکمیل، پرداخت را انجام دهید");
+      navigate(`/payment/${created.data.id}`, {
+        state: discountApplied
+          ? { discountCode: discountCode.trim() }
+          : undefined,
+      });
     } catch (err) {
-      // If the booking was created but finalizing it failed (e.g. the
-      // discount code became invalid in the meantime), don't leave an
-      // unpaid booking sitting on the seats — release it and let the user
-      // try again.
-      if (booking) {
-        try {
-          await bookingApi.cancelBooking(booking.id, "خطا در تکمیل رزرو");
-        } catch {
-          // best-effort rollback; surface the original error either way
-        }
-      }
-
       const message =
         err.response?.status === 409
           ? "برخی از صندلی‌های انتخابی توسط شخص دیگری رزرو شده‌اند"
@@ -546,40 +571,139 @@ export default function Booking() {
               </Stack>
 
               {isFlight ? (
-                <Stack spacing={2.5}>
+                <Box
+                  sx={{
+                    border: "1px solid #E2E8F0",
+                    borderRadius: "48px 48px 20px 20px",
+                    bgcolor: "#FAFBFF",
+                    overflow: "hidden",
+                  }}
+                >
+                  {/* Nose of the plane */}
+                  <Stack
+                    alignItems="center"
+                    spacing={0.5}
+                    sx={{
+                      py: 2,
+                      borderBottom: "1px dashed #CBD5E1",
+                      color: "text.secondary",
+                    }}
+                  >
+                    <FlightIcon sx={{ transform: "rotate(90deg)" }} />
+                    <Typography variant="caption">جلوی هواپیما</Typography>
+                  </Stack>
+
+                  <Box sx={{ px: { xs: 1.5, sm: 3 }, pt: 2 }}>
+                    <SeatMapLegend />
+                  </Box>
+
                   {SEAT_CLASS_ORDER.filter(
                     (cls) => seatsByClass[cls]?.length,
-                  ).map((cls) => (
-                    <Box key={cls}>
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        color="text.secondary"
-                        mb={1}
+                  ).map((cls, clsIndex, arr) => {
+                    const cabinRows = buildCabinRows(seatsByClass[cls]);
+                    const rowWidth = cabinRows[0]?.seats.length || 0;
+                    const groupSizes = splitSeatColumns(rowWidth);
+
+                    return (
+                      <Box
+                        key={cls}
+                        sx={{
+                          px: { xs: 1.5, sm: 4 },
+                          py: 2.5,
+                          borderBottom:
+                            clsIndex < arr.length - 1
+                              ? "1px dashed #E2E8F0"
+                              : "none",
+                        }}
                       >
-                        {SEAT_CLASS_LABELS[cls] || cls} (
-                        {
-                          seatsByClass[cls].filter((seat) => seat.is_available)
-                            .length
-                        }{" "}
-                        صندلی خالی)
-                      </Typography>
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                        {seatsByClass[cls].map((seat) => (
-                          <SeatButton
-                            key={seat.id}
-                            seat={seat}
-                            selected={selectedSeatIds.includes(seat.id)}
-                            booked={!seat.is_available}
-                            onClick={() =>
-                              seat.is_available && toggleSeat(seat.id)
-                            }
-                          />
-                        ))}{" "}
+                        <Typography
+                          variant="body2"
+                          fontWeight={700}
+                          color="text.secondary"
+                          mb={1.5}
+                          textAlign="center"
+                        >
+                          {SEAT_CLASS_LABELS[cls] || cls} (
+                          {
+                            seatsByClass[cls].filter((s) => s.is_available)
+                              .length
+                          }{" "}
+                          صندلی خالی)
+                        </Typography>
+
+                        <Stack spacing={1} alignItems="center">
+                          {cabinRows.map((row) => (
+                            <Stack
+                              key={row.rowNumber}
+                              direction="row"
+                              alignItems="center"
+                              spacing={1.5}
+                            >
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  width: 20,
+                                  textAlign: "center",
+                                  color: "text.disabled",
+                                }}
+                              >
+                                {row.rowNumber}
+                              </Typography>
+
+                              {groupSizes.map((size, groupIndex) => {
+                                const start = groupSizes
+                                  .slice(0, groupIndex)
+                                  .reduce((sum, s) => sum + s, 0);
+                                const groupSeats = row.seats.slice(
+                                  start,
+                                  start + size,
+                                );
+
+                                return (
+                                  <Stack
+                                    key={groupIndex}
+                                    direction="row"
+                                    alignItems="center"
+                                    spacing={1.5}
+                                  >
+                                    <Stack direction="row" spacing={0.75}>
+                                      {groupSeats.map((seat, i) =>
+                                        seat ? (
+                                          <SeatButton
+                                            key={seat.id}
+                                            seat={seat}
+                                            wide={cls === "first"}
+                                            selected={selectedSeatIds.includes(
+                                              seat.id,
+                                            )}
+                                            booked={!seat.is_available}
+                                            onClick={() =>
+                                              seat.is_available &&
+                                              toggleSeat(seat.id)
+                                            }
+                                          />
+                                        ) : (
+                                          <Box key={i} sx={{ width: 56 }} />
+                                        ),
+                                      )}
+                                    </Stack>
+
+                                    {/* aisle */}
+                                    {groupIndex < groupSizes.length - 1 && (
+                                      <Box
+                                        sx={{ width: { xs: 20, sm: 32 } }}
+                                      />
+                                    )}
+                                  </Stack>
+                                );
+                              })}
+                            </Stack>
+                          ))}
+                        </Stack>
                       </Box>
-                    </Box>
-                  ))}
-                </Stack>
+                    );
+                  })}
+                </Box>
               ) : (
                 // Bus & tour tickets only ever have one seat type — lay the
                 // seats out like an actual coach: columns of seats running

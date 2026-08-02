@@ -5,8 +5,8 @@ export default function Spinner() {
     return (
         <Box
             display="flex"
-            justifycontent="center"
-            alignitems="center"
+            justifyContent="center"
+            alignItems="center"
             p={3}
         >
             <CircularProgress />

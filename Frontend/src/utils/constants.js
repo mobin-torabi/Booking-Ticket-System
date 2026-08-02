@@ -5,7 +5,7 @@ export const USER_ROLES = {
 
 export const BOOKING_STATUS = {
     PENDING: "pending",
-    PAID: "paid",
+    BOOKED: "booked",
     CANCELLED: "cancelled",
 };
 

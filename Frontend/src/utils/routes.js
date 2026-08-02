@@ -14,9 +14,11 @@ export const ROUTES = {
 
   // Admin
   ADMIN: "/admin/profile",
+  ADMIN_DASHBOARD: "/admin/dashboard",
   USERS: "/admin/users",
   PROVIDERS: "/admin/providers",
   ADMIN_BOOKINGS: "/admin/bookings",
+  ADMIN_TICKETS: "/admin/tickets",
   PAYMENTS: "/admin/payments",
   DISCOUNTS: "/admin/discounts",
 };
