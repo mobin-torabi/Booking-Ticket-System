@@ -336,7 +336,7 @@ export default function BookingDetails() {
             <Stack direction="row" spacing={0.5} alignItems="center">
               <PaymentsIcon fontSize="small" color="action" />
               <Typography variant="body2" fontWeight={600}>
-                {formatPrice(booking.total_amount)} تومان
+                {formatPrice(booking.total_amount)}
               </Typography>
             </Stack>
 
