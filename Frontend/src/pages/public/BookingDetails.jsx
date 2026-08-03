@@ -445,7 +445,7 @@ export default function BookingDetails() {
                   fontWeight: 600,
                 }}
               >
-                {formatPrice(booking.total_amount)} تومان
+                {formatPrice(booking.total_amount)}
               </Typography>
             </Stack>
 

@@ -1364,7 +1364,7 @@ app.post("/bookings", async (req, res) => {
     const totalAmount = Number(ticket.base_price) * seat_ids.length;
     const bookingResult = await sql`
       INSERT INTO bookings (user_id, ticket_id, total_amount, number_of_seats, status)
-      VALUES (${userId}, ${ticket_id}, ${totalAmount}, ${seat_ids.length}, 'pending')
+      VALUES (${userId}, ${ticket_id}, ${totalAmount}, ${seat_ids.length}, 'booked')
       RETURNING *
     `;
     const booking = bookingResult[0];
