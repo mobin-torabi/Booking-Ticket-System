@@ -48,7 +48,7 @@ export default function DashboardMenu() {
   function logoutHandler() {
     logout();
     showSuccess("از حساب کاربری خود خارج شدید!");
-    navigate(ROUTES.HOME)
+    navigate(ROUTES.HOME);
   }
 
   function navigateAdminDashboard() {
@@ -106,7 +106,6 @@ export default function DashboardMenu() {
           <IconButton
             onClick={handleClick}
             size="small"
-            sx={{ ml: 2 }}
             aria-controls={open ? "account-menu" : undefined}
             aria-haspopup="true"
             aria-expanded={open}
@@ -118,7 +117,6 @@ export default function DashboardMenu() {
                 bgcolor:
                   user.role === "Admin" ? "secondary.main" : "primary.main",
                 fontWeight: "bold",
-                m: 1
               }}
             >
               {user.username.charAt(0).toUpperCase()}
@@ -167,7 +165,13 @@ export default function DashboardMenu() {
           <>
             <MenuItem onClick={navigateAdminDashboard}>
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <div style={{ display: "flex", flexDirection: "row", marginBottom: '10px'}}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    marginBottom: "10px",
+                  }}
+                >
                   <Avatar
                     sx={{
                       bgcolor: "secondary.main",
@@ -177,7 +181,7 @@ export default function DashboardMenu() {
                   <Chip
                     size="small"
                     label={"ادمین"}
-                    sx={{ ml: 1, mt: 0.5}}
+                    sx={{ ml: 1, mt: 0.5 }}
                     color={"secondary"}
                   />
                 </div>
@@ -240,7 +244,13 @@ export default function DashboardMenu() {
           <>
             <MenuItem onClick={navigateCustomerDashboard}>
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <div style={{ display: "flex", flexDirection: "row", marginBottom: '10px'}}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    marginBottom: "10px",
+                  }}
+                >
                   <Avatar
                     sx={{
                       bgcolor: "primary.main",
@@ -250,7 +260,7 @@ export default function DashboardMenu() {
                   <Chip
                     size="small"
                     label={"کاربر"}
-                    sx={{ ml: 1, mt: 0.5}}
+                    sx={{ ml: 1, mt: 0.5 }}
                     color={"primary"}
                   />
                 </div>

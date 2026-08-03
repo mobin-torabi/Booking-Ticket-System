@@ -30,6 +30,7 @@ import { showError, showPromise } from "../../utils/toast";
 import { isValidEmail, isValidPhone } from "../../utils/validators";
 
 import PageHeader from "../../components/common/PageHeader";
+import PageContainer from "../../components/common/PageContainer";
 import SearchBar from "../../components/common/SearchBar";
 import Select from "../../components/common/Select";
 import Input from "../../components/common/Input";
@@ -208,8 +209,11 @@ export default function Users() {
       );
 
       closeEditModal();
-    } catch(error) {
-      showError(error.response?.data?.error ?? "بروزرسانی اطلاعات کاربر با خطا مواجه شد");
+    } catch (error) {
+      showError(
+        error.response?.data?.error ??
+          "بروزرسانی اطلاعات کاربر با خطا مواجه شد",
+      );
     } finally {
       setSaving(false);
     }
@@ -242,246 +246,248 @@ export default function Users() {
   }
 
   return (
-    <div style={{ padding: "10px" }}>
-      <Box>
-        <PageHeader
-          title="مدیریت کاربران"
-          subtitle={`مجموع ${users.length} کاربر`}
-        />
+    <PageContainer>
+      <PageHeader
+        title="مدیریت کاربران"
+        subtitle={`مجموع ${users.length} کاربر`}
+      />
 
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 2, mb: 3 }}>
-          <Box sx={{ flex: "1 1 260px" }}>
-            <SearchBar
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="جستجو بر اساس نام کاربری یا نام و نام خانوادگی..."
-            />
-          </Box>
-
-          <Box sx={{ width: { xs: "100%", sm: 180 } }}>
-            <Select
-              label="نقش"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              options={ROLE_OPTIONS}
-            />
-          </Box>
-
-          <Box sx={{ width: { xs: "100%", sm: 180 } }}>
-            <Select
-              label="جنسیت"
-              value={genderFilter}
-              onChange={(e) => setGenderFilter(e.target.value)}
-              options={GENDER_OPTIONS}
-            />
-          </Box>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 2, mb: 3 }}>
+        <Box sx={{ flex: "1 1 260px" }}>
+          <SearchBar
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="جستجو بر اساس نام کاربری یا نام و نام خانوادگی..."
+          />
         </Box>
 
-        {loading && <Loading message="در حال بارگذاری کاربران..." />}
-
-        {!loading && error && <ErrorState message={error} />}
-
-        {!loading && !error && users.length === 0 && (
-          <EmptyState
-            title="کاربری یافت نشد"
-            description="با معیارهای جستجوی فعلی هیچ کاربری پیدا نشد."
+        <Box sx={{ width: { xs: "100%", sm: 180 } }}>
+          <Select
+            label="نقش"
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            options={ROLE_OPTIONS}
           />
-        )}
+        </Box>
 
-        {!loading && !error && users.length > 0 && (
-          <>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>نام کاربری</TableCell>
-                    <TableCell>نام و نام خانوادگی</TableCell>
-                    <TableCell>شماره تماس</TableCell>
-                    <TableCell>ایمیل</TableCell>
-                    <TableCell>جنسیت</TableCell>
-                    <TableCell>تاریخ تولد</TableCell>
-                    <TableCell>نقش</TableCell>
-                    <TableCell align="center">عملیات</TableCell>
-                  </TableRow>
-                </TableHead>
+        <Box sx={{ width: { xs: "100%", sm: 180 } }}>
+          <Select
+            label="جنسیت"
+            value={genderFilter}
+            onChange={(e) => setGenderFilter(e.target.value)}
+            options={GENDER_OPTIONS}
+          />
+        </Box>
+      </Box>
 
-                <TableBody>
-                  {currentData.map((u) => {
-                    const isSelf = u.id === currentUser?.id;
+      {loading && <Loading message="در حال بارگذاری کاربران..." />}
 
-                    return (
-                      <TableRow key={u.id} hover>
-                        <TableCell>{u.username}</TableCell>
-                        <TableCell>
-                          {u["first-name"]} {u["last-name"]}
-                        </TableCell>
-                        <TableCell sx={{ direction: "ltr", textAlign: "left" }}>
-                          {u["phone-number"]}
-                        </TableCell>
-                        <TableCell sx={{ direction: "ltr", textAlign: "left" }}>
-                          {u.email || "—"}
-                        </TableCell>
-                        <TableCell>
-                          {u.gender === "male" ? "مرد" : "زن"}
-                        </TableCell>
-                        <TableCell>{formatDate(u.birth_date)}</TableCell>
-                        <TableCell>
-                          <Chip
-                            size="small"
-                            label={u.role === "Admin" ? "ادمین" : "مشتری"}
-                            color={u.role === "Admin" ? "secondary" : "primary"}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Tooltip
-                            title={
-                              isSelf
-                                ? "امکان ویرایش حساب خودتان از این بخش وجود ندارد"
-                                : "ویرایش کاربر"
-                            }
-                          >
-                            <span>
-                              <IconButton
-                                size="small"
-                                onClick={() => openEditModal(u)}
-                                disabled={isSelf}
-                              >
-                                <EditIcon fontSize="medium" />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
+      {!loading && error && <ErrorState message={error} />}
 
-                          <Tooltip
-                            title={
-                              isSelf
-                                ? "امکان حذف حساب خودتان وجود ندارد"
-                                : "حذف کاربر"
-                            }
-                          >
-                            <span>
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => setDeletingUser(u)}
-                                disabled={isSelf}
-                              >
-                                <DeleteIcon fontSize="medium" />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
+      {!loading && !error && users.length === 0 && (
+        <EmptyState
+          title="کاربری یافت نشد"
+          description="با معیارهای جستجوی فعلی هیچ کاربری پیدا نشد."
+        />
+      )}
 
-            {totalPages > 1 && (
-              <Box sx={{ display: "flex", justifyContent: "center", mt: 1, mb: 1 }}>
-                <Pagination
-                  page={page}
-                  count={totalPages}
-                  onChange={(_, value) => setPage(value)}
-                />
-              </Box>
-            )}
-          </>
-        )}
+      {!loading && !error && users.length > 0 && (
+        <>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>نام کاربری</TableCell>
+                  <TableCell>نام و نام خانوادگی</TableCell>
+                  <TableCell>شماره تماس</TableCell>
+                  <TableCell>ایمیل</TableCell>
+                  <TableCell>جنسیت</TableCell>
+                  <TableCell>تاریخ تولد</TableCell>
+                  <TableCell>نقش</TableCell>
+                  <TableCell align="center">عملیات</TableCell>
+                </TableRow>
+              </TableHead>
 
-        <Modal
-          open={!!editingUser}
-          title="ویرایش اطلاعات کاربر"
-          onClose={closeEditModal}
-          actions={
-            <>
-              <Button
-                variant="outlined"
-                onClick={closeEditModal}
-                disabled={saving}
-              >
-                انصراف
-              </Button>
+              <TableBody>
+                {currentData.map((u) => {
+                  const isSelf = u.id === currentUser?.id;
 
-              <Button
-                onClick={handleSaveUser}
-                disabled={saveBtnDisableHandler()}
-              >
-                {saving ? "در حال ذخیره..." : "ذخیره تغییرات"}
-              </Button>
-            </>
-          }
-        >
-          {editingUser && (
+                  return (
+                    <TableRow key={u.id} hover>
+                      <TableCell>{u.username}</TableCell>
+                      <TableCell>
+                        {u["first-name"]} {u["last-name"]}
+                      </TableCell>
+                      <TableCell sx={{ direction: "ltr", textAlign: "left" }}>
+                        {u["phone-number"]}
+                      </TableCell>
+                      <TableCell sx={{ direction: "ltr", textAlign: "left" }}>
+                        {u.email || "—"}
+                      </TableCell>
+                      <TableCell>
+                        {u.gender === "male" ? "مرد" : "زن"}
+                      </TableCell>
+                      <TableCell>{formatDate(u.birth_date)}</TableCell>
+                      <TableCell>
+                        <Chip
+                          size="small"
+                          label={u.role === "Admin" ? "ادمین" : "مشتری"}
+                          color={u.role === "Admin" ? "secondary" : "primary"}
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Tooltip
+                          title={
+                            isSelf
+                              ? "امکان ویرایش حساب خودتان از این بخش وجود ندارد"
+                              : "ویرایش کاربر"
+                          }
+                        >
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={() => openEditModal(u)}
+                              disabled={isSelf}
+                            >
+                              <EditIcon fontSize="medium" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+
+                        <Tooltip
+                          title={
+                            isSelf
+                              ? "امکان حذف حساب خودتان وجود ندارد"
+                              : "حذف کاربر"
+                          }
+                        >
+                          <span>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => setDeletingUser(u)}
+                              disabled={isSelf}
+                            >
+                              <DeleteIcon fontSize="medium" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {totalPages > 1 && (
             <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-                mt: 1,
-              }}
+              sx={{ display: "flex", justifyContent: "center", mt: 1, mb: 1 }}
             >
-              <Typography variant="body2" color="text.secondary">
-                نام کاربری: {editingUser.username}
-              </Typography>
-
-              <Input
-                label="نام"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleFormChange}
-                required
-              />
-
-              <Input
-                label="نام خانوادگی"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleFormChange}
-                required
-              />
-
-              <Input
-                label="شماره تماس"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleFormChange}
-                required
-              />
-
-              <Input
-                label="ایمیل"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleFormChange}
-              />
-
-              <Select
-                label="نقش کاربر"
-                name="role"
-                value={formData.role}
-                onChange={handleFormChange}
-                options={ROLE_OPTIONS_FORM}
+              <Pagination
+                page={page}
+                count={totalPages}
+                onChange={(_, value) => setPage(value)}
               />
             </Box>
           )}
-        </Modal>
+        </>
+      )}
 
-        <ConfirmDialog
-          open={!!deletingUser}
-          title="حذف کاربر"
-          message={
-            deletingUser
-              ? `آیا از حذف کاربر «${deletingUser["first-name"]} ${deletingUser["last-name"]}» مطمئن هستید؟ این عملیات قابل بازگشت نیست.`
-              : ""
-          }
-          confirmText={deleting ? "در حال حذف..." : "حذف کن"}
-          cancelText="انصراف"
-          onConfirm={handleConfirmDelete}
-          onCancel={() => !deleting && setDeletingUser(null)}
-        />
-      </Box>
-    </div>
+      <Modal
+        open={!!editingUser}
+        title="ویرایش اطلاعات کاربر"
+        onClose={closeEditModal}
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              onClick={closeEditModal}
+              disabled={saving}
+            >
+              انصراف
+            </Button>
+
+            <Button onClick={handleSaveUser} disabled={saveBtnDisableHandler()}>
+              {saving ? "در حال ذخیره..." : "ذخیره تغییرات"}
+            </Button>
+          </>
+        }
+      >
+        {editingUser && (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              mt: 1,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+              }}
+            >
+              نام کاربری: {editingUser.username}
+            </Typography>
+
+            <Input
+              label="نام"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleFormChange}
+              required
+            />
+
+            <Input
+              label="نام خانوادگی"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleFormChange}
+              required
+            />
+
+            <Input
+              label="شماره تماس"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleFormChange}
+              required
+            />
+
+            <Input
+              label="ایمیل"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleFormChange}
+            />
+
+            <Select
+              label="نقش کاربر"
+              name="role"
+              value={formData.role}
+              onChange={handleFormChange}
+              options={ROLE_OPTIONS_FORM}
+            />
+          </Box>
+        )}
+      </Modal>
+
+      <ConfirmDialog
+        open={!!deletingUser}
+        title="حذف کاربر"
+        message={
+          deletingUser
+            ? `آیا از حذف کاربر «${deletingUser["first-name"]} ${deletingUser["last-name"]}» مطمئن هستید؟ این عملیات قابل بازگشت نیست.`
+            : ""
+        }
+        confirmText={deleting ? "در حال حذف..." : "حذف کن"}
+        cancelText="انصراف"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => !deleting && setDeletingUser(null)}
+      />
+    </PageContainer>
   );
 }

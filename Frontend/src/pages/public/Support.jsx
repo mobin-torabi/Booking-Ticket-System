@@ -88,14 +88,17 @@ export default function Support() {
         <Box sx={{ maxWidth: 720, mx: "auto", textAlign: "center" }}>
           <Typography
             variant="h4"
-            fontWeight={700}
-            sx={{ color: "#fff", mb: 1 }}
+            sx={{
+              fontWeight: 700,
+              color: "#fff",
+              mb: 1,
+            }}
           >
             پشتیبانی
           </Typography>
           <Typography sx={{ color: "rgba(255,255,255,.85)" }}>
-            سوال یا مشکلی دارید؟ فرم زیر را پر کنید تا هر چه سریع‌تر
-            پاسخگوی شما باشیم
+            سوال یا مشکلی دارید؟ فرم زیر را پر کنید تا هر چه سریع‌تر پاسخگوی شما
+            باشیم
           </Typography>
         </Box>
       </Box>
@@ -113,11 +116,28 @@ export default function Support() {
           <Box sx={{ width: { xs: "100%", md: 280 } }}>
             <CardBox>
               <Stack spacing={2.5}>
-                <Stack direction="row" spacing={1.5} alignItems="center">
+                <Stack
+                  direction="row"
+                  spacing={1.5}
+                  sx={{
+                    alignItems: "center",
+                  }}
+                >
                   <SupportAgentIcon color="primary" fontSize="large" />
                   <Box>
-                    <Typography fontWeight={700}>پشتیبانی تیکی</Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                      }}
+                    >
+                      پشتیبانی تیکی
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "text.secondary",
+                      }}
+                    >
                       پاسخگوی سوالات شما هستیم
                     </Typography>
                   </Box>
@@ -128,15 +148,23 @@ export default function Support() {
                 <Stack
                   direction="row"
                   spacing={1}
-                  alignItems="center"
                   component="a"
                   href={`https://mail.google.com/mail/?view=cm&fs=1&to=${SUPPORT_EMAIL}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  sx={{ color: "primary.main", textDecoration: "none" }}
+                  sx={{
+                    alignItems: "center",
+                    color: "primary.main",
+                    textDecoration: "none",
+                  }}
                 >
                   <EmailOutlinedIcon fontSize="small" />
-                  <Typography variant="body2" fontWeight={600}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                    }}
+                  >
                     {SUPPORT_EMAIL}
                   </Typography>
                 </Stack>
@@ -144,21 +172,29 @@ export default function Support() {
                 <Stack
                   direction="row"
                   spacing={1}
-                  alignItems="center"
                   component="a"
                   href="https://github.com/mobin-torabi/Booking-Ticket-System"
                   target="_blank"
                   rel="noopener noreferrer"
-                  sx={{ color: "text.secondary", textDecoration: "none" }}
+                  sx={{
+                    alignItems: "center",
+                    color: "text.secondary",
+                    textDecoration: "none",
+                  }}
                 >
                   <GitHubIcon fontSize="small" />
                   <Typography variant="body2">مخزن گیت‌هاب</Typography>
                 </Stack>
 
-                <Typography variant="caption" color="text.secondary">
-                  پیام‌های ارسالی از این فرم مستقیماً برای تیم پشتیبانی
-                  ارسال می‌شود و از طریق ایمیلی که وارد می‌کنید با شما
-                  تماس خواهیم گرفت.
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                  }}
+                >
+                  پیام‌های ارسالی از این فرم مستقیماً برای تیم پشتیبانی ارسال
+                  می‌شود و از طریق ایمیلی که وارد می‌کنید با شما تماس خواهیم
+                  گرفت.
                 </Typography>
               </Stack>
             </CardBox>
@@ -167,7 +203,13 @@ export default function Support() {
           {/* Form */}
           <Box sx={{ flex: 1 }}>
             <CardBox>
-              <Typography variant="h6" fontWeight={700} mb={2.5}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  mb: 2.5,
+                }}
+              >
                 ارسال پیام به پشتیبانی
               </Typography>
 

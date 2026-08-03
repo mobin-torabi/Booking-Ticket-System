@@ -24,9 +24,11 @@ app.use(function (_, res, next) {
     "Access-Control-Allow-Methods",
     "GET, POST, OPTIONS, PUT, PATCH, DELETE",
   );
+  // Authorization has to be listed here or the browser rejects the preflight
+  // for every authenticated request (httpClient sends a Bearer token).
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "X-Requested-With,content-type",
+    "X-Requested-With,Content-Type,Authorization",
   );
   res.setHeader("Access-Control-Allow-Credentials", true);
   next();
@@ -875,10 +877,22 @@ app.post("/tickets", async (req, res) => {
       });
     }
 
+    // return_date is what makes a ticket a round trip — GET /tickets reads it
+    // as trip_type (oneway = null, roundtrip = set). It is optional for
+    // flights, trains and buses, and mandatory for tours, which are always
+    // sold as a round trip.
     if (type === "tour" && !return_date) {
       return res
         .status(400)
         .send({ error: "تور ها باید تاریخ برگشت داشته باشند" });
+    }
+
+    const returnDate = return_date || null;
+
+    if (returnDate && new Date(returnDate) < new Date(departure_date)) {
+      return res
+        .status(400)
+        .send({ error: "تاریخ برگشت نمی‌تواند قبل از تاریخ رفت باشد" });
     }
 
     if (
@@ -901,7 +915,7 @@ app.post("/tickets", async (req, res) => {
     const typeId = typeRow[0].id;
 
     const ticketResult = await sql`
-      INSERT INTO tickets (type_id, origin, destination, departure_at, arrival_at, base_price, total_seats, departure_date, return_date) VALUES (${typeId},${origin},${destination},${departure_at},${arrival_at},${base_price},${total_seats},${departure_date},${return_date || null}) RETURNING *
+      INSERT INTO tickets (type_id, origin, destination, departure_at, arrival_at, base_price, total_seats, departure_date, return_date) VALUES (${typeId},${origin},${destination},${departure_at},${arrival_at},${base_price},${total_seats},${departure_date},${returnDate || null}) RETURNING *
     `;
     const ticket = ticketResult[0];
 

@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
-import { Box, Stack, Chip, Typography, Divider, IconButton } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Chip,
+  Typography,
+  Divider,
+  IconButton,
+} from "@mui/material";
 
 import EventSeatIcon from "@mui/icons-material/EventSeat";
 import PaymentsIcon from "@mui/icons-material/Payments";
@@ -183,7 +190,9 @@ export default function Payment() {
         maxWidth: 640,
         mx: "auto",
         px: { xs: 2, md: 3 },
-        pt: { xs: "88px", md: "104px" },
+        // The navbar is sticky, not fixed — the page doesn't have to reserve
+        // its height as top padding.
+        pt: { xs: 3, md: 5 },
         pb: 6,
       }}
     >
@@ -196,30 +205,59 @@ export default function Payment() {
         <CardBox>
           <Stack
             direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
+            sx={{
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 2,
+            }}
           >
-            <Typography variant="h6" fontWeight={700}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+              }}
+            >
               {booking.origin} ← {booking.destination}
             </Typography>
             <Chip size="small" label="در انتظار پرداخت" color="warning" />
           </Stack>
 
           <Stack spacing={1}>
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+              }}
+            >
               <ReceiptLongIcon
                 fontSize="small"
                 sx={{ color: "text.disabled" }}
               />
-              <Typography variant="body2" color="text.secondary">
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                }}
+              >
                 کد رزرو: {booking.id}
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+              }}
+            >
               <EventSeatIcon fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "text.secondary",
+                }}
+              >
                 {booking.number_of_seats} صندلی
               </Typography>
             </Stack>
@@ -233,12 +271,19 @@ export default function Payment() {
                   <Stack
                     key={seat.id}
                     direction="row"
-                    justifyContent="space-between"
+                    sx={{
+                      justifyContent: "space-between",
+                    }}
                   >
                     <Typography variant="body2">
                       صندلی {seat.seat_number}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "text.secondary",
+                      }}
+                    >
                       {seat.passenger_first_name} {seat.passenger_last_name}
                     </Typography>
                   </Stack>
@@ -249,16 +294,22 @@ export default function Payment() {
         </CardBox>
 
         <CardBox>
-          <Typography variant="subtitle1" fontWeight={700} mb={2}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 700,
+              mb: 2,
+            }}
+          >
             کد تخفیف
           </Typography>
 
           {discountApplied ? (
             <Stack
               direction="row"
-              alignItems="center"
-              justifyContent="space-between"
               sx={{
+                alignItems: "center",
+                justifyContent: "space-between",
                 bgcolor: "#F0FDF4",
                 border: "1px solid #86EFAC",
                 borderRadius: 2,
@@ -266,7 +317,13 @@ export default function Payment() {
                 py: 1,
               }}
             >
-              <Typography variant="body2" color="success.dark" fontWeight={700}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "success.dark",
+                  fontWeight: 700,
+                }}
+              >
                 {discountApplied.code} (٪{discountApplied.percentage})
               </Typography>
               <IconButton size="small" onClick={handleRemoveDiscount}>
@@ -292,18 +349,54 @@ export default function Payment() {
         </CardBox>
 
         <CardBox>
-          <Stack spacing={1} mb={2}>
-            <Stack direction="row" justifyContent="space-between">
-              <Typography color="text.secondary">مبلغ رزرو</Typography>
-              <Typography fontWeight={600}>
+          <Stack
+            spacing={1}
+            sx={{
+              mb: 2,
+            }}
+          >
+            <Stack
+              direction="row"
+              sx={{
+                justifyContent: "space-between",
+              }}
+            >
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                }}
+              >
+                مبلغ رزرو
+              </Typography>
+              <Typography
+                sx={{
+                  fontWeight: 600,
+                }}
+              >
                 {formatPrice(totalAmount)}
               </Typography>
             </Stack>
 
             {discountAmount > 0 && (
-              <Stack direction="row" justifyContent="space-between">
-                <Typography color="success.main">تخفیف</Typography>
-                <Typography color="success.main" fontWeight={600}>
+              <Stack
+                direction="row"
+                sx={{
+                  justifyContent: "space-between",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "success.main",
+                  }}
+                >
+                  تخفیف
+                </Typography>
+                <Typography
+                  sx={{
+                    color: "success.main",
+                    fontWeight: 600,
+                  }}
+                >
                   ‎-{formatPrice(discountAmount)}
                 </Typography>
               </Stack>
@@ -312,9 +405,26 @@ export default function Payment() {
 
           <Divider sx={{ mb: 2 }} />
 
-          <Stack direction="row" justifyContent="space-between" mb={2.5}>
-            <Typography fontWeight={700}>مبلغ قابل پرداخت</Typography>
-            <Typography fontWeight={700} color="primary.main">
+          <Stack
+            direction="row"
+            sx={{
+              justifyContent: "space-between",
+              mb: 2.5,
+            }}
+          >
+            <Typography
+              sx={{
+                fontWeight: 700,
+              }}
+            >
+              مبلغ قابل پرداخت
+            </Typography>
+            <Typography
+              sx={{
+                fontWeight: 700,
+                color: "primary.main",
+              }}
+            >
               {formatPrice(finalAmount)}
             </Typography>
           </Stack>

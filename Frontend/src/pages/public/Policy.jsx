@@ -42,14 +42,16 @@ export default function Policy() {
         <Box sx={{ maxWidth: 720, mx: "auto", textAlign: "center" }}>
           <Typography
             variant="h4"
-            fontWeight={700}
-            sx={{ color: "#fff", mb: 1 }}
+            sx={{
+              fontWeight: 700,
+              color: "#fff",
+              mb: 1,
+            }}
           >
             قوانین و مقررات
           </Typography>
           <Typography sx={{ color: "rgba(255,255,255,.85)" }}>
-            لطفا پیش از رزرو، قوانین مربوط به بخش مورد نظر خود را مطالعه
-            کنید
+            لطفا پیش از رزرو، قوانین مربوط به بخش مورد نظر خود را مطالعه کنید
           </Typography>
         </Box>
       </Box>
@@ -81,9 +83,19 @@ export default function Policy() {
 
         <Stack spacing={1.5}>
           {sections.map((section, sIndex) => (
-            <Accordion key={sIndex} disableGutters defaultExpanded={sIndex === 0}>
+            <Accordion
+              key={sIndex}
+              disableGutters
+              defaultExpanded={sIndex === 0}
+            >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography fontWeight={700}>{section.title}</Typography>
+                <Typography
+                  sx={{
+                    fontWeight: 700,
+                  }}
+                >
+                  {section.title}
+                </Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <Stack spacing={1.5}>
@@ -92,16 +104,24 @@ export default function Policy() {
                       key={cIndex}
                       direction="row"
                       spacing={1}
-                      alignItems="flex-start"
+                      sx={{
+                        alignItems: "flex-start",
+                      }}
                     >
                       <Typography
-                        fontWeight={700}
-                        color="primary.main"
-                        sx={{ minWidth: 20 }}
+                        sx={{
+                          fontWeight: 700,
+                          color: "primary.main",
+                          minWidth: 20,
+                        }}
                       >
                         {cIndex + 1}.
                       </Typography>
-                      <Typography color="text.secondary">
+                      <Typography
+                        sx={{
+                          color: "text.secondary",
+                        }}
+                      >
                         {clause}
                       </Typography>
                     </Stack>
@@ -113,21 +133,42 @@ export default function Policy() {
         </Stack>
 
         {/* Support box */}
-        <Box mt={5}>
+        <Box
+          sx={{
+            mt: 5,
+          }}
+        >
           <CardBox>
             <Stack
               direction={{ xs: "column", sm: "row" }}
               spacing={2}
-              alignItems={{ xs: "flex-start", sm: "center" }}
-              justifyContent="space-between"
+              sx={{
+                alignItems: { xs: "flex-start", sm: "center" },
+                justifyContent: "space-between",
+              }}
             >
-              <Stack direction="row" spacing={1.5} alignItems="center">
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{
+                  alignItems: "center",
+                }}
+              >
                 <SupportAgentIcon color="primary" fontSize="large" />
                 <Box>
-                  <Typography fontWeight={700}>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                    }}
+                  >
                     سوالی درباره قوانین دارید؟
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                    }}
+                  >
                     پشتیبانی ما آماده پاسخگویی به شماست.
                   </Typography>
                 </Box>
@@ -136,15 +177,22 @@ export default function Policy() {
               <Stack
                 direction="row"
                 spacing={0.5}
-                alignItems="center"
                 component="a"
                 href="https://mail.google.com/mail/?view=cm&fs=1&to=tickisupport@gmail.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                sx={{ color: "primary.main", textDecoration: "none" }}
+                sx={{
+                  alignItems: "center",
+                  color: "primary.main",
+                  textDecoration: "none",
+                }}
               >
                 <EmailOutlinedIcon fontSize="small" />
-                <Typography fontWeight={600}>
+                <Typography
+                  sx={{
+                    fontWeight: 600,
+                  }}
+                >
                   tickisupport@gmail.com
                 </Typography>
               </Stack>

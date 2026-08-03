@@ -1,21 +1,29 @@
-export default function PageHeader({
-    title,
-    subtitle,
-    actions,
-}) {
-    return (
-        <div className="flex justify-between items-center mb-6">
-            <div>
-                <h1 className="text-3xl font-bold ">
-                    {title}
-                </h1>
+import { Box, Stack, Typography } from "@mui/material";
 
-                {subtitle && (
-                    <p className="text-xl">{subtitle}</p>
-                )}
-            </div>
+export default function PageHeader({ title, subtitle, actions }) {
+  return (
+    <Stack
+      direction={{ xs: "column", sm: "row" }}
+      spacing={2}
+      sx={{
+        justifyContent: "space-between",
+        alignItems: { xs: "stretch", sm: "center" },
+        mb: 4,
+      }}
+    >
+      <Box>
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          {title}
+        </Typography>
 
-            {actions}
-        </div>
-    );
+        {subtitle && (
+          <Typography sx={{ color: "text.secondary", mt: 0.5 }}>
+            {subtitle}
+          </Typography>
+        )}
+      </Box>
+
+      {actions}
+    </Stack>
+  );
 }

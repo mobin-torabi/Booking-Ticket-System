@@ -18,52 +18,84 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { ROUTES } from "../../utils/routes";
 
-
 export default function Footer() {
   const [open, setOpen] = useState(false);
   const theme = useTheme();
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const emails = [
     "tickisupport@gmail.com",
     "mobintorabi592@gmail.com",
     "aylinamjad@gmail.com",
   ];
-function navigateFAQ(){
-  navigate(ROUTES.FAQ)
-}
-function navigatePolicy(){
-  navigate(ROUTES.POLICY)
-}
-function navigateSupport(){
-  navigate(ROUTES.SUPPORT)
-}
+  function navigateFAQ() {
+    navigate(ROUTES.FAQ);
+  }
+  function navigatePolicy() {
+    navigate(ROUTES.POLICY);
+  }
+  function navigateSupport() {
+    navigate(ROUTES.SUPPORT);
+  }
   return (
     <footer
-
-      className="mt-20 border-t w-auto "
+      className="border-t w-auto mt-16"
       style={{
         backgroundColor: theme.palette.background.paper,
         borderColor: theme.palette.grey[200],
-        
       }}
     >
-      <div className="mx-auto max-w-7xl px-6 py-12">
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: 1280,
+          mx: "auto",
+          px: { xs: 2, md: 3 },
+          py: { xs: 5, md: 7 },
+        }}
+      >
         <div className="flex flex-col md:flex-row items-start justify-between gap-10 ">
-          <div style={{ marginRight: "70px" ,fontSize: "20px"}}>
-            <Typography sx={{ mt: 6, mb: 2 ,fontSize:20}} fontWeight={600}>
+          <div>
+            <Typography
+              sx={{
+                fontWeight: 600,
+                mb: 2,
+                fontSize: 20,
+              }}
+            >
               خدمات مشتریان
             </Typography>
 
             <div className="flex flex-col gap-2">
-              <Link sx={{ cursor:"pointer"}} onClick={navigateSupport} underline="hover" color="text.secondary">
+              <Link
+                onClick={navigateSupport}
+                underline="hover"
+                sx={{
+                  color: "text.secondary",
+                  cursor: "pointer",
+                }}
+              >
                 پشتیبانی
               </Link>
 
-              <Link sx={{ cursor:"pointer"}} onClick={navigateFAQ} underline="hover" color="text.secondary">
+              <Link
+                onClick={navigateFAQ}
+                underline="hover"
+                sx={{
+                  color: "text.secondary",
+                  cursor: "pointer",
+                }}
+              >
                 پرسش و پاسخ
               </Link>
 
-              <Link sx={{ cursor:"pointer"}} onClick={navigatePolicy} underline="hover" color="text.secondary">
+              <Link
+                onClick={navigatePolicy}
+                underline="hover"
+                sx={{
+                  color: "text.secondary",
+                  cursor: "pointer",
+                }}
+              >
                 قوانین و مقررات
               </Link>
             </div>
@@ -123,18 +155,19 @@ function navigateSupport(){
                       left: 15,
                     }}
                   >
-                    <CloseIcon  />
+                    <CloseIcon />
                   </IconButton>
 
                   <Typography
-                   sx={{mt:3}}
                     variant="h5"
-                    fontWeight={700}
-                    textAlign="center"
+                    sx={{
+                      fontWeight: 700,
+                      textAlign: "center",
+                      mt: 3,
+                    }}
                   >
                     تماس با ما
                   </Typography>
-
 
                   {emails.map((email) => (
                     <Box
@@ -166,7 +199,13 @@ function navigateSupport(){
                     </Box>
                   ))}
 
-                  <Box display="flex" justifyContent="center" mt={2}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      mt: 2,
+                    }}
+                  >
                     <Button variant="contained" onClick={() => setOpen(false)}>
                       بستن
                     </Button>
@@ -177,22 +216,24 @@ function navigateSupport(){
           </div>
         </div>
 
-        <Divider sx={{ my: 4, 
-    width: 'auto',
-    position: 'relative',
-    left: '50%',
-    right: '50%',
-    marginLeft: '-50vw',
-    marginRight: '-50vw',
-  }}  />
+        {/* Plain full-width rule. The old version stretched itself to 100vw
+            with negative margins, which pushed the page wider than the
+            viewport and only looked contained because <body> hides the
+            horizontal overflow. */}
+        <Divider sx={{ my: 4 }} />
 
-        <div className="flex justify-center text-center">
-          <Typography sx={{mb:3}} textAlign="center" color="text.secondary">
-            ©2026 استفاده از مطالب این وب سایت فقط برای مقاصد غیر تجاری و با ذکر
-            منبع بلامانع است. کلیه حقوق این سایت متعلق به تیکی می‌باشد.
-          </Typography>
-        </div>
-      </div>
+        <Typography
+          sx={{
+            textAlign: "center",
+            color: "text.secondary",
+            maxWidth: 720,
+            mx: "auto",
+          }}
+        >
+          ©2026 استفاده از مطالب این وب سایت فقط برای مقاصد غیر تجاری و با ذکر
+          منبع بلامانع است. کلیه حقوق این سایت متعلق به تیکی می‌باشد.
+        </Typography>
+      </Box>
     </footer>
   );
 }

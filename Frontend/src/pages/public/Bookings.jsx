@@ -34,6 +34,7 @@ import usePagination from "../../hooks/usePagination";
 import { showError, showPromise } from "../../utils/toast";
 
 import PageHeader from "../../components/common/PageHeader";
+import PageContainer from "../../components/common/PageContainer";
 import CardBox from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import Loading from "../../components/common/Loading";
@@ -118,7 +119,8 @@ export default function Bookings() {
         data.map(async (booking) => {
           try {
             const { data: ticket } = await ticketApi.getTicketById(
-              booking.ticket_id, false
+              booking.ticket_id,
+              false,
             );
 
             return { ...booking, ticket };
@@ -243,266 +245,290 @@ export default function Bookings() {
   }
 
   return (
-    <div style={{ padding: "10px" }}>
-      <Box>
-        <PageHeader
-          title={isAdmin ? "مدیریت رزرو ها" : "رزرو های من"}
-          subtitle={
-            isAdmin
-              ? "مشاهده و پیگیری همه رزرو های سیستم"
-              : "مشاهده، پیگیری و مدیریت رزروهای بلیط شما"
-          }
-        />
+    <PageContainer>
+      <PageHeader
+        title={isAdmin ? "مدیریت رزرو ها" : "رزرو های من"}
+        subtitle={
+          isAdmin
+            ? "مشاهده و پیگیری همه رزرو های سیستم"
+            : "مشاهده، پیگیری و مدیریت رزروهای بلیط شما"
+        }
+      />
 
-        <Box
-          dir="rtl"
-          sx={{
-            maxWidth: 1100,
-            mx: "auto",
-            px: { xs: 2, md: 3 },
-            pt: { xs: "88px", md: "40px" },
-            pb: 4,
-          }}
-        >
-          {isAdmin ? (
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 2,
-                mt: 2,
-                mb: 3,
-                flexDirection: "column",
-              }}
-            >
-              <Box sx={{ width: "100%" }}>
-                <SearchBar
-                  value={bookingId}
-                  onChange={(e) => setBookingId(e.target.value)}
-                  placeholder="جستجو بر اساس کد رزرو..."
-                />
-              </Box>
-
-              <Box sx={{ width: "100%" }}>
-                <SearchBar
-                  value={ticketId}
-                  onChange={(e) => setTicketId(e.target.value)}
-                  placeholder="جستجو بر اساس شناسه تیکت..."
-                />
-              </Box>
-
-              <Box sx={{ width: "100%" }}>
-                <Autocomplete
-                  options={userOptions}
-                  value={userFilter}
-                  onChange={(_, value) => setUserFilter(value)}
-                  getOptionLabel={(option) =>
-                    `${option["first-name"]} ${option["last-name"]} - (${option.username})`
-                  }
-                  renderInput={(params) => (
-                    <TextField {...params} label="انتخاب کاربر" />
-                  )}
-                />
-              </Box>
-            </Box>
-          ) : null}
-
-          <Tabs
-            value={statusTab}
-            onChange={handleTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{ mb: 3, borderBottom: "1px solid #E2E8F0" }}
+      <Box
+        dir="rtl"
+        sx={{
+          maxWidth: 1100,
+          mx: "auto",
+          px: { xs: 2, md: 3 },
+          pt: { xs: 3, md: 5 },
+          pb: 4,
+        }}
+      >
+        {isAdmin ? (
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 2,
+              mt: 2,
+              mb: 3,
+              flexDirection: "column",
+            }}
           >
-            {STATUS_TABS.map((tab) => (
-              <Tab key={tab.value} value={tab.value} label={tab.label} />
-            ))}
-          </Tabs>
+            <Box sx={{ width: "100%" }}>
+              <SearchBar
+                value={bookingId}
+                onChange={(e) => setBookingId(e.target.value)}
+                placeholder="جستجو بر اساس کد رزرو..."
+              />
+            </Box>
 
-          {filteredBookings.length === 0 ? (
-            <EmptyState
-              title="رزروی یافت نشد"
-              description="در این دسته هیچ رزروی برای شما ثبت نشده است."
-            />
-          ) : (
-            <>
-              <Stack spacing={2.5} sx={{mb: 3}}>
-                {currentData.map((booking) => {
-                  const TypeIcon = getTypeIcon(booking.ticket_type);
+            <Box sx={{ width: "100%" }}>
+              <SearchBar
+                value={ticketId}
+                onChange={(e) => setTicketId(e.target.value)}
+                placeholder="جستجو بر اساس شناسه تیکت..."
+              />
+            </Box>
 
-                  const meta = STATUS_META[booking.status] || {
-                    label: booking.status,
-                    color: "default",
-                  };
+            <Box sx={{ width: "100%" }}>
+              <Autocomplete
+                options={userOptions}
+                value={userFilter}
+                onChange={(_, value) => setUserFilter(value)}
+                getOptionLabel={(option) =>
+                  `${option["first-name"]} ${option["last-name"]} - (${option.username})`
+                }
+                renderInput={(params) => (
+                  <TextField {...params} label="انتخاب کاربر" />
+                )}
+              />
+            </Box>
+          </Box>
+        ) : null}
 
-                  return (
-                    <CardBox key={booking.id}>
+        <Tabs
+          value={statusTab}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ mb: 3, borderBottom: "1px solid #E2E8F0" }}
+        >
+          {STATUS_TABS.map((tab) => (
+            <Tab key={tab.value} value={tab.value} label={tab.label} />
+          ))}
+        </Tabs>
+
+        {filteredBookings.length === 0 ? (
+          <EmptyState
+            title="رزروی یافت نشد"
+            description="در این دسته هیچ رزروی برای شما ثبت نشده است."
+          />
+        ) : (
+          <>
+            <Stack spacing={2.5} sx={{ mb: 3 }}>
+              {currentData.map((booking) => {
+                const TypeIcon = getTypeIcon(booking.ticket_type);
+
+                const meta = STATUS_META[booking.status] || {
+                  label: booking.status,
+                  color: "default",
+                };
+
+                return (
+                  <CardBox key={booking.id}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: {
+                          xs: "column",
+                          sm: "row",
+                        },
+                        alignItems: {
+                          xs: "stretch",
+                          sm: "center",
+                        },
+                        gap: 2.5,
+                      }}
+                    >
+                      {/* Icon */}
                       <Box
                         sx={{
+                          width: 52,
+                          height: 52,
+                          minWidth: 52,
+                          borderRadius: "50%",
+                          bgcolor: "#E8F1FF",
+                          color: "primary.main",
                           display: "flex",
-                          flexDirection: {
-                            xs: "column",
-                            sm: "row",
-                          },
-                          alignItems: {
-                            xs: "stretch",
-                            sm: "center",
-                          },
-                          gap: 2.5,
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                       >
-                        {/* Icon */}
-                        <Box
+                        <TypeIcon />
+                      </Box>
+
+                      {/* Main info */}
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          useFlexGap
                           sx={{
-                            width: 52,
-                            height: 52,
-                            minWidth: 52,
-                            borderRadius: "50%",
-                            bgcolor: "#E8F1FF",
-                            color: "primary.main",
-                            display: "flex",
                             alignItems: "center",
-                            justifyContent: "center",
+                            flexWrap: "wrap",
                           }}
                         >
-                          <TypeIcon />
-                        </Box>
-
-                        {/* Main info */}
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                            flexWrap="wrap"
-                            useFlexGap
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontWeight: 700,
+                              wordBreak: "break-word",
+                            }}
                           >
-                            <Typography
-                              variant="h6"
-                              fontWeight={700}
-                              sx={{ wordBreak: "break-word" }}
-                            >
-                              {booking.ticket
-                                ? `${booking.ticket.origin} ← ${booking.ticket.destination}`
-                                : "جزئیات بلیط در دسترس نیست"}
-                            </Typography>
+                            {booking.ticket
+                              ? `${booking.ticket.origin} ← ${booking.ticket.destination}`
+                              : "جزئیات بلیط در دسترس نیست"}
+                          </Typography>
 
+                          <Chip
+                            size="small"
+                            label={meta.label}
+                            color={meta.color}
+                          />
+
+                          {booking.ticket_type && (
                             <Chip
                               size="small"
-                              label={meta.label}
-                              color={meta.color}
+                              variant="outlined"
+                              label={booking.ticket_type}
                             />
+                          )}
+                        </Stack>
 
-                            {booking.ticket_type && (
-                              <Chip
-                                size="small"
-                                variant="outlined"
-                                label={booking.ticket_type}
+                        <Stack
+                          direction="row"
+                          spacing={2.5}
+                          useFlexGap
+                          sx={{
+                            flexWrap: "wrap",
+                            mt: 1,
+                          }}
+                        >
+                          {booking.ticket?.departure_at && (
+                            <Stack
+                              direction="row"
+                              spacing={0.5}
+                              sx={{
+                                alignItems: "center",
+                              }}
+                            >
+                              <CalendarMonthIcon
+                                fontSize="small"
+                                color="action"
                               />
-                            )}
-                          </Stack>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  color: "text.secondary",
+                                }}
+                              >
+                                {formatDateTime(booking.ticket.departure_at)}
+                              </Typography>
+                            </Stack>
+                          )}
 
                           <Stack
                             direction="row"
-                            spacing={2.5}
-                            flexWrap="wrap"
-                            useFlexGap
-                            mt={1}
+                            spacing={0.5}
+                            sx={{
+                              alignItems: "center",
+                            }}
                           >
-                            {booking.ticket?.departure_at && (
-                              <Stack
-                                direction="row"
-                                spacing={0.5}
-                                alignItems="center"
-                              >
-                                <CalendarMonthIcon
-                                  fontSize="small"
-                                  color="action"
-                                />
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                >
-                                  {formatDateTime(booking.ticket.departure_at)}
-                                </Typography>
-                              </Stack>
-                            )}
-
-                            <Stack
-                              direction="row"
-                              spacing={0.5}
-                              alignItems="center"
+                            <EventSeatIcon fontSize="small" color="action" />
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: "text.secondary",
+                              }}
                             >
-                              <EventSeatIcon fontSize="small" color="action" />
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {booking.number_of_seats} صندلی
-                              </Typography>
-                            </Stack>
-
-                            <Stack
-                              direction="row"
-                              spacing={0.5}
-                              alignItems="center"
-                            >
-                              <PaymentsIcon fontSize="small" color="action" />
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {formatPrice(booking.total_amount)}
-                              </Typography>
-                            </Stack>
+                              {booking.number_of_seats} صندلی
+                            </Typography>
                           </Stack>
 
                           <Stack
                             direction="row"
                             spacing={0.5}
-                            alignItems="center"
-                            mt={1}
+                            sx={{
+                              alignItems: "center",
+                            }}
                           >
-                            <ReceiptLongIcon
-                              fontSize="small"
-                              sx={{ color: "text.disabled" }}
-                            />
+                            <PaymentsIcon fontSize="small" color="action" />
                             <Typography
-                              variant="caption"
-                              color="text.secondary"
+                              variant="body2"
+                              sx={{
+                                color: "text.secondary",
+                              }}
                             >
-                              کد رزرو: {booking.id}
+                              {formatPrice(booking.total_amount)}
                             </Typography>
                           </Stack>
+                        </Stack>
 
-                          {booking.status === "cancelled" &&
-                            booking.cancellation_reason && (
-                              <Typography
-                                variant="caption"
-                                color="error"
-                                display="block"
-                                mt={0.5}
-                              >
-                                دلیل لغو: {booking.cancellation_reason}
-                              </Typography>
-                            )}
-                        </Box>
-
-                        {/* Actions */}
                         <Stack
-                          spacing={1}
+                          direction="row"
+                          spacing={0.5}
                           sx={{
-                            minWidth: { xs: "100%", sm: 180 },
+                            alignItems: "center",
+                            mt: 1,
                           }}
                         >
-                          <Button
-                            variant="outlined"
-                            startIcon={<VisibilityIcon />}
-                            onClick={() => handleViewDetails(booking.id)}
+                          <ReceiptLongIcon
+                            fontSize="small"
+                            sx={{ color: "text.disabled" }}
+                          />
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: "text.secondary",
+                            }}
                           >
-                            مشاهده جزئیات
-                          </Button>
-                          {!isAdmin && booking.status === BOOKING_STATUS.PENDING && (
+                            کد رزرو: {booking.id}
+                          </Typography>
+                        </Stack>
+
+                        {booking.status === "cancelled" &&
+                          booking.cancellation_reason && (
+                            <Typography
+                              variant="caption"
+                              color="error"
+                              sx={{
+                                display: "block",
+                                mt: 0.5,
+                              }}
+                            >
+                              دلیل لغو: {booking.cancellation_reason}
+                            </Typography>
+                          )}
+                      </Box>
+
+                      {/* Actions */}
+                      <Stack
+                        spacing={1}
+                        sx={{
+                          minWidth: { xs: "100%", sm: 180 },
+                        }}
+                      >
+                        <Button
+                          variant="outlined"
+                          startIcon={<VisibilityIcon />}
+                          onClick={() => handleViewDetails(booking.id)}
+                        >
+                          مشاهده جزئیات
+                        </Button>
+                        {!isAdmin &&
+                          booking.status === BOOKING_STATUS.PENDING && (
                             <Button
                               startIcon={<CreditScoreIcon />}
                               onClick={() => handlePay(booking.id)}
@@ -511,50 +537,49 @@ export default function Bookings() {
                             </Button>
                           )}
 
-                          {!isAdmin &&
-                            (booking.status === BOOKING_STATUS.BOOKED ||
-                              booking.status === BOOKING_STATUS.PENDING) && (
-                              <Button
-                                variant="outlined"
-                                color="error"
-                                startIcon={<CancelIcon />}
-                                onClick={() => setCancelTarget(booking)}
-                              >
-                                لغو رزرو
-                              </Button>
-                            )}
-                        </Stack>
-                      </Box>
-                    </CardBox>
-                  );
-                })}
-              </Stack>
+                        {!isAdmin &&
+                          (booking.status === BOOKING_STATUS.BOOKED ||
+                            booking.status === BOOKING_STATUS.PENDING) && (
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              startIcon={<CancelIcon />}
+                              onClick={() => setCancelTarget(booking)}
+                            >
+                              لغو رزرو
+                            </Button>
+                          )}
+                      </Stack>
+                    </Box>
+                  </CardBox>
+                );
+              })}
+            </Stack>
 
-              {totalPages > 1 && (
-                <Pagination
-                  page={page}
-                  count={totalPages}
-                  onChange={(_, value) => setPage(value)}
-                />
-              )}
-            </>
-          )}
-        </Box>
-
-        <ConfirmDialog
-          open={!!cancelTarget}
-          title="لغو رزرو"
-          message={
-            cancelTarget
-              ? `آیا از لغو رزرو به مقصد «${
-                  cancelTarget.ticket?.destination ?? ""
-                }» مطمئن هستید؟ این عملیات غیرقابل بازگشت است.`
-              : ""
-          }
-          onCancel={() => setCancelTarget(null)}
-          onConfirm={confirmCancel}
-        />
+            {totalPages > 1 && (
+              <Pagination
+                page={page}
+                count={totalPages}
+                onChange={(_, value) => setPage(value)}
+              />
+            )}
+          </>
+        )}
       </Box>
-    </div>
+
+      <ConfirmDialog
+        open={!!cancelTarget}
+        title="لغو رزرو"
+        message={
+          cancelTarget
+            ? `آیا از لغو رزرو به مقصد «${
+                cancelTarget.ticket?.destination ?? ""
+              }» مطمئن هستید؟ این عملیات غیرقابل بازگشت است.`
+            : ""
+        }
+        onCancel={() => setCancelTarget(null)}
+        onConfirm={confirmCancel}
+      />
+    </PageContainer>
   );
 }

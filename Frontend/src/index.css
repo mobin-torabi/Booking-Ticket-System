@@ -1,3 +1,7 @@
+/* `@import` is only honoured at the very top of a stylesheet — sitting below
+   the reset meant the browser dropped it. */
+@import "tailwindcss";
+
 /* -------------------------------------------------- */
 /* RESET */
 /* -------------------------------------------------- */
@@ -9,7 +13,6 @@
     margin: 0;
     padding: 0;
 }
-@import "tailwindcss";
 
 /* -------------------------------------------------- */
 /* HTML */
@@ -41,11 +44,14 @@ body {
     min-width: 320px;
     min-height: 100vh;
 
-    font-family: "Inter", sans-serif;
+    font-family: "Vazirmatn", "Inter", sans-serif;
 
-    background-color: #ccdef5;
+    /* Matches theme.palette.background.default — the old #ccdef5 was a much
+       heavier blue than any surface the app actually paints on top of it,
+       so it showed through as a hard band under short pages. */
+    background-color: #f6f9fd;
 
-    color: #1e293b;
+    color: #0f172a;
 
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

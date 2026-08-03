@@ -18,13 +18,14 @@ httpClient.interceptors.request.use((config) => {
     return config;
 });
 
+// Every caller already handles its own failures (toasts, empty states, 404
+// fallbacks), so logging here only produced a console full of red for
+// perfectly expected responses — a search that returns no tickets, an
+// unauthenticated profile lookup, a rejected discount code. Rejections are
+// passed straight through instead.
 httpClient.interceptors.response.use(
     (response) => response,
-    (error) => {
-        console.error(error);
-
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
 export default httpClient;

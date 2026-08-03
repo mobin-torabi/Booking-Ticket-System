@@ -26,6 +26,7 @@ import { showError } from "../../utils/toast";
 import JalaliDatePicker from "../../components/common/Jalalidatepicker";
 
 import PageHeader from "../../components/common/PageHeader";
+import PageContainer from "../../components/common/PageContainer";
 import Select from "../../components/common/Select";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
@@ -129,7 +130,7 @@ export default function Payments() {
   }
 
   return (
-    <Box sx={{ p: 1, mb: 2 }}>
+    <PageContainer>
       <PageHeader
         title="مدیریت پرداخت‌ها"
         subtitle={`مجموع ${payments.length} پرداخت`}
@@ -146,7 +147,12 @@ export default function Payments() {
       >
         <Box sx={{ flex: "1 1 200px" }}>
           <Card>
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+              }}
+            >
               تعداد کل پرداخت‌ ها
             </Typography>
             <Typography variant="h5">{stats.total}</Typography>
@@ -155,7 +161,12 @@ export default function Payments() {
 
         <Box sx={{ flex: "1 1 200px" }}>
           <Card>
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+              }}
+            >
               پرداخت‌شده / در انتظار
             </Typography>
             <Typography variant="h5">
@@ -166,7 +177,12 @@ export default function Payments() {
 
         <Box sx={{ flex: "1 1 200px" }}>
           <Card>
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+              }}
+            >
               مجموع مبلغ دریافتی
             </Typography>
             <Typography variant="h5">
@@ -190,9 +206,7 @@ export default function Payments() {
           <JalaliDatePicker
             label="از تاریخ"
             value={dateFrom}
-            onChange={(isoDate) =>
-              setDateFrom(isoDate)
-            }
+            onChange={(isoDate) => setDateFrom(isoDate)}
           />
         </Box>
 
@@ -200,9 +214,7 @@ export default function Payments() {
           <JalaliDatePicker
             label="تا تاریخ"
             value={dateTo}
-            onChange={(isoDate) =>
-              setDateTo(isoDate)
-            }
+            onChange={(isoDate) => setDateTo(isoDate)}
           />
         </Box>
 
@@ -301,6 +313,6 @@ export default function Payments() {
           )}
         </>
       )}
-    </Box>
+    </PageContainer>
   );
 }

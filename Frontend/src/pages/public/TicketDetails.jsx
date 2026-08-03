@@ -26,6 +26,7 @@ import NightsStayIcon from "@mui/icons-material/NightsStay";
 import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
 import GavelIcon from "@mui/icons-material/Gavel";
 import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
+import SyncAltIcon from "@mui/icons-material/SyncAlt";
 
 import { ticketApi, providerApi } from "../../api";
 import { formatPrice } from "../../utils/formatPrice";
@@ -219,14 +220,23 @@ export default function TicketDetails() {
                 fontWeight: 600,
               }}
             />
-            <Typography variant="h4" fontWeight={700} sx={{ color: "#fff" }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: "#fff",
+              }}
+            >
               تور {tourContent.destination}
             </Typography>
             <Stack
               direction="row"
               spacing={0.75}
-              alignItems="center"
-              sx={{ color: "rgba(255,255,255,.85)", mt: 0.5 }}
+              sx={{
+                alignItems: "center",
+                color: "rgba(255,255,255,.85)",
+                mt: 0.5,
+              }}
             >
               <LocationOnIcon fontSize="small" />
               <Typography variant="body2">
@@ -245,20 +255,38 @@ export default function TicketDetails() {
           }}
         >
           <Box sx={{ maxWidth: 1100, mx: "auto" }}>
-            <Chip
-              icon={<TypeIcon sx={{ color: "#fff !important" }} />}
-              label={TYPE_LABELS[type]}
-              sx={{
-                bgcolor: "rgba(255,255,255,.15)",
-                color: "#fff",
-                mb: 1.5,
-                fontWeight: 600,
-              }}
-            />
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ flexWrap: "wrap", mb: 1.5 }}
+              useFlexGap
+            >
+              <Chip
+                icon={<TypeIcon sx={{ color: "#fff !important" }} />}
+                label={TYPE_LABELS[type]}
+                sx={{
+                  bgcolor: "rgba(255,255,255,.15)",
+                  color: "#fff",
+                  fontWeight: 600,
+                }}
+              />
+              <Chip
+                icon={<SyncAltIcon sx={{ color: "#fff !important" }} />}
+                label={ticket.return_date ? "رفت و برگشت" : "یک طرفه"}
+                sx={{
+                  bgcolor: "rgba(255,255,255,.15)",
+                  color: "#fff",
+                  fontWeight: 600,
+                }}
+              />
+            </Stack>
             <Typography
               variant="h4"
-              fontWeight={700}
-              sx={{ color: "#fff", wordBreak: "break-word" }}
+              sx={{
+                fontWeight: 700,
+                color: "#fff",
+                wordBreak: "break-word",
+              }}
             >
               {ticket.origin} ← {ticket.destination}
             </Typography>
@@ -275,10 +303,13 @@ export default function TicketDetails() {
           maxWidth: 1100,
           mx: "auto",
           px: { xs: 2, md: 3 },
-          py: 4,
+          py: { xs: 3, md: 5 },
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", md: "2fr 1fr" },
-          gap: 3,
+          gridTemplateColumns: {
+            xs: "1fr",
+            md: "minmax(0, 2fr) minmax(300px, 1fr)",
+          },
+          gap: { xs: 2.5, md: 3 },
           alignItems: "start",
         }}
       >
@@ -294,9 +325,20 @@ export default function TicketDetails() {
                 border: "1px solid #FCA5A5",
               }}
             >
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                }}
+              >
                 <ErrorOutlinedIcon color="error" />
-                <Typography color="error.main" fontWeight={600}>
+                <Typography
+                  sx={{
+                    color: "error.main",
+                    fontWeight: 600,
+                  }}
+                >
                   این بلیط لغو شده و امکان رزرو آن وجود ندارد.
                 </Typography>
               </Stack>
@@ -305,15 +347,37 @@ export default function TicketDetails() {
 
           {/* Tour description */}
           {isTour && (
-            <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight={700} mb={1}>
+            <Paper
+              elevation={0}
+              sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  mb: 1,
+                }}
+              >
                 درباره این تور
               </Typography>
-              <Typography color="text.secondary" mb={2.5}>
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                  mb: 2.5,
+                }}
+              >
                 {tourContent.tagline}
               </Typography>
 
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap mb={2.5}>
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{
+                  flexWrap: "wrap",
+                  mb: 2.5,
+                }}
+              >
                 {nights && (
                   <Chip
                     icon={<NightsStayIcon />}
@@ -337,26 +401,61 @@ export default function TicketDetails() {
 
               <Divider sx={{ my: 2 }} />
 
-              <Typography fontWeight={700} mb={1.5}>
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  mb: 1.5,
+                }}
+              >
                 جاذبه‌ها و برنامه سفر
               </Typography>
-              <Stack spacing={1} mb={2.5}>
+              <Stack
+                spacing={1}
+                sx={{
+                  mb: 2.5,
+                }}
+              >
                 {tourContent.highlights.map((item, i) => (
-                  <Stack key={i} direction="row" spacing={1} alignItems="flex-start">
+                  <Stack
+                    key={i}
+                    direction="row"
+                    spacing={1}
+                    sx={{
+                      alignItems: "flex-start",
+                    }}
+                  >
                     <CheckCircleOutlinedIcon
                       fontSize="small"
                       color="primary"
                       sx={{ mt: "2px" }}
                     />
-                    <Typography color="text.secondary">{item}</Typography>
+                    <Typography
+                      sx={{
+                        color: "text.secondary",
+                      }}
+                    >
+                      {item}
+                    </Typography>
                   </Stack>
                 ))}
               </Stack>
 
-              <Typography fontWeight={700} mb={1.5}>
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  mb: 1.5,
+                }}
+              >
                 خدمات شامل تور
               </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{
+                  flexWrap: "wrap",
+                }}
+              >
                 {tourContent.includes.map((item, i) => (
                   <Chip key={i} label={item} size="small" />
                 ))}
@@ -366,47 +465,116 @@ export default function TicketDetails() {
 
           {/* Trip info (non-tour) */}
           {!isTour && (
-            <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
-              <Typography variant="h6" fontWeight={700} mb={2}>
+            <Paper
+              elevation={0}
+              sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  mb: 2,
+                }}
+              >
                 جزئیات سفر
               </Typography>
 
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 2, sm: 4 }}>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={{ xs: 2, sm: 4 }}
+              >
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                    }}
+                  >
                     مبدا
                   </Typography>
-                  <Typography fontWeight={700}>{ticket.origin}</Typography>
-                  <Typography variant="body2" color="text.secondary" mt={0.5}>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                    }}
+                  >
+                    {ticket.origin}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      mt: 0.5,
+                    }}
+                  >
                     {formatDateTime(ticket.departure_at)}
                   </Typography>
                 </Box>
 
-                <Stack alignItems="center" justifyContent="center" spacing={0.5}>
+                <Stack
+                  spacing={0.5}
+                  sx={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <AccessTimeIcon fontSize="small" color="action" />
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "text.secondary",
+                    }}
+                  >
                     {calculateDuration(ticket.departure_at, ticket.arrival_at)}
                   </Typography>
                 </Stack>
 
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                    }}
+                  >
                     مقصد
                   </Typography>
-                  <Typography fontWeight={700}>{ticket.destination}</Typography>
-                  <Typography variant="body2" color="text.secondary" mt={0.5}>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                    }}
+                  >
+                    {ticket.destination}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      mt: 0.5,
+                    }}
+                  >
                     {formatDateTime(ticket.arrival_at)}
                   </Typography>
                 </Box>
               </Stack>
 
+              {/* A return date is what makes this a round trip — it's
+                  optional on flights, trains and buses. */}
               {ticket.return_date && (
                 <>
                   <Divider sx={{ my: 2 }} />
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <CalendarMonthIcon fontSize="small" color="action" />
-                    <Typography variant="body2" color="text.secondary">
-                      تاریخ برگشت: {formatDate(ticket.return_date)}
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{ alignItems: "center" }}
+                  >
+                    <SyncAltIcon fontSize="small" color="primary" />
+                    <Typography sx={{ fontWeight: 700 }}>
+                      بلیط رفت و برگشت
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      — تاریخ برگشت: {formatDate(ticket.return_date)}
                     </Typography>
                   </Stack>
                 </>
@@ -416,11 +584,25 @@ export default function TicketDetails() {
 
           {/* Seats */}
           <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
-            <Typography variant="h6" fontWeight={700} mb={2}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                mb: 2,
+              }}
+            >
               ظرفیت و صندلی‌ها
             </Typography>
 
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap mb={1.5}>
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              sx={{
+                flexWrap: "wrap",
+                mb: 1.5,
+              }}
+            >
               <Chip
                 icon={<EventSeatIcon />}
                 label={`${ticket.total_seats} صندلی کل`}
@@ -435,7 +617,14 @@ export default function TicketDetails() {
             </Stack>
 
             {Object.keys(seatClassCounts).length > 0 && (
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{
+                  flexWrap: "wrap",
+                }}
+              >
                 {Object.entries(seatClassCounts).map(([cls, count]) => (
                   <Chip
                     key={cls}
@@ -449,27 +638,68 @@ export default function TicketDetails() {
 
           {/* Policies for this ticket type */}
           <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
-            <Stack direction="row" spacing={1} alignItems="center" mb={2}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
               <GavelIcon color="primary" />
-              <Typography variant="h6" fontWeight={700}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                }}
+              >
                 قوانین و مقررات {TYPE_LABELS[type]}
               </Typography>
             </Stack>
 
             <Stack spacing={1.5}>
               {typePolicy?.sections.map((section, sIndex) => (
-                <Accordion key={sIndex} disableGutters defaultExpanded={sIndex === 0}>
+                <Accordion
+                  key={sIndex}
+                  disableGutters
+                  defaultExpanded={sIndex === 0}
+                >
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography fontWeight={700}>{section.title}</Typography>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                      }}
+                    >
+                      {section.title}
+                    </Typography>
                   </AccordionSummary>
                   <AccordionDetails>
                     <Stack spacing={1.25}>
                       {section.clauses.map((clause, cIndex) => (
-                        <Stack key={cIndex} direction="row" spacing={1} alignItems="flex-start">
-                          <Typography fontWeight={700} color="primary.main" sx={{ minWidth: 20 }}>
+                        <Stack
+                          key={cIndex}
+                          direction="row"
+                          spacing={1}
+                          sx={{
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontWeight: 700,
+                              color: "primary.main",
+                              minWidth: 20,
+                            }}
+                          >
                             {cIndex + 1}.
                           </Typography>
-                          <Typography color="text.secondary">{clause}</Typography>
+                          <Typography
+                            sx={{
+                              color: "text.secondary",
+                            }}
+                          >
+                            {clause}
+                          </Typography>
                         </Stack>
                       ))}
                     </Stack>
@@ -480,7 +710,11 @@ export default function TicketDetails() {
               {/* Relevant general clauses (booking/payment/refunds) */}
               <Accordion disableGutters>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography fontWeight={700}>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                    }}
+                  >
                     قوانین عمومی رزرو، پرداخت و بازگشت وجه
                   </Typography>
                 </AccordionSummary>
@@ -489,11 +723,30 @@ export default function TicketDetails() {
                     {generalPolicy.sections
                       .find((s) => s.title === "رزرو، پرداخت و بازگشت وجه")
                       ?.clauses.map((clause, cIndex) => (
-                        <Stack key={cIndex} direction="row" spacing={1} alignItems="flex-start">
-                          <Typography fontWeight={700} color="primary.main" sx={{ minWidth: 20 }}>
+                        <Stack
+                          key={cIndex}
+                          direction="row"
+                          spacing={1}
+                          sx={{
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontWeight: 700,
+                              color: "primary.main",
+                              minWidth: 20,
+                            }}
+                          >
                             {cIndex + 1}.
                           </Typography>
-                          <Typography color="text.secondary">{clause}</Typography>
+                          <Typography
+                            sx={{
+                              color: "text.secondary",
+                            }}
+                          >
+                            {clause}
+                          </Typography>
                         </Stack>
                       ))}
                   </Stack>
@@ -501,19 +754,37 @@ export default function TicketDetails() {
               </Accordion>
             </Stack>
 
-            <Button variant="text" className="!mt-2" onClick={() => navigate("/policy")}>
+            <Button
+              variant="text"
+              className="!mt-2"
+              onClick={() => navigate("/policy")}
+            >
               مشاهده قوانین کامل
             </Button>
           </Paper>
         </Stack>
 
         {/* -------- RIGHT / SIDEBAR COLUMN -------- */}
-        <Stack spacing={3} sx={{ position: { md: "sticky" }, top: { md: 16 } }}>
+        {/* `top` has to clear the 72px sticky navbar, otherwise the card
+            slides underneath it as the page scrolls. */}
+        <Stack spacing={3} sx={{ position: { md: "sticky" }, top: { md: 88 } }}>
           <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+              }}
+            >
               قیمت هر نفر از
             </Typography>
-            <Typography variant="h5" fontWeight={700} color="primary.main" mb={2}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 700,
+                color: "primary.main",
+                mb: 2,
+              }}
+            >
               {formatPrice(ticket.base_price)}
             </Typography>
 
@@ -533,8 +804,17 @@ export default function TicketDetails() {
           </Paper>
 
           {provider && (
-            <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}>
-              <Stack direction="row" spacing={1.5} alignItems="center">
+            <Paper
+              elevation={0}
+              sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 3 }}
+            >
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{
+                  alignItems: "center",
+                }}
+              >
                 <Box
                   sx={{
                     width: 44,
@@ -551,10 +831,21 @@ export default function TicketDetails() {
                   <ApartmentIcon />
                 </Box>
                 <Box>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                    }}
+                  >
                     {isTour ? "آژانس گردشگری" : "ارائه‌دهنده خدمات"}
                   </Typography>
-                  <Typography fontWeight={700}>{provider.name}</Typography>
+                  <Typography
+                    sx={{
+                      fontWeight: 700,
+                    }}
+                  >
+                    {provider.name}
+                  </Typography>
                 </Box>
               </Stack>
             </Paper>

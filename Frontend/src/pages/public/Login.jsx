@@ -80,9 +80,20 @@ export default function Login() {
     >
       <Paper
         elevation={6}
-        sx={{ width: "100%", maxWidth: 420, borderRadius: 4, p: { xs: 3, sm: 4 } }}
+        sx={{
+          width: "100%",
+          maxWidth: 420,
+          borderRadius: 4,
+          p: { xs: 3, sm: 4 },
+        }}
       >
-        <Stack alignItems="center" spacing={1} mb={3}>
+        <Stack
+          spacing={1}
+          sx={{
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
           <Box
             sx={{
               width: 56,
@@ -97,10 +108,21 @@ export default function Login() {
           >
             <AirplaneTicketIcon fontSize="medium" />
           </Box>
-          <Typography variant="h5" fontWeight={700}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+            }}
+          >
             ورود به حساب کاربری
           </Typography>
-          <Typography variant="body2" color="text.secondary" textAlign="center">
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              textAlign: "center",
+            }}
+          >
             برای جستجو و رزرو بلیط وارد حساب کاربری خود شوید
           </Typography>
         </Stack>

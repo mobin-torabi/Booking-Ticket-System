@@ -8,8 +8,6 @@ import { useAuth } from "../../context/AuthContext";
 import { showSuccess } from "../../utils/toast";
 import HeaderLogo from "../MUIComponents/HeaderLogo";
 
-
-
 export default function Navbar() {
   const { user, isAuthenticated } = useAuth();
 
@@ -18,46 +16,44 @@ export default function Navbar() {
     showSuccess("نام کاربری کپی شد!");
   }
   return (
-    <AppBar 
+    <AppBar
       position="sticky"
       color="inherit"
       elevation={1}
       sx={{
-        
         borderBottom: "1px solid #E5E7EB",
       }}
     >
+      {/* The bar's own content is capped and centred to the same width the
+          pages below use, so the logo and account menu line up with the page
+          content instead of hugging the window edges on wide screens. */}
       <Toolbar
         sx={{
+          width: "100%",
+          maxWidth: 1280,
+          mx: "auto",
+          px: { xs: 2, md: 3 },
           display: "flex",
           justifyContent: "space-between",
-          minHeight: 72,
+          gap: 2,
+          minHeight: { xs: 72, md: 72 },
         }}
       >
         {/* Right Side */}
         <Box
+          component={Link}
+          to="/tickets"
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 2,
+            gap: 1,
+            color: "primary.main",
+            textDecoration: "none",
+            minWidth: 0,
           }}
         >
-          <Typography
-            variant="h5"
-            component={Link}
-            to="/tickets"
-            sx={{
-              fontWeight: 700,
-              color: "primary.main",
-              textDecoration: "none",
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            <AirplaneTicketIcon fontSize="large" />
-            <HeaderLogo component={Link} to="/tickets" />
-          </Typography>
+          <AirplaneTicketIcon fontSize="large" />
+          <HeaderLogo />
         </Box>
 
         {/* Left Side */}
@@ -70,23 +66,27 @@ export default function Navbar() {
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 0,
+              gap: 1.5,
+              minWidth: 0,
             }}
           >
-            <Box
-              sx={{
-                textAlign: "right",
-              }}
-            >
-              <Tooltip
-                title="نام کاربری خود را کپی کنید"
-                sx={{ cursor: "pointer", fontSize: "18px" }}
+            <Tooltip title="نام کاربری خود را کپی کنید">
+              <Typography
+                onClick={copyUsername}
+                sx={{
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  display: { xs: "none", sm: "block" },
+                  "&:hover": { color: "primary.main" },
+                }}
               >
-                <Typography fontWeight={600} onClick={copyUsername}>
-                  {user.username}
-                </Typography>
-              </Tooltip>
-            </Box>
+                {user.username}
+              </Typography>
+            </Tooltip>
+
             <DashboardMenu />
           </Box>
         )}

@@ -41,21 +41,38 @@ export default function NotFound() {
         <SentimentDissatisfiedIcon sx={{ fontSize: 48 }} />
       </Box>
 
-      <Typography variant="h2" fontWeight={700} color="primary.main" mb={1}>
+      <Typography
+        variant="h2"
+        sx={{
+          fontWeight: 700,
+          color: "primary.main",
+          mb: 1,
+        }}
+      >
         404
       </Typography>
 
-      <Typography variant="h6" fontWeight={700} mb={1}>
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: 700,
+          mb: 1,
+        }}
+      >
         صفحه مورد نظر یافت نشد
       </Typography>
 
-      <Typography color="text.secondary" mb={4} sx={{ maxWidth: 420 }}>
+      <Typography
+        sx={{
+          color: "text.secondary",
+          mb: 4,
+          maxWidth: 420,
+        }}
+      >
         صفحه‌ای که به دنبال آن هستید وجود ندارد یا جابه‌جا شده است.
       </Typography>
 
-      <Button onClick={() => navigate(ROUTES.HOME)}>
-        بازگشت به صفحه اصلی
-      </Button>
+      <Button onClick={() => navigate(ROUTES.HOME)}>بازگشت به صفحه اصلی</Button>
     </Box>
   );
 }

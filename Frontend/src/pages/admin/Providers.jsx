@@ -30,6 +30,7 @@ import { showError, showPromise } from "../../utils/toast";
 import { isValidEmail } from "../../utils/validators";
 
 import PageHeader from "../../components/common/PageHeader";
+import PageContainer from "../../components/common/PageContainer";
 import SearchBar from "../../components/common/SearchBar";
 import Select from "../../components/common/Select";
 import Input from "../../components/common/Input";
@@ -151,11 +152,11 @@ export default function Providers() {
     setModalOpen(false);
     setEditingProvider(null);
     setFormData(EMPTY_FORM);
-    setDataChanged(false)
+    setDataChanged(false);
   }
 
   function handleFormChange(e) {
-    setDataChanged(true)
+    setDataChanged(true);
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   }
@@ -202,8 +203,13 @@ export default function Providers() {
 
       closeModal();
       fetchProviders();
-    } catch(error) {
-        showError(error.response?.data?.error ?? (editingProvider ? "بروزرسانی اطلاعات با خطا مواجه شد" :"افزودن ارائه‌دهنده با خطا مواجه شد"));
+    } catch (error) {
+      showError(
+        error.response?.data?.error ??
+          (editingProvider
+            ? "بروزرسانی اطلاعات با خطا مواجه شد"
+            : "افزودن ارائه‌دهنده با خطا مواجه شد"),
+      );
     } finally {
       setSaving(false);
     }
@@ -258,7 +264,7 @@ export default function Providers() {
   }
 
   return (
-    <Box sx={{ p: 1, mb:2 }}>
+    <PageContainer>
       <PageHeader
         title="مدیریت ارائه‌دهندگان"
         subtitle={`مجموع ${providers.length} ${activeType.singular}`}
@@ -404,7 +410,10 @@ export default function Providers() {
               انصراف
             </Button>
 
-            <Button onClick={handleSaveProvider} disabled={saveBtnDisableHandler()}>
+            <Button
+              onClick={handleSaveProvider}
+              disabled={saveBtnDisableHandler()}
+            >
               {saving ? "در حال ذخیره..." : "ذخیره"}
             </Button>
           </>
@@ -448,6 +457,6 @@ export default function Providers() {
         onConfirm={handleConfirmDeactivate}
         onCancel={() => !deactivating && setDeactivatingProvider(null)}
       />
-    </Box>
+    </PageContainer>
   );
 }
