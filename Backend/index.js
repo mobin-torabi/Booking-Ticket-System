@@ -49,6 +49,19 @@ const PROVIDER_TABLES = {
   "tour-agencies": "tour_agencies",
 };
 
+// `departure_at` is a timestamp so it gets a clock time; `return_date` is a
+// plain date, and rendering a time for it would just invent one.
+function formatEmailDate(value, { withTime = true } = {}) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("fa-IR", {
+    dateStyle: "full",
+    ...(withTime ? { timeStyle: "short" } : {}),
+    timeZone: "Asia/Tehran",
+  }).format(date);
+}
+
 async function sendEmail({ to, subject, text, html }) {
   try {
     const info = await transporter.sendMail({
@@ -451,6 +464,42 @@ app.post("/bookings/:id/pay", async (req, res) => {
     }
 
     await sql`INSERT INTO notifications (booking_id, user_id, type, content) VALUES (${booking.id}, ${booking.user_id}, 'confirmation', 'رزرو شما با موفقیت تایید شد.')`;
+
+    // Confirmation email. Best-effort only: the payment has already been
+    // recorded and the booking flipped to 'booked' above, so a mail failure
+    // must never turn a successful payment into an error response.
+    try {
+      const contactResult = await sql`
+        SELECT u.email, u.username, t.origin, t.destination, t.departure_at, t.return_date
+        FROM bookings b
+        JOIN "Users" u ON u.id = b.user_id
+        JOIN tickets t ON t.id = b.ticket_id
+        WHERE b.id = ${id}
+      `;
+      const contact = contactResult[0];
+
+      if (contact?.email) {
+        const route = `${contact.origin} به ${contact.destination}`;
+        await sendEmail({
+          to: contact.email,
+          subject: "تایید رزرو",
+          text: `${contact.username} عزیز، رزرو شما (${route}) با موفقیت ثبت شد. شماره رزرو: ${booking.id} - مبلغ پرداختی: ${amount}`,
+          html: `
+            <div dir="rtl" style="font-family: Tahoma, sans-serif;">
+              <p>${contact.username} عزیز، رزرو شما با موفقیت ثبت شد.</p>
+              <p><strong>شماره رزرو:</strong> ${booking.id}</p>
+              <p><strong>مسیر:</strong> ${route}</p>
+              <p><strong>تاریخ رفت:</strong> ${formatEmailDate(contact.departure_at)}</p>
+              ${contact.return_date ? `<p><strong>تاریخ برگشت:</strong> ${formatEmailDate(contact.return_date, { withTime: false })}</p>` : ""}
+              <p><strong>تعداد صندلی:</strong> ${booking.number_of_seats}</p>
+              <p><strong>مبلغ پرداختی:</strong> ${Number(amount).toLocaleString("fa-IR")} تومان</p>
+            </div>
+          `,
+        });
+      }
+    } catch (mailError) {
+      console.error("Confirmation email failed:", mailError);
+    }
 
     res.send({ message: "پرداخت موفقیت آمیز بود", amount });
   } catch (error) {
