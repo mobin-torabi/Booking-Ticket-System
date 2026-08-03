@@ -104,7 +104,7 @@ export default function Footer() {
           <div className="flex flex-col items-start">
             <img src="/logo.png" alt="Ticki" className="h-12 w-60" />
 
-            <div className="mt-2">
+            <div style={{marginRight: 65}} className="mt-2">
               <IconButton
                 component="a"
                 href="https://github.com/mobin-torabi/Booking-Ticket-System"
